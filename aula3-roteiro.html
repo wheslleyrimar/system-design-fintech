@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aula 3 — Caderno visual de System Design</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+<style>
+:root{
+  --surface-0:#F0EEE6; --surface-1:#ffffff;
+  --text-primary:#1f1e1c; --text-secondary:#5F5E5A; --text-muted:#8a897f;
+  --border:#E4E1D8;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:var(--font-sans);line-height:1.6;}
+.wrap{max-width:920px;margin:0 auto;padding:44px 24px 90px;}
+h1{font-size:36px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em;}
+.sub{color:var(--text-muted);font-size:17px;margin:0 0 18px;}
+h2{font-size:26px;font-weight:600;margin:40px 0 4px;border-top:1px solid var(--border);padding-top:26px;}
+.teach{color:var(--text-secondary);font-size:18px;margin:4px 0 14px;}
+.lead{color:var(--text-secondary);font-size:18px;background:var(--surface-1);border:2px solid var(--border);border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:14px 16px;}
+.fig{margin:6px 0 6px;}
+.cap{font-size:16px;color:var(--text-muted);margin:8px 0 2px;}
+.box{border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:12px;}
+.arrow{display:flex;align-items:center;justify-content:center;color:var(--text-muted);}
+.tag{font-size:17px;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:2px 7px;white-space:nowrap;}
+.chip{font-size:18px;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:5px 9px;display:inline-block;}
+.navlink{font-size:18px;text-decoration:none;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:5px 12px;display:inline-block;border:2px solid var(--border);color:var(--text-secondary);background:var(--surface-1);}
+.navlink:hover{border-color:#534AB7;color:#534AB7;}
+.navlink.active{background:#534AB7;border-color:#534AB7;color:#fff;}
+@media print{ body{background:#fff;} .wrap{padding:0;max-width:none;} .fig,.box{break-inside:avoid;} h2{break-after:avoid;} }
+.grid5{display:grid;grid-template-columns:118px repeat(5,1fr);gap:8px;align-items:stretch;}
+.rowlabel{font-size:17px;color:var(--text-secondary);text-align:right;align-self:center;line-height:1.35;padding-right:6px;}
+.mcard{background:#fff;border:2px solid var(--border);border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:11px;display:flex;flex-direction:column;gap:6px;}
+.mdim{opacity:.55;border-style:dashed;}
+.mactive{border:2px solid #534AB7;}
+.mbadge{width:26px;height:26px;border-radius:50%;background:#D3D1C7;color:#2C2C2A;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:18px;}
+.mtitle{font-size:17px;font-weight:500;line-height:1.25;}
+.gancho{font-style:italic;color:var(--text-secondary);font-size:18px;line-height:1.4;}
+.theme{font-size:17px;color:var(--text-muted);line-height:1.4;}
+.mchip{font-size:18px;line-height:1.35;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:6px 8px;align-self:center;}
+.chip-fin{background:#E1F5EE;color:#04342C;}
+.chip-ia{background:#EEEDFE;color:#26215C;}
+.sticky{background:#FAEEDA;border:2px solid #FAC775;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:8px 10px;font-size:18px;color:#412402;text-align:center;flex:1;min-width:110px;}
+.lad{display:flex;flex-direction:column;gap:6px;}
+.lrow{display:grid;grid-template-columns:26px 1.3fr 1.7fr auto;gap:10px;align-items:center;background:#fff;border:2px solid var(--border);border-radius:3px 8px 5px 7px / 7px 5px 8px 3px;padding:9px 11px;}
+.lnum{width:22px;height:22px;border-radius:50%;background:#EEEDFE;color:#26215C;font-size:18px;display:flex;align-items:center;justify-content:center;}
+.actors{font-size:18px;color:var(--text-primary);font-weight:500;}
+.act{font-size:18px;color:var(--text-secondary);line-height:1.35;}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   EXCALIDRAW DIAGRAMS — scoped to .fig only
+   v2: page chrome reverted; diagrams get the hand-drawn treatment
+   ================================================================ */
+
+/* ── 1. REVERT PAGE CHROME (undo global bumps) ───────────────── */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important;
+  background-image: none !important;
+}
+h1 { font-size: 27px !important; font-weight: 600 !important;
+     letter-spacing: -.01em !important;
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+h2 { font-size: 20px !important; font-weight: 600 !important;
+     border-top: 1px solid var(--border) !important;
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.sub   { font-size: 14px   !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.teach { font-size: 14.5px !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.lead  { font-size: 15px  !important;
+         border: 1px solid var(--border) !important;
+         border-radius: 12px !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.lead::before { display: none !important; }
+.navlink {
+  font-size: 12.5px !important;
+  border-radius: 8px !important;
+  border-width: 1px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important;
+}
+.navlink.active { background: #534AB7 !important; border-color: #534AB7 !important; color: #fff !important; }
+
+/* Revert .mcard outside .fig (course-map cards in h2/grid area) */
+.mcard          { border: 1px solid var(--border) !important; border-radius: 12px !important; }
+.mcard::before  { display: none !important; }
+.mbadge         { font-size: 12px !important; border: none !important; width: 26px !important; height: 26px !important; }
+.mtitle         { font-size: 14px !important; }
+.gancho         { font-size: 12px !important; }
+.theme          { font-size: 11px !important; }
+.mchip          { font-size: 12px !important; border-radius: 8px !important; border: none !important; }
+.chip-fin       { background: #E1F5EE !important; color: #04342C !important; border: none !important; }
+.chip-ia        { background: #EEEDFE !important; color: #26215C !important; border: none !important; }
+.lrow           { border: 1px solid var(--border) !important; border-radius: 10px !important; background: #fff !important; }
+.lnum           { font-size: 12px !important; border: none !important; width: 22px !important; height: 22px !important; }
+.actors         { font-size: 12.5px !important; font-weight: 500 !important; }
+.act            { font-size: 12.5px !important; }
+.box            { border-radius: 12px !important; }
+.rowlabel       { font-size: 11px !important; }
+.chip           { font-size: 12px !important; border-radius: 8px !important; }
+.tag            { font-size: 11px !important; border-radius: 8px !important; padding: 2px 7px !important; }
+
+/* ── 2. EXCALIDRAW: scoped to .fig ──────────────────────────── */
+
+/* Dot-grid whiteboard container */
+.fig {
+  background: #fdfcf8 !important;
+  background-image: radial-gradient(circle, #c3c0b8 1.3px, transparent 1.3px) !important;
+  background-size: 22px 22px !important;
+  border-radius: 14px !important;
+  padding: 18px !important;
+  margin: 8px 0 18px !important;
+  border: 1.5px solid #dbd8cf !important;
+}
+
+/* Caveat everywhere inside diagrams */
+.fig * { font-family: 'Caveat', cursive !important; }
+
+/* Hand-drawn boxes */
+.fig .box {
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  position: relative !important;
+}
+/* Upgrade inline border to 2px on boxes inside .fig */
+.fig .box[style*="border:2px solid"],
+.fig .box[style*="border: 2px solid"] {
+  /* already 2px from prior script; just ensure radius */
+}
+
+/* Course-map cards inside .fig get the hand-drawn treatment */
+.fig .mcard {
+  border: 2px solid #1a1a1a !important;
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  position: relative !important;
+}
+.fig .mcard::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 3px 2px 2px 3px !important;
+  border: 1.5px solid rgba(26,26,26,0.13) !important;
+  border-radius: 4px 7px 4px 7px / 7px 4px 7px 4px !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+.fig .mcard > * { position: relative !important; z-index: 1 !important; }
+
+.fig .mbadge {
+  font-size: 16px !important; font-weight: 700 !important;
+  border: 2px solid rgba(0,0,0,0.28) !important;
+  width: 28px !important; height: 28px !important;
+}
+.fig .mtitle  { font-size: 19px !important; font-weight: 600 !important; }
+.fig .gancho  { font-size: 16px !important; }
+.fig .theme   { font-size: 15px !important; }
+
+/* Chip colors inside diagrams: stronger stroke */
+.fig .mchip   { font-size: 16px !important; border-radius: 3px 8px 5px 7px / 7px 5px 8px 3px !important; }
+.fig .chip-fin { background: #d5f5e3 !important; color: #0a4f35 !important; border: 2.5px solid #27ae60 !important; }
+.fig .chip-ia  { background: #e8daef !important; color: #4a235a !important; border: 2.5px solid #8e44ad !important; }
+
+/* Ladder rows inside .fig */
+.fig .lrow {
+  border: 2px solid var(--border) !important;
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  background: #fdfcf8 !important;
+}
+.fig .lnum {
+  font-size: 16px !important; font-weight: 700 !important;
+  width: 26px !important; height: 26px !important;
+  border: 2px solid #CECBF6 !important;
+}
+.fig .actors { font-size: 17px !important; font-weight: 700 !important; }
+.fig .act    { font-size: 16px !important; }
+
+/* Tags and chips inside .fig */
+.fig .chip { font-size: 16px !important; border-radius: 2px 7px 4px 6px / 6px 4px 7px 2px !important; }
+.fig .tag  { font-size: 15px !important; border-radius: 2px 7px 4px 6px / 6px 4px 7px 2px !important; padding: 4px 10px !important; }
+
+/* Rowlabel inside .fig */
+.fig .rowlabel { font-size: 15px !important; }
+
+/* Arrow icons inside diagrams: slightly bigger */
+.fig .arrow i { font-size: 22px !important; }
+/* Fix: preserve Tabler icon font inside diagrams */
+.fig i[class*="ti"],
+.fig .ti { font-family: 'tabler-icons' !important; }
+
+/* Stronger box borders inside diagrams for better visibility */
+.fig .box[style*="border:2px solid #"],
+.fig .box[style*="border: 2px solid #"] {
+  box-shadow: 1px 2px 0 rgba(0,0,0,0.08) !important;
+}
+
+/* Remove spurious ::before on plain boxes (keep only on .mcard) */
+.fig .box:not(.mcard)::before { display: none !important; }
+
+
+/* Bar chart labels inside .fig (cotovelo, conta quente) */
+.fig [style*="font-size:13px"] { font-size: 16px !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Aula 3 — Caderno visual de System Design</h1>
+  <nav style="display:flex;gap:8px;margin:2px 0 14px;flex-wrap:wrap;">
+    <a href="aula1-roteiro.html" class="navlink">Aula 1</a>
+    <a href="aula2-roteiro.html" class="navlink">Aula 2</a>
+    <a href="aula3-roteiro.html" class="navlink active">Aula 3</a>
+    <a href="aula8-roteiro.html" class="navlink">Aula 8</a>
+    <a href="topologia-progressiva.html" class="navlink">Topologia</a>
+  </nav>
+  <p class="sub">Modelagem de Domínio e Decisões Arquiteturais (SDD na prática) · diagramas para desenhar/projetar ao vivo</p>
+  <div class="lead">Continuação do <b>TechPix</b>. Hoje: as fronteiras que a Aula 2 desenhou "no olho" emergem de verdade, a partir dos eventos do domínio — via event storming.</div>
+
+  <div class="fig">
+    <div class="box" style="background:#fff;border:2px solid var(--border);">
+      <div style="font-size:18px;color:var(--text-secondary);font-weight:500;margin-bottom:8px;">Legenda de termos — consulte sempre que aparecer</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 16px;font-size:18px;color:var(--text-secondary);line-height:1.4;">
+        <div><b style="color:var(--text-primary);">Linguagem ubíqua</b> — vocabulário sem ambiguidade dentro de um contexto</div>
+        <div><b style="color:var(--text-primary);">Bounded context</b> — fronteira onde um modelo vale sem ambiguidade</div>
+        <div><b style="color:var(--text-primary);">Agregado</b> — fronteira de consistência transacional</div>
+        <div><b style="color:var(--text-primary);">Evento de domínio</b> — fato de negócio, nomeado no passado</div>
+        <div><b style="color:var(--text-primary);">Event storming</b> — descoberta colaborativa de eventos e fronteiras</div>
+        <div><b style="color:var(--text-primary);">Context map</b> — como os bounded contexts se relacionam</div>
+        <div><b style="color:var(--text-primary);">Upstream/downstream</b> — quem decide, quem se adapta</div>
+        <div><b style="color:var(--text-primary);">ACL</b> — Anti-Corruption Layer: traduz o externo sem deixá-lo vazar</div>
+        <div><b style="color:var(--text-primary);">Shared kernel</b> — fatia pequena de modelo compartilhada deliberadamente</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lead" style="margin-top:10px;">No TechPix, o time de Antifraude construiu uma regra de limite diário, olhando para o que chamava de "conta" — a identidade do cliente. Enquanto isso, o time de Pagamentos usava "conta" para sub-carteira dentro do ledger. Ninguém mentiu. Ninguém foi descuidado. O bug não morava em nenhuma linha de código. Ele morava <em>entre</em> os dois times, no espaço onde a mesma palavra significava duas coisas diferentes. <b>Todo desastre de arquitetura que já vi começou com um substantivo errado — e a solução não é impor um vocabulário global, é saber exatamente onde uma palavra pode mudar de significado.</b></div>
+
+  <h2>1 · Mapa narrativo do curso</h2>
+  <p class="teach">Ensina: hoje as fronteiras "no olho" da Aula 2 ganham técnica — emergem dos eventos, não de palpite. Domain-Driven Design, de Eric Evans, dá quatro ferramentas para o problema que acabamos de ver: linguagem ubíqua, bounded context, agregados e eventos de domínio. Não vou dar o curso completo de DDD — vou pegar só as quatro ideias que realmente mudam a arquitetura de uma fintech.</p>
+  <div class="lead">O mapa do curso reflete a jornada real do TechPix: <b>Nascimento</b> — as decisões fundacionais do ledger; <b>Crescimento</b> — o monólito rachou sob carga; <b>Linguagem</b> (hoje) — as fronteiras descobertas pelo event storming viram especificações executáveis; <b>Aula 8</b> — agentes olhando para essas mesmas especificações para propor a próxima evolução. O eixo IA não é adicional: é o mesmo artefato (bounded context, spec, ADR) visto de outro ângulo.</div>
+  <div class="fig">
+    <div class="grid5">
+      <div class="rowlabel" style="font-size:18px;color:var(--text-primary);">A jornada do<br>TechPix →</div>
+      <div class="mcard"><div class="mbadge">1</div><div class="mtitle">Nascimento</div><div class="gancho">"Decisão na fé"</div><div class="theme">Ledger, trade-offs, o papel do arquiteto</div></div>
+      <div class="mcard"><div class="mbadge">2</div><div class="mtitle">Crescimento</div><div class="gancho">"O monólito rachou"</div><div class="theme">Evolução e fitness functions</div></div>
+      <div class="mcard mactive"><div class="mbadge" style="background:#534AB7;color:#fff;">3</div><div class="mtitle">Linguagem</div><div class="gancho">"Palavras são arquitetura"</div><div class="theme">DDD, bounded contexts, SDD</div></div>
+      <div class="mcard mdim"><div class="mbadge" style="background:#B4B2A9;">4–7</div><div class="mtitle" style="color:var(--text-secondary);">Comunicação → operação</div><div class="theme">Outros professores</div></div>
+      <div class="mcard"><div class="mbadge">8</div><div class="mtitle">Evolui sozinho</div><div class="gancho">"Decisão na evidência"</div><div class="theme">IA, agentes, feedback</div></div>
+
+      <div class="rowlabel">Eixo<br>BACEN</div>
+      <div class="mchip chip-fin">Ledger · idempotência · SLA 40s</div>
+      <div class="mchip chip-fin">DICT/SPI sob carga</div>
+      <div class="mchip chip-fin" style="border:2px solid #534AB7;">Contexts · MED · ACL</div>
+      <div class="mchip chip-fin">Eventos, resiliência</div>
+      <div class="mchip chip-fin">Flags · canary · rollback</div>
+
+      <div class="rowlabel">Eixo<br>IA</div>
+      <div class="mchip chip-ia">ADR → spec (SDD)</div>
+      <div class="mchip chip-ia">Fitness = evals</div>
+      <div class="mchip chip-ia" style="border:2px solid #534AB7;">Context engineering</div>
+      <div class="mchip chip-ia">MCP · agentes</div>
+      <div class="mchip chip-ia">Harness · looping · RLHF</div>
+    </div>
+  </div>
+
+  <h2>2 · O rio de eventos do Pix <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(event storming)</span></h2>
+  <p class="teach">Ensina: eventos de domínio, nomeados no passado, numa linha do tempo — a matéria-prima de onde os bounded contexts vão emergir. A técnica é poderosa porque deixa as fronteiras emergir dos eventos, de baixo para cima, em vez de você impô-las de cima para baixo por palpite.</p>
+  <div class="lead">A técnica que vou ensinar — <b>event storming</b>, criada por Alberto Brandolini — funciona colando post-its laranjas, cada um descrevendo um evento de domínio no passado (<em>"PixIniciado"</em>, não <em>"Iniciar Pix"</em>), numa linha do tempo, com pessoas de áreas diferentes. É exatamente no atrito entre visões diferentes que os pontos cegos aparecem. Se o Diego e a Marina tivessem feito esse exercício juntos, dois post-its dizendo "conta" com dois significados teriam ficado lado a lado, forçando a pergunta: <em>"espera, é a mesma conta?"</em></div>
+  <div class="fig">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:stretch;">
+      <div class="sticky">PixIniciado</div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="sticky">ChaveResolvida</div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="sticky">LimitesValidados</div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="sticky">FundosReservados</div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="sticky">OrdemEnviadaAoSPI</div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="sticky">PixLiquidado</div>
+      <div class="arrow"><i class="ti ti-corner-down-right" aria-hidden="true"></i></div>
+      <div class="sticky" style="background:#FAECE7;border-color:#F5C4B3;color:#4A1B0C;">PixDevolvido</div>
+    </div>
+    <div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:8px;">
+      <span style="font-weight:600;color:#534AB7;">↯ Insight:</span> Cada evento tem um dono claro. <b>PixIniciado</b> = Ana toca em pagar. <b>ChaveResolvida</b> = DICT devolve a instituição do Bruno (a consulta que quase derrubou o sistema na Aula 2). <b>LimitesValidados</b> = Antifraude aprova — aqui "conta" significava identidade do cliente. <b>FundosReservados</b> = Ledger debita — aqui "conta" significava sub-carteira. <b>OrdemEnviadaAoSPI</b> = mensagem pacs.008. <b>PixLiquidado</b> = confirmação pacs.002. <b>PixDevolvido</b> = trilho do MED, pacs.004. Donos diferentes → contextos diferentes.
+    </div>
+  </div>
+
+  <h2>3 · Contextos emergindo do agrupamento</h2>
+  <p class="teach">Ensina: os bounded contexts não são impostos — emergem de quem cuida de cada evento. Cores = contexto. Eventos que mudam juntos, cuidados pela mesma equipe, com a mesma linguagem, naturalmente se agrupam — é isso que faz o event storming ser mais confiável que um palpite educado.</p>
+  <div class="lead">Agrupando os eventos por quem cuida deles, as fronteiras aparecem sozinhas. <b>Identidade</b> responde "quem é o cliente". <b>Contas e Ledger</b> responde "quanto tem e onde". <b>Pagamentos</b> orquestra a conversa com o mundo externo — DICT e SPI. <b>Antifraude</b> decide se uma operação é suspeita, com sua própria linguagem e seus próprios modelos de risco. <b>Devoluções</b> entra em cena quando o MED abre uma disputa. Os dois times estavam certos — cada um dentro dos seus próprios limites. O que faltava era a fronteira explícita.</div>
+  <div class="fig">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
+      <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:18px;font-weight:500;">Identidade</div><div style="font-size:17px;color:var(--text-secondary);margin-top:4px;">quem é o cliente</div></div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;font-weight:500;color:#04342C;">Contas & Ledger</div><div style="font-size:17px;color:#0F6E56;margin-top:4px;">FundosReservados</div></div>
+      <div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;font-weight:500;color:#042C53;">Pagamentos</div><div style="font-size:17px;color:#185FA5;margin-top:4px;">ChaveResolvida, OrdemEnviada, Liquidado</div></div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;font-weight:500;color:#412402;">Antifraude</div><div style="font-size:17px;color:#854F0B;margin-top:4px;">LimitesValidados</div></div>
+      <div class="box" style="background:#FAECE7;border:2px solid #F5C4B3;"><div style="font-size:18px;font-weight:500;color:#4A1B0C;">Devoluções</div><div style="font-size:17px;color:#993C1D;margin-top:4px;">PixDevolvido, MED</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;">
+      Se "conta" aparecesse em dois post-its de contextos diferentes lado a lado, o conflito Diego/Marina ficaria visível na hora.
+    </div>
+  </div>
+
+  <h2>4 · Context map <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(diagrama-estrela da aula)</span></h2>
+  <p class="teach">Ensina: como os contextos se relacionam. Contas&amp;Ledger é upstream de quase tudo; o ACL protege a linguagem do domínio contra o BACEN. Descobrir os contextos é metade do trabalho — a outra metade é desenhar como eles se relacionam, porque contextos isolados não existem numa fintech.</p>
+  <div class="lead">No TechPix, <b>Contas e Ledger</b> é upstream de quase tudo — Pagamentos, Cartões, Antifraude dependem da verdade que o Ledger define, mas o Ledger não muda seu modelo para agradar nenhum deles. O <b>ACL</b> já estava no TechPix desde a Aula 1, só que sem esse nome: é a camada que traduz a mensagem pacs.008 do ISO 20022 para o evento de domínio "PixIniciado". Se o BACEN mudar o formato, o ACL absorve — o resto do domínio nem sabe que algo mudou do lado de fora.</div>
+  <div class="fig">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;justify-content:center;">
+        <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;min-width:200px;text-align:center;"><div style="font-size:16px;font-weight:500;color:#04342C;">Contas & Ledger</div><div style="font-size:17px;color:#0F6E56;">upstream de quase tudo</div></div>
+      </div>
+      <div style="display:flex;justify-content:center;gap:40px;">
+        <div style="width:1px;background:var(--border);height:20px;"></div>
+        <div style="width:1px;background:var(--border);height:20px;"></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;min-width:150px;text-align:center;"><div style="font-size:18px;font-weight:500;color:#042C53;">Pagamentos</div><div style="font-size:16px;color:#185FA5;">↔ Antifraude (síncrono)</div></div>
+        <div class="box" style="background:#FAECE7;border:2px solid #F5C4B3;min-width:150px;text-align:center;"><div style="font-size:18px;font-weight:500;color:#4A1B0C;">Devoluções</div></div>
+      </div>
+      <div style="display:flex;justify-content:center;"><i class="ti ti-arrow-down" aria-hidden="true" style="color:var(--text-muted);"></i></div>
+      <div class="box" style="background:#F1EFE8;border:2px dashed #B4B2A9;text-align:center;">
+        <div style="font-size:18px;color:#5F5E5A;font-weight:500;">ACL — Anti-Corruption Layer</div>
+        <div style="font-size:17px;color:var(--text-muted);margin-top:2px;">traduz pacs.008/002/004 e DICT em eventos de domínio; nunca deixa o formato do BACEN vazar pra dentro</div>
+      </div>
+      <div style="display:flex;justify-content:center;">
+        <div class="box" style="background:#fff;border:2px solid var(--border);text-align:center;"><div style="font-size:18px;color:var(--text-secondary);">BACEN — SPI · DICT · MED</div></div>
+      </div>
+    </div>
+    <div style="margin-top:12px;border-top:1.5px dashed #C8C5BC;padding-top:12px;">
+      <div style="font-size:18px;font-weight:500;color:var(--text-secondary);margin-bottom:8px;">Outras relações do mapa de contexto</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="box" style="background:#F1EFE8;border:2px solid #C8C5BC;">
+          <div style="font-size:18px;font-weight:500;color:var(--text-primary);">Conformista</div>
+          <div style="font-size:17px;color:var(--text-secondary);margin-top:4px;line-height:1.5;">um contexto simplesmente aceita o modelo de outro, sem tradução, porque não vale o esforço do ACL</div>
+          <div style="margin-top:6px;font-size:16px;color:var(--text-muted);font-style:italic;">ex: time de Cartões aceita o vocabulário do Ledger tal como é</div>
+        </div>
+        <div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;">
+          <div style="font-size:18px;font-weight:500;color:#26215C;">Shared kernel</div>
+          <div style="font-size:17px;color:#3D3A82;margin-top:4px;line-height:1.5;">dois contextos deliberadamente compartilham uma fatia pequena e bem definida de modelo, porque separar custaria mais</div>
+          <div style="margin-top:6px;font-size:16px;color:#534AB7;font-style:italic;">ex: o conceito de "moeda" e "valor monetário" pode ser shared kernel entre Ledger e Pagamentos</div>
+        </div>
+      </div>
+      <div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:8px;">
+        <span style="font-weight:600;color:#534AB7;">↯ Insight:</span> <b>Conformista</b> quando não vale o esforço do ACL — o time de Cartões aceita o vocabulário do Ledger tal como é, sem tradução. <b>Shared kernel</b> quando separar custa mais do que compartilhar — o conceito de "valor monetário" entre Ledger e Pagamentos, porque seria estranho cada contexto ter sua própria definição de como representar reais. Use o ACL sempre que um sistema externo (como o BACEN) tiver uma linguagem que não deve vazar para o seu domínio.
+      </div>
+    </div>
+  </div>
+
+  <h2>5 · O agregado Ledger e a fronteira de consistência</h2>
+  <p class="teach">Ensina: "forte no núcleo, eventual na borda" da Aula 1 sempre foi sobre agregado e bounded context. A fronteira de consistência transacional coincide com a fronteira do agregado — dentro, tudo na mesma transação protegido pela invariante; fora, evento de domínio assíncrono aceitando atraso.</p>
+  <div class="lead">Voltando à Aula 1: <em>"forte no núcleo, eventual na borda"</em>. Agora com DDD na mão, dá para ser preciso: <b>a fronteira de consistência transacional coincide com a fronteira do agregado</b>. Dentro do agregado Ledger, tudo acontece na mesma transação, protegido pela invariante Σ débitos = Σ créditos e pelo saldo que nunca pode ficar negativo. Fora dele — quando Pagamentos quer avisar Antifraude, ou quando o extrato precisa ser atualizado — a comunicação acontece por evento de domínio, de forma assíncrona. O Outbox da Aula 2 não é um truque de infraestrutura: é a consequência direta de ter desenhado agregados com fronteiras explícitas.</div>
+  <div class="fig">
+    <div style="display:flex;align-items:stretch;gap:10px;">
+      <div class="box" style="flex:1.2;background:#E1F5EE;border:2px solid #9FE1CB;">
+        <div style="font-size:18px;color:#0F6E56;font-weight:500;margin-bottom:6px;">DENTRO do agregado (transacional)</div>
+        <div style="font-size:18px;color:#04342C;line-height:1.6;">débito carteira · crédito a_liquidar · invariante Σ=Σ · saldo nunca negativo</div>
+      </div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;background:#E6F1FB;border:2px solid #B5D4F4;">
+        <div style="font-size:18px;color:#185FA5;font-weight:500;margin-bottom:6px;">FORA (via evento, eventual)</div>
+        <div style="font-size:18px;color:#042C53;line-height:1.6;">extrato · notificação · Antifraude · feed</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>6 · Agregado grande vs pequeno <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(o trade-off que explica o dia 5)</span></h2>
+  <p class="teach">Ensina: as regras 2 e 4 de Vernon se op&otilde;em. E a revela&ccedil;&atilde;o da aula &mdash; o ponto quente da Aula 2 <b>era um agregado grande demais</b>: problema de modelagem que se manifestou como problema de banco. A conten&ccedil;&atilde;o que voc&ecirc;s medem em produ&ccedil;&atilde;o &eacute;, na maioria das vezes, uma fronteira de dom&iacute;nio mal desenhada cobrando o pre&ccedil;o.</p>
+  <div class="lead">Aqui est&aacute; o insight mais valioso das tr&ecirc;s aulas juntas — e precisa decantar. A conta <code>pix_a_liquidar</code> estava, efetivamente, dentro da fronteira transacional de <em>todas</em> as transa&ccedil;&otilde;es do sistema ao mesmo tempo. N&atilde;o era um problema de banco de dados; era um problema de <b>modelagem de dom&iacute;nio</b> que se manifestou como problema de banco de dados. Quando a Aula 2 falou em "reparticionar a escrita do ledger", estava falando, em vocabul&aacute;rio de DDD, de <b>redesenhar a fronteira do agregado</b>. O <code>hash(conta_id) mod N</code> e a decis&atilde;o de "que dados vivem dentro deste agregado" s&atilde;o a mesma decis&atilde;o, vista de dois &acirc;ngulos.</div>
+  <div class="fig">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;">
+        <div style="font-size:16px;color:#501313;font-weight:500;">Agregado GRANDE</div>
+        <div style="font-size:18px;color:#791F1F;margin-top:6px;line-height:1.5;">Cliente + todas as contas + cart&otilde;es + hist&oacute;rico + limite di&aacute;rio</div>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:17px;background:#EAF3DE;color:#173404;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:3px 8px;">+ invariantes complexas f&aacute;ceis de garantir</span>
+          <span style="font-size:17px;background:#F7C1C1;color:#501313;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:3px 8px;">&minus; TUDO compete pelo mesmo lock</span>
+          <span style="font-size:17px;background:#F7C1C1;color:#501313;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:3px 8px;">&minus; conten&ccedil;&atilde;o disfar&ccedil;ada de conveni&ecirc;ncia</span>
+        </div>
+      </div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;">
+        <div style="font-size:16px;color:#04342C;font-weight:500;">Agregado PEQUENO</div>
+        <div style="font-size:18px;color:#0F6E56;margin-top:6px;line-height:1.5;">Conta (s&oacute; o essencial para a invariante &Sigma;=&Sigma;) &middot; refer&ecirc;ncia outros por identidade</div>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:17px;background:#EAF3DE;color:#173404;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:3px 8px;">+ escala de verdade, menos conten&ccedil;&atilde;o</span>
+          <span style="font-size:17px;background:#FAC775;color:#412402;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:3px 8px;">&minus; mais consist&ecirc;ncia eventual para gerenciar</span>
+          <span style="font-size:17px;background:#FAC775;color:#412402;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:3px 8px;">&minus; mais eventos, mais compensa&ccedil;&atilde;o</span>
+        </div>
+      </div>
+    </div>
+    <div class="box" style="margin-top:10px;background:#EEEDFE;border:2px solid #CECBF6;font-size:16px;color:#26215C;line-height:1.55;">
+      <b>A revela&ccedil;&atilde;o:</b> a conta <code>pix_a_liquidar</code> estava dentro da fronteira transacional de <b>todas</b> as transa&ccedil;&otilde;es ao mesmo tempo. "Reparticionar a escrita" (Aula 2) &eacute;, em vocabul&aacute;rio de DDD, <b>redesenhar a fronteira do agregado</b>. Mesma decis&atilde;o, dois &acirc;ngulos.
+    </div>
+    <div class="box" style="margin-top:8px;background:#fff;border:2px solid var(--border);font-size:18px;color:var(--text-secondary);">
+      <b style="color:var(--text-primary);">Exerc&iacute;cio discut&iacute;vel:</b> o limite di&aacute;rio pertence ao agregado Conta? A favor: &eacute; invariante (regra 1). Contra: serializa todas as transfer&ecirc;ncias daquele cliente. Resposta: <b>depende do rigor exigido</b> &mdash; e isso &eacute; decis&atilde;o de neg&oacute;cio, n&atilde;o de engenharia.
+    </div>
+  </div>
+
+  <h2>7 · Versionamento de evento <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(o problema do m&ecirc;s seis)</span></h2>
+  <p class="teach">Ensina: evento publicado &eacute; contrato p&uacute;blico. No momento em que tr&ecirc;s servi&ccedil;os consomem o mesmo evento, ele deixou de ser detalhe interno — virou uma interface com tr&ecirc;s clientes. Em fintech, com reten&ccedil;&atilde;o de anos por auditoria, voc&ecirc; <b>vai</b> ler eventos escritos por c&oacute;digo que n&atilde;o existe mais.</p>
+  <div class="lead">No m&ecirc;s seis, algu&eacute;m precisa adicionar um campo ao <b>PixLiquidado</b>. Ou pior: renomear um. O que acontece com os consumidores que ainda esperam o formato antigo? E com os eventos antigos no broker, retidos por exig&ecirc;ncia de auditoria, que podem ser reprocessados no formato velho? O versionamento de evento n&atilde;o &eacute; detalhe de implementa&ccedil;&atilde;o — &eacute; a fitness function da Aula 2 aplicada a contrato de evento. Planeje desde o primeiro evento publicado.</div>
+  <div class="fig">
+    <div class="flow" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <div class="box" style="flex:1;min-width:150px;background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">PixLiquidado</div><div style="font-size:17px;color:#0F6E56;">publicado pelo Outbox</div></div>
+      <div class="arrow" style="display:flex;align-items:center;color:var(--text-muted);">&rarr;</div>
+      <div style="flex:1.4;min-width:170px;display:flex;flex-direction:column;gap:4px;">
+        <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:6px 9px;font-size:17px;">consumidor: extrato</div>
+        <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:6px 9px;font-size:17px;">consumidor: notifica&ccedil;&atilde;o</div>
+        <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:6px 9px;font-size:17px;">consumidor: antifraude</div>
+      </div>
+      <div class="arrow" style="display:flex;align-items:center;color:var(--text-muted);">=</div>
+      <div class="box" style="flex:1;min-width:140px;background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">interface com 3 clientes</div><div style="font-size:17px;color:#791F1F;">n&atilde;o &eacute; mais detalhe interno</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;">
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;font-size:17px;color:#04342C;"><b>S&oacute; adicionar</b> &mdash; campos novos opcionais, velhos permanecem para sempre. Simples e defens&aacute;vel; acumula lixo no schema.</div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;font-size:17px;color:#412402;"><b>Versionar o tipo</b> &mdash; <code>v1</code> e <code>v2</code> convivem numa janela de migra&ccedil;&atilde;o. Mais trabalho, mas expl&iacute;cito.</div>
+      <div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;font-size:17px;color:#26215C;"><b>Schema registry</b> &mdash; rejeita publica&ccedil;&atilde;o incompat&iacute;vel. &Eacute; a fitness function da Aula 2 aplicada a contrato de evento.</div>
+    </div>
+  </div>
+
+  <h2>8 · Spec do contexto Pagamentos</h2>
+  <p class="teach">Ensina: a spec de um bounded context é o mesmo tipo de artefato que um ADR — só que registra fronteira e contrato, não uma decisão pontual. Se um bounded context tem sua própria linguagem, eventos e invariantes, ele é, naturalmente, a unidade certa para uma especificação executável.</p>
+  <div class="lead">Vamos escrever juntos a spec do contexto <b>Pagamentos</b>. Este artefato não é decoração — é do mesmo tipo que o ADR-001 e o ADR-002, só que com escopo diferente: em vez de registrar uma decisão pontual, registra a <b>fronteira e o contrato</b> de um contexto inteiro. E assim como a invariante do ledger virou uma fitness function na Aula 2, as invariantes da spec viram testes automáticos.</div>
+  <div class="fig">
+    <div class="box" style="background:#fff;border:2px solid var(--border);padding:14px;">
+      <div style="font-size:17px;font-weight:500;margin-bottom:10px;">Contexto: pagamentos</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:18px;">
+        <div><span style="color:var(--text-secondary);">linguagem</span> — "Pagamento" ≠ "Transferência" (contexto Contas)</div>
+        <div><span style="color:var(--text-secondary);">invariantes</span> — E2E ID único · nunca envia ao SPI sem FundosReservados</div>
+        <div><span style="color:var(--text-secondary);">eventos</span> — PixIniciado, ChaveResolvida, OrdemEnviadaAoSPI, PixLiquidado</div>
+        <div><span style="color:var(--text-secondary);">depende de</span> — Ledger (upstream) · Antifraude (síncrono) · BACEN (via ACL)</div>
+      </div>
+    </div>
+    <div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:10px;">
+      <span style="font-weight:600;color:#534AB7;">↯ Insight:</span> Cada linha de "Invariantes" vira diretamente um teste automático. A linha "Linguagem" torna testável que "Pagamento" e "Transferência" não são a mesma coisa — evitando exatamente o bug do Diego e da Marina. O bounded context de vocês é, literalmente, a unidade de contexto que um agente deveria receber: a spec de Pagamentos, o glossário daquele contexto, os ADRs relevantes — e o que fica de fora é tão importante quanto o que entra.
+    </div>
+  </div>
+
+  <h2>9 · Context Engineering: o que entra, o que fica de fora</h2>
+  <p class="teach">Ensina: o bounded context é, literalmente, a unidade de contexto que um agente deveria receber para trabalhar com segurança. DDD não é só uma técnica para humanos — é o desenho de como fatiar o conhecimento para que um agente raciocine dentro de fronteiras seguras.</p>
+  <div class="lead">Um agente implementando algo no contexto de Pagamentos deve receber: a spec de Pagamentos, o glossário da linguagem ubíqua daquele contexto, os ADRs relevantes e os eventos que ele emite e consome. Não deve receber: internals de Antifraude, internals de Identidade, nenhum detalhe fora do contrato de evento. Isso não é só higiene de prompt — é a mesma disciplina de fronteira que vocês aplicariam a um engenheiro novo entrando no time: ele aprende a linguagem daquele contexto e conversa com os outros só pelos contratos publicados.</div>
+  <div class="fig">
+    <div style="display:flex;gap:10px;align-items:stretch;">
+      <div class="box" style="flex:1.3;background:#E1F5EE;border:2px solid #9FE1CB;">
+        <div style="font-size:18px;color:#0F6E56;font-weight:500;margin-bottom:6px;">Entra na janela do agente</div>
+        <div style="font-size:18px;color:#04342C;line-height:1.6;">spec de Pagamentos · glossário do contexto · ADR-001 e ADR-002 · eventos emitidos/consumidos</div>
+      </div>
+      <div class="box" style="flex:1;background:#FCEBEB;border:2px solid #F7C1C1;">
+        <div style="font-size:18px;color:#791F1F;font-weight:500;margin-bottom:6px;">Fica de fora</div>
+        <div style="font-size:18px;color:#501313;line-height:1.6;">internals de Antifraude · internals de Identidade · qualquer coisa fora do contrato de evento</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>10 · Bounded context ≠ microsserviço</h2>
+  <p class="teach">Ensina: bounded context é decisão de modelagem; microsserviço é decisão de topologia. Essa pergunta vem em toda turma — e a resposta simplista causa dano real. A relação correta: um serviço nunca deve ter mais de um bounded context (senão é bola de lama distribuída). Mas um bounded context pode perfeitamente ser um módulo dentro de um monólito modular. Extrair para serviço é uma decisão posterior e independente, por critérios operacionais, não de modelagem.</p>
+  <div class="lead">As fronteiras descobertas pelo event storming <em>são</em> as fronteiras de módulo do monólito modular da Aula 2. Extrair um módulo para serviço próprio só faz sentido quando há uma razão operacional concreta — e existem exatamente quatro critérios legítimos para isso. Se nenhum deles se aplica, você comprou os custos do sistema distribuído sem levar nenhum dos benefícios: latência de rede, falha parcial, consistência eventual entre serviços, complexidade de observabilidade.</div>
+  <div class="fig">
+    <div style="display:grid;grid-template-columns:1fr 48px 1fr;gap:8px;align-items:center;margin-bottom:12px;">
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;text-align:center;padding:16px 12px;">
+        <div style="font-size:20px;font-weight:700;color:#04342C;">Bounded Context</div>
+        <div style="font-size:16px;color:#0F6E56;margin-top:3px;font-weight:600;">decisão de MODELAGEM</div>
+        <div style="font-size:17px;color:#0F6E56;margin-top:8px;line-height:1.5;">fronteira onde um modelo faz sentido sem ambiguidade · descoberta pelo event storming · independe de deploy</div>
+      </div>
+      <div class="arrow" style="font-size:26px;font-weight:700;color:#791F1F;justify-content:center;">≠</div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;text-align:center;padding:16px 12px;">
+        <div style="font-size:20px;font-weight:700;color:#412402;">Microsserviço</div>
+        <div style="font-size:16px;color:#854F0B;margin-top:3px;font-weight:600;">decisão de TOPOLOGIA</div>
+        <div style="font-size:17px;color:#854F0B;margin-top:8px;line-height:1.5;">unidade de deploy e escala · decisão operacional · feita depois e de forma independente</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;font-size:17px;color:#04342C;line-height:1.5;">
+        <b>Bom candidato</b> — bounded context é bom candidato a serviço, não obrigação
+      </div>
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;font-size:17px;color:#501313;line-height:1.5;">
+        <b>Proibido</b> — um serviço NUNCA deve conter mais de um bounded context (bola de lama distribuída)
+      </div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;font-size:17px;color:#412402;line-height:1.55;grid-column:1 / -1;">
+        Um bounded context pode perfeitamente permanecer como módulo dentro de um monólito modular — e frequentemente deveria. As fronteiras descobertas pelo event storming <b>são</b> as fronteiras de módulo do monólito. Extrair para serviço separado é decisão posterior e independente, tomada por critérios operacionais — não de modelagem.
+      </div>
+    </div>
+
+    <div style="font-size:18px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;">Critérios que justificam a extração para serviço</div>
+    <div class="lad">
+      <div class="lrow">
+        <div class="lnum">1</div>
+        <div class="actors">Escala diferente</div>
+        <div class="act">o contexto precisa escalar de forma diferente — ex: Antifraude precisa de muito mais CPU/GPU que o resto; escalar junto significa pagar pela capacidade que só uma parte precisa</div>
+        <div><span class="tag" style="background:#E6F1FB;color:#042C53;">infra</span></div>
+      </div>
+      <div class="lrow">
+        <div class="lnum">2</div>
+        <div class="actors">Ciclo de deploy diferente</div>
+        <div class="act">o contexto muda várias vezes por dia enquanto o resto muda semanalmente — acoplamento de deploy gera risco desnecessário</div>
+        <div><span class="tag" style="background:#E1F5EE;color:#04342C;">ritmo</span></div>
+      </div>
+      <div class="lrow">
+        <div class="lnum">3</div>
+        <div class="actors">Time diferente</div>
+        <div class="act">pertence a um time diferente e o acoplamento de deploy causa fila entre times — razão mais frequente e mais legítima na prática</div>
+        <div><span class="tag" style="background:#FAEEDA;color:#412402;">org</span></div>
+      </div>
+      <div class="lrow">
+        <div class="lnum">4</div>
+        <div class="actors">Disponibilidade / isolamento distinto</div>
+        <div class="act">o bulkhead da Aula 2 aplicado no nível de serviço — requisitos de SLA ou tolerância a falha distintos do resto do sistema</div>
+        <div><span class="tag" style="background:#EEEDFE;color:#26215C;">resil.</span></div>
+      </div>
+    </div>
+
+    <div class="box" style="margin-top:10px;background:#FCEBEB;border:2px solid #F7C1C1;font-size:17px;color:#501313;line-height:1.55;">
+      <b>Aviso:</b> se nenhum desses critérios se aplica, extrair o serviço só compra os <b>custos</b> de sistemas distribuídos — latência de rede, falha parcial, consistência eventual entre serviços, complexidade de observabilidade — sem comprar nenhum dos benefícios.
+    </div>
+
+    <div class="box" style="margin-top:10px;background:#EEEDFE;border:2px solid #CECBF6;font-size:17px;color:#26215C;line-height:1.6;text-align:center;padding:14px 16px;">
+      <b>"Bounded context é decisão de modelagem; microsserviço é decisão de topologia. Elas se relacionam, mas não são a mesma decisão, e confundi-las é a origem de boa parte dos projetos de microsserviços que dão errado."</b>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =============================================
+   TECH ICONS — auto-injection inside .fig boxes
+   Uses Simple Icons CDN + letter-badge fallback
+   ============================================= */
+(function () {
+  var SI = 'https://cdn.simpleicons.org/';
+
+  /* ── Icon map ────────────────────────────────────────────────
+     img: Simple Icons slug + brand color (hex, no #)
+     letter: fallback badge letter  bg: badge bg color
+  ───────────────────────────────────────────────────────────── */
+  var ICONS = {
+    // ── Databases ─────────────────────────────────────────────
+    'PostgreSQL':    { img: SI+'postgresql/336791' },
+    'MySQL':         { img: SI+'mysql/4479A1' },
+    'InnoDB':        { img: SI+'mysql/4479A1' },
+    'CockroachDB':   { img: SI+'cockroachdb/6933FF' },
+    'TiDB':          { img: SI+'pingcap/CC0000' },
+    'YugabyteDB':    { letter:'Y', bg:'#3D3D4F' },
+    'Yugabyte':      { letter:'Y', bg:'#3D3D4F' },
+    'Spanner':       { img: SI+'googlecloud/4285F4' },
+    'DynamoDB':      { img: SI+'amazondynamodb/4053D6' },
+    'Vitess':        { letter:'V', bg:'#F10737' },
+    // ── Cache ─────────────────────────────────────────────────
+    'Redis':         { img: SI+'redis/DC382D' },
+    'Cache':         { img: SI+'redis/DC382D' },
+    // ── Messaging / Streaming ─────────────────────────────────
+    'Kafka':         { img: SI+'apachekafka/231F20' },
+    'Broker':        { img: SI+'apachekafka/231F20' },
+    // ── CDC ───────────────────────────────────────────────────
+    'Debezium':      { letter:'D', bg:'#FF4040' },
+    // ── Connection pooling ────────────────────────────────────
+    'PgBouncer':     { img: SI+'postgresql/336791' },
+    'Pooler':        { img: SI+'postgresql/8B5E3C' },
+    // ── Testing ───────────────────────────────────────────────
+    'k6':            { img: SI+'k6/7D64FF' },
+    // ── Feature flags ─────────────────────────────────────────
+    'Unleash':       { img: SI+'unleash/1A4A52' },
+    // ── Resilience ────────────────────────────────────────────
+    'Resilience4j':  { letter:'R4', bg:'#27ae60' },
+    // ── Architecture testing ──────────────────────────────────
+    'ArchUnit':      { letter:'A', bg:'#e67e22' },
+    // ── Proxy / Service Mesh ──────────────────────────────────
+    'Envoy':         { img: SI+'envoy/AC6199' },
+    // ── Version control ───────────────────────────────────────
+    'GitHub':        { img: SI+'github/181717' },
+    // ── Containers ────────────────────────────────────────────
+    'Docker':        { img: SI+'docker/2496ED' },
+    'Kubernetes':    { img: SI+'kubernetes/326CE5' },
+    // ── Cloud ─────────────────────────────────────────────────
+    'AWS':           { img: SI+'amazonaws/FF9900' },
+    'GCP':           { img: SI+'googlecloud/4285F4' },
+    // ── Load balancers / WAF ──────────────────────────────────
+    'Cloudflare':    { img: SI+'cloudflare/F38020' },
+  };
+
+  /* Sort by key length desc so longer matches win
+     (e.g. "CockroachDB" beats "Cockroach") */
+  var SORTED = Object.keys(ICONS).sort(function(a,b){ return b.length - a.length; });
+
+  function makeIcon(data) {
+    if (data.img) {
+      var img = document.createElement('img');
+      img.src = data.img;
+      img.width = 22; img.height = 22;
+      img.alt = '';
+      img.style.cssText =
+        'vertical-align:middle;margin-right:7px;border-radius:3px;' +
+        'flex-shrink:0;display:inline-block;';
+      img.onerror = function(){ this.style.display='none'; };
+      return img;
+    }
+    if (data.letter) {
+      var span = document.createElement('span');
+      span.textContent = data.letter;
+      span.style.cssText =
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'width:22px;height:22px;min-width:22px;' +
+        'background:' + data.bg + ';color:#fff;' +
+        'border-radius:4px;font-size:11px;font-weight:700;' +
+        'margin-right:7px;vertical-align:middle;flex-shrink:0;' +
+        'font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+      return span;
+    }
+    return null;
+  }
+
+  function injectInto(el) {
+    if (!el || el._ti) return;   // already processed
+    var text = el.textContent.trim();
+    for (var i = 0; i < SORTED.length; i++) {
+      var tech = SORTED[i];
+      /* Match at word-boundary start (avoid "MySQL" matching inside words) */
+      if (text === tech ||
+          text.startsWith(tech + ' ') ||
+          text.startsWith(tech + '/') ||
+          text.startsWith(tech + ',') ||
+          text.startsWith(tech + ':') ||
+          text.startsWith(tech + ' —') ||
+          (text.indexOf(tech) === 0)) {
+        var icon = makeIcon(ICONS[tech]);
+        if (icon) {
+          /* Wrap text in a flex row */
+          el.style.display = 'flex';
+          el.style.alignItems = 'center';
+          el.style.flexWrap = 'nowrap';
+          el.insertBefore(icon, el.firstChild);
+          el._ti = true;
+        }
+        return;
+      }
+    }
+  }
+
+  function run() {
+    /* ── Aulas 1–8: .fig .box > first div child with font-weight ── */
+    document.querySelectorAll(
+      '.fig .box > div:first-child, ' +
+      '.fig .box > [style*="font-weight:500"]:first-child, ' +
+      '.fig .box > [style*="font-weight: 500"]:first-child'
+    ).forEach(injectInto);
+
+    /* ── Topologia: .t class titles ──────────────────────────── */
+    document.querySelectorAll('.fig .box .t, .fig .t').forEach(injectInto);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+})();
+</script>
+
+</body>
+</html>

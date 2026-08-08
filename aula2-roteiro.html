@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aula 2 — Caderno visual de System Design</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+<style>
+:root{
+  --surface-0:#F0EEE6; --surface-1:#ffffff;
+  --text-primary:#1f1e1c; --text-secondary:#5F5E5A; --text-muted:#8a897f;
+  --border:#E4E1D8;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:var(--font-sans);line-height:1.6;}
+.wrap{max-width:920px;margin:0 auto;padding:44px 24px 90px;}
+h1{font-size:36px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em;}
+.sub{color:var(--text-muted);font-size:17px;margin:0 0 18px;}
+h2{font-size:26px;font-weight:600;margin:40px 0 4px;border-top:1px solid var(--border);padding-top:26px;}
+.teach{color:var(--text-secondary);font-size:18px;margin:4px 0 14px;}
+.lead{color:var(--text-secondary);font-size:18px;background:var(--surface-1);border:2px solid var(--border);border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:14px 16px;}
+.fig{margin:6px 0 6px;}
+.cap{font-size:16px;color:var(--text-muted);margin:8px 0 2px;}
+.box{border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:12px;}
+.arrow{display:flex;align-items:center;justify-content:center;color:var(--text-muted);}
+.tag{font-size:17px;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:2px 7px;white-space:nowrap;}
+.chip{font-size:18px;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:5px 9px;display:inline-block;}
+.navlink{font-size:18px;text-decoration:none;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:5px 12px;display:inline-block;border:2px solid var(--border);color:var(--text-secondary);background:var(--surface-1);}
+.navlink:hover{border-color:#534AB7;color:#534AB7;}
+.navlink.active{background:#534AB7;border-color:#534AB7;color:#fff;}
+@media print{ body{background:#fff;} .wrap{padding:0;max-width:none;} .fig,.box{break-inside:avoid;} h2{break-after:avoid;} }
+.grid5{display:grid;grid-template-columns:118px repeat(5,1fr);gap:8px;align-items:stretch;}
+.rowlabel{font-size:17px;color:var(--text-secondary);text-align:right;align-self:center;line-height:1.35;padding-right:6px;}
+.mcard{background:#fff;border:2px solid var(--border);border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:11px;display:flex;flex-direction:column;gap:6px;}
+.mdim{opacity:.55;border-style:dashed;}
+.mactive{border:2px solid #534AB7;}
+.mbadge{width:26px;height:26px;border-radius:50%;background:#D3D1C7;color:#2C2C2A;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:18px;}
+.mtitle{font-size:17px;font-weight:500;line-height:1.25;}
+.gancho{font-style:italic;color:var(--text-secondary);font-size:18px;line-height:1.4;}
+.theme{font-size:17px;color:var(--text-muted);line-height:1.4;}
+.mchip{font-size:18px;line-height:1.35;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:6px 8px;align-self:center;}
+.chip-fin{background:#E1F5EE;color:#04342C;}
+.chip-ia{background:#EEEDFE;color:#26215C;}
+.lad{display:flex;flex-direction:column;gap:6px;}
+.lrow{display:grid;grid-template-columns:26px 1.3fr 1.7fr auto;gap:10px;align-items:center;background:#fff;border:2px solid var(--border);border-radius:3px 8px 5px 7px / 7px 5px 8px 3px;padding:9px 11px;}
+.lnum{width:22px;height:22px;border-radius:50%;background:#EEEDFE;color:#26215C;font-size:18px;display:flex;align-items:center;justify-content:center;}
+.actors{font-size:18px;color:var(--text-primary);font-weight:500;}
+.act{font-size:18px;color:var(--text-secondary);line-height:1.35;}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   EXCALIDRAW DIAGRAMS — scoped to .fig only
+   v2: page chrome reverted; diagrams get the hand-drawn treatment
+   ================================================================ */
+
+/* ── 1. REVERT PAGE CHROME (undo global bumps) ───────────────── */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important;
+  background-image: none !important;
+}
+h1 { font-size: 27px !important; font-weight: 600 !important;
+     letter-spacing: -.01em !important;
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+h2 { font-size: 20px !important; font-weight: 600 !important;
+     border-top: 1px solid var(--border) !important;
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.sub   { font-size: 14px   !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.teach { font-size: 14.5px !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.lead  { font-size: 15px  !important;
+         border: 1px solid var(--border) !important;
+         border-radius: 12px !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.lead::before { display: none !important; }
+.navlink {
+  font-size: 12.5px !important;
+  border-radius: 8px !important;
+  border-width: 1px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important;
+}
+.navlink.active { background: #534AB7 !important; border-color: #534AB7 !important; color: #fff !important; }
+
+/* Revert .mcard outside .fig (course-map cards in h2/grid area) */
+.mcard          { border: 1px solid var(--border) !important; border-radius: 12px !important; }
+.mcard::before  { display: none !important; }
+.mbadge         { font-size: 12px !important; border: none !important; width: 26px !important; height: 26px !important; }
+.mtitle         { font-size: 14px !important; }
+.gancho         { font-size: 12px !important; }
+.theme          { font-size: 11px !important; }
+.mchip          { font-size: 12px !important; border-radius: 8px !important; border: none !important; }
+.chip-fin       { background: #E1F5EE !important; color: #04342C !important; border: none !important; }
+.chip-ia        { background: #EEEDFE !important; color: #26215C !important; border: none !important; }
+.lrow           { border: 1px solid var(--border) !important; border-radius: 10px !important; background: #fff !important; }
+.lnum           { font-size: 12px !important; border: none !important; width: 22px !important; height: 22px !important; }
+.actors         { font-size: 12.5px !important; font-weight: 500 !important; }
+.act            { font-size: 12.5px !important; }
+.box            { border-radius: 12px !important; }
+.rowlabel       { font-size: 11px !important; }
+.chip           { font-size: 12px !important; border-radius: 8px !important; }
+.tag            { font-size: 11px !important; border-radius: 8px !important; padding: 2px 7px !important; }
+
+/* ── 2. EXCALIDRAW: scoped to .fig ──────────────────────────── */
+
+/* Dot-grid whiteboard container */
+.fig {
+  background: #fdfcf8 !important;
+  background-image: radial-gradient(circle, #c3c0b8 1.3px, transparent 1.3px) !important;
+  background-size: 22px 22px !important;
+  border-radius: 14px !important;
+  padding: 18px !important;
+  margin: 8px 0 18px !important;
+  border: 1.5px solid #dbd8cf !important;
+}
+
+/* Caveat everywhere inside diagrams */
+.fig * { font-family: 'Caveat', cursive !important; }
+
+/* Hand-drawn boxes */
+.fig .box {
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  position: relative !important;
+}
+/* Upgrade inline border to 2px on boxes inside .fig */
+.fig .box[style*="border:2px solid"],
+.fig .box[style*="border: 2px solid"] {
+  /* already 2px from prior script; just ensure radius */
+}
+
+/* Course-map cards inside .fig get the hand-drawn treatment */
+.fig .mcard {
+  border: 2px solid #1a1a1a !important;
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  position: relative !important;
+}
+.fig .mcard::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 3px 2px 2px 3px !important;
+  border: 1.5px solid rgba(26,26,26,0.13) !important;
+  border-radius: 4px 7px 4px 7px / 7px 4px 7px 4px !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+.fig .mcard > * { position: relative !important; z-index: 1 !important; }
+
+.fig .mbadge {
+  font-size: 16px !important; font-weight: 700 !important;
+  border: 2px solid rgba(0,0,0,0.28) !important;
+  width: 28px !important; height: 28px !important;
+}
+.fig .mtitle  { font-size: 19px !important; font-weight: 600 !important; }
+.fig .gancho  { font-size: 16px !important; }
+.fig .theme   { font-size: 15px !important; }
+
+/* Chip colors inside diagrams: stronger stroke */
+.fig .mchip   { font-size: 16px !important; border-radius: 3px 8px 5px 7px / 7px 5px 8px 3px !important; }
+.fig .chip-fin { background: #d5f5e3 !important; color: #0a4f35 !important; border: 2.5px solid #27ae60 !important; }
+.fig .chip-ia  { background: #e8daef !important; color: #4a235a !important; border: 2.5px solid #8e44ad !important; }
+
+/* Ladder rows inside .fig */
+.fig .lrow {
+  border: 2px solid var(--border) !important;
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  background: #fdfcf8 !important;
+}
+.fig .lnum {
+  font-size: 16px !important; font-weight: 700 !important;
+  width: 26px !important; height: 26px !important;
+  border: 2px solid #CECBF6 !important;
+}
+.fig .actors { font-size: 17px !important; font-weight: 700 !important; }
+.fig .act    { font-size: 16px !important; }
+
+/* Tags and chips inside .fig */
+.fig .chip { font-size: 16px !important; border-radius: 2px 7px 4px 6px / 6px 4px 7px 2px !important; }
+.fig .tag  { font-size: 15px !important; border-radius: 2px 7px 4px 6px / 6px 4px 7px 2px !important; padding: 4px 10px !important; }
+
+/* Rowlabel inside .fig */
+.fig .rowlabel { font-size: 15px !important; }
+
+/* Arrow icons inside diagrams: slightly bigger */
+.fig .arrow i { font-size: 22px !important; }
+/* Fix: preserve Tabler icon font inside diagrams */
+.fig i[class*="ti"],
+.fig .ti { font-family: 'tabler-icons' !important; }
+
+/* Stronger box borders inside diagrams for better visibility */
+.fig .box[style*="border:2px solid #"],
+.fig .box[style*="border: 2px solid #"] {
+  box-shadow: 1px 2px 0 rgba(0,0,0,0.08) !important;
+}
+
+/* Remove spurious ::before on plain boxes (keep only on .mcard) */
+.fig .box:not(.mcard)::before { display: none !important; }
+
+
+/* Bar chart labels inside .fig (cotovelo, conta quente) */
+.fig [style*="font-size:13px"] { font-size: 16px !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Aula 2 — Caderno visual de System Design</h1>
+  <nav style="display:flex;gap:8px;margin:2px 0 14px;flex-wrap:wrap;">
+    <a href="aula1-roteiro.html" class="navlink">Aula 1</a>
+    <a href="aula2-roteiro.html" class="navlink active">Aula 2</a>
+    <a href="aula3-roteiro.html" class="navlink">Aula 3</a>
+    <a href="aula8-roteiro.html" class="navlink">Aula 8</a>
+    <a href="topologia-progressiva.html" class="navlink">Topologia</a>
+  </nav>
+  <p class="sub">Fundamentos da Evolução Arquitetural em Fintech · diagramas para desenhar/projetar ao vivo</p>
+  <div class="lead">Continuação do <b>TechPix</b>. Hoje: onde um sistema bem arquitetado ainda racha em escala, e como desacoplar sem parar de operar. O ADR-001 da Aula 1 <b>não é revertido</b> — é complementado.</div>
+
+  <div class="fig">
+    <div class="box" style="background:#fff;border:2px solid var(--border);">
+      <div style="font-size:18px;color:var(--text-secondary);font-weight:500;margin-bottom:8px;">Legenda de termos — consulte sempre que aparecer</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 16px;font-size:18px;color:var(--text-secondary);line-height:1.4;">
+        <div><b style="color:var(--text-primary);">Hot partition</b> — recurso que concentra tráfego e vira gargalo</div>
+        <div><b style="color:var(--text-primary);">Bulkhead</b> — isolar pools de recursos por dependência</div>
+        <div><b style="color:var(--text-primary);">Circuit breaker</b> — para de chamar dependência com falha, falha rápido</div>
+        <div><b style="color:var(--text-primary);">Strangler Fig</b> — migração gradual via fachada de roteamento</div>
+        <div><b style="color:var(--text-primary);">Branch by Abstraction</b> — abstração interna antes de trocar implementação</div>
+        <div><b style="color:var(--text-primary);">Dual write problem</b> — risco de inconsistência ao escrever em 2 lugares</div>
+        <div><b style="color:var(--text-primary);">Outbox</b> — evento gravado na mesma transação do dado de negócio</div>
+        <div><b style="color:var(--text-primary);">CQRS</b> — separar modelo de escrita do modelo de leitura</div>
+        <div><b style="color:var(--text-primary);">Fitness function</b> — verificação automática de propriedade arquitetural</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>1 · Mapa narrativo do curso</h2>
+  <p class="teach">Ensina: o TechPix decolou — e num dia 5 do mês, com o salário de meio Brasil caindo ao mesmo tempo, o sistema racha. Hoje é o dia em que a produção responde ao ADR-001, não revertendo, mas complementando. Este mapa situa a jornada completa do curso: do nascimento modular, passando pelo crescimento doloroso, até o sistema que aprende e evolui com apoio de IA na Aula 8.</p>
+  <p class="lead">O curso tem dois eixos que correm em paralelo. No eixo Fintech, cada aula enfrenta um desafio real do setor regulado — ledger, DICT sob carga, bounded contexts, resiliência. No eixo IA, o mesmo desafio é revisitado sob a perspectiva de como modelos e agentes mudam as ferramentas do arquiteto. A Aula 2 é onde esses dois eixos se tocam pela primeira vez: <em>fitness functions</em> têm exatamente o mesmo formato de <em>evals</em>.</p>
+  <div class="fig">
+    <div class="grid5">
+      <div class="rowlabel" style="font-size:18px;color:var(--text-primary);">A jornada do<br>TechPix →</div>
+      <div class="mcard"><div class="mbadge">1</div><div class="mtitle">Nascimento</div><div class="gancho">"Decisão na fé"</div><div class="theme">Ledger, trade-offs, o papel do arquiteto</div></div>
+      <div class="mcard mactive"><div class="mbadge" style="background:#534AB7;color:#fff;">2</div><div class="mtitle">Crescimento</div><div class="gancho">"O monólito rachou"</div><div class="theme">Evolução e fitness functions</div></div>
+      <div class="mcard"><div class="mbadge">3</div><div class="mtitle">Linguagem</div><div class="gancho">"Palavras são arquitetura"</div><div class="theme">DDD, bounded contexts, SDD</div></div>
+      <div class="mcard mdim"><div class="mbadge" style="background:#B4B2A9;">4–7</div><div class="mtitle" style="color:var(--text-secondary);">Comunicação → operação</div><div class="theme">Outros professores</div></div>
+      <div class="mcard"><div class="mbadge">8</div><div class="mtitle">Evolui sozinho</div><div class="gancho">"Decisão na evidência"</div><div class="theme">IA, agentes, feedback</div></div>
+
+      <div class="rowlabel">Eixo<br>BACEN</div>
+      <div class="mchip chip-fin">Ledger · idempotência · SLA 40s</div>
+      <div class="mchip chip-fin" style="border:2px solid #534AB7;">DICT/SPI sob carga</div>
+      <div class="mchip chip-fin">Contexts · MED · ACL</div>
+      <div class="mchip chip-fin">Eventos, resiliência</div>
+      <div class="mchip chip-fin">Flags · canary · rollback</div>
+
+      <div class="rowlabel">Eixo<br>IA</div>
+      <div class="mchip chip-ia">ADR → spec (SDD)</div>
+      <div class="mchip chip-ia" style="border:2px solid #534AB7;">Fitness = evals</div>
+      <div class="mchip chip-ia">Context engineering</div>
+      <div class="mchip chip-ia">MCP · agentes</div>
+      <div class="mchip chip-ia">Harness · looping · RLHF</div>
+    </div>
+  </div>
+  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">Com o mapa da jornada claro, vamos ao ponto de partida técnico — e ao primeiro mito a desfazer.</p>
+
+  <h2>2 · O monólito modular do TechPix</h2>
+  <p class="teach">Ensina: antes de qualquer diagrama, preciso desfazer um mito — monólito não é vilão. O vilão tem nome: <em>Big Ball of Mud</em>, um sistema onde qualquer módulo pode chamar qualquer tabela e ninguém sabe mais o que depende do quê. Um monólito <em>modular</em>, com fronteiras explícitas, é uma decisão arquitetural legítima — e frequentemente a mais defensável no dia 1.</p>
+  <p class="lead">A regra de ouro — nenhum módulo faz JOIN na tabela de outro — não é decoração de arquitetura. Toda comunicação passa por interface explícita mesmo dentro do mesmo processo, mesmo no mesmo binário. Se essa regra for mantida com rigor, as fronteiras do monólito se tornam um ensaio para as futuras fronteiras de serviço: se o módulo de Cartões nunca acessou diretamente a tabela do Ledger, a futura extração será uma cirurgia limpa. Se acessou, você não tem um monólito modular — tem uma bola de lama com um nome bonito. Martin Fowler chama essa estratégia de <em>monolith first</em>: não é fase intermediária vergonhosa, é a decisão mais defensável enquanto as fronteiras reais do domínio ainda não estão claras.</p>
+  <div class="fig">
+    <div class="box" style="border:2px dashed var(--border);padding:16px;">
+      <div style="font-size:17px;color:var(--text-muted);margin-bottom:10px;text-align:center;">UM ÚNICO DEPLOYABLE</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+        <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:18px;font-weight:500;">Identidade / KYC-PLD</div></div>
+        <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:18px;font-weight:500;">Contas</div></div>
+        <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;font-weight:500;color:#04342C;">Ledger</div></div>
+        <div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;font-weight:500;color:#042C53;">Pagamentos (Pix)</div></div>
+        <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:18px;font-weight:500;">Cartões</div></div>
+        <div class="box" style="background:#FAECE7;border:2px solid #F5C4B3;"><div style="font-size:18px;font-weight:500;color:#4A1B0C;">Antifraude</div></div>
+      </div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;align-items:flex-start;gap:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;">
+      <i class="ti ti-lock" aria-hidden="true" style="margin-top:2px;"></i><span>Regra de ouro: nenhum módulo faz JOIN na tabela de outro. Toda comunicação passa por interface explícita — mesmo dentro do mesmo processo.</span>
+    </div>
+    <div class="box" style="margin-top:8px;background:#F0EEFF;border:2px solid #534AB7;">
+      <span style="font-weight:600;color:#534AB7;">↯ Insight:</span> As fronteiras do monólito modular são, literalmente, um ensaio para as fronteiras de serviço que talvez um dia você precise extrair. Se o módulo de Cartões nunca vazou uma consulta na tabela do Ledger, a cirurgia de extração é limpa — porque a fronteira já existia, só que dentro do mesmo processo.
+    </div>
+  </div>
+  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">Manter a fronteira intacta ao longo do tempo exige mais do que boa vontade — exige mecanismos automáticos de verificação. É o que a arquitetura evolutiva fornece.</p>
+
+  <h2>3 · Loop de fitness function</h2>
+  <p class="teach">Ensina: "comece com o monólito" não significa "pare de pensar em arquitetura depois do dia 1". Arquitetura evolutiva — ideia de Neal Ford, Rebecca Parsons e Patrick Kua — trata a arquitetura como um organismo vivo, que muda continuamente em resposta a volume real, comportamento real dos usuários e mudanças no trilho regulatório. O mecanismo concreto são as <em>fitness functions</em>: verificações objetivas e automatizadas de propriedades arquiteturais que importam — deploy só passa se elas forem respeitadas.</p>
+  <p class="lead">Uma fitness function atômica testa uma coisa isolada — "o p99 do caminho de escrita do Pix é menor que X ms?" — e roda a cada pull request, quebrando o build se a propriedade for violada. Uma fitness function holística testa a interação entre várias características ao mesmo tempo: um game day que simula o pico do dia 5 antes que ele aconteça de verdade. Disparadas no CI, contínuas em produção — juntas, elas transformam regras de arquitetura de acordos de cavalheiros em checagens automáticas que ninguém consegue burlar distraidamente sob pressão de prazo.</p>
+  <div class="fig">
+    <div style="display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;">
+      <div class="box" style="flex:1;min-width:130px;background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:18px;color:var(--text-secondary);">1</div><div style="font-size:16px;font-weight:500;">Proposta de mudança</div><div style="font-size:17px;color:var(--text-secondary);">PR ou deploy</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;min-width:130px;background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#534AB7;">2</div><div style="font-size:16px;font-weight:500;color:#26215C;">Fitness function</div><div style="font-size:17px;color:#534AB7;">atômica/holística · CI/contínua</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;min-width:130px;background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;">3</div><div style="font-size:16px;font-weight:500;">Gate</div><div style="font-size:17px;color:#412402;">passa ou barra</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;min-width:130px;background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#0F6E56;">4</div><div style="font-size:16px;font-weight:500;color:#04342C;">Produção</div><div style="font-size:17px;color:#0F6E56;">monitor contínuo</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;align-items:flex-start;gap:8px;background:#fff;border:2px solid var(--border);font-size:18px;">
+      <i class="ti ti-bulb" aria-hidden="true" style="margin-top:2px;color:#534AB7;"></i><span>Mesmo formato de um <b>eval</b> que barra a proposta de um agente de IA — o Harness (Aula 8) já está nascendo aqui.</span>
+    </div>
+    <div class="box" style="margin-top:8px;background:#F0EEFF;border:2px solid #534AB7;">
+      <span style="font-weight:600;color:#534AB7;">↯ Insight:</span> Uma fitness function que trava um deploy porque uma característica não está sendo respeitada tem exatamente o mesmo formato de um eval que trava a proposta de um agente de IA. Você, hoje, está construindo o esqueleto do Harness da Aula 8.
+    </div>
+  </div>
+  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">Com o mecanismo de governança no lugar, chegou a hora de entender a matemática do que acontece quando a escala aperta — e por que a intuição linear falha tão feio.</p>
+
+  <h2>4 · A curva do cotovelo <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(por que triplicar o tráfego não triplica a lentidão)</span></h2>
+  <p class="teach">Ensina: por que o tráfego triplicou e o sistema não ficou três vezes mais lento — ficou muito, muito pior? Isso não é bug misterioso: é matemática, e é a mais útil que eu vou ensinar neste curso. A relação espera &prop; &rho;/(1&minus;&rho;) gera uma curva com formato de cotovelo — quase plana até 70%, depois sobe verticalmente. Entre 80% e 95% de utilização a espera quintuplica; a intuição linear falha feio. Regra operacional: nunca dimensionar sistema financeiro para operar acima de 70% no pico.</p>
+  <p class="lead">Coloquem números nessa fórmula, porque é aqui que a turma sente. Um sistema rodando a 30% de utilização pode absorber o triplo do tráfego e ficar em 90% — e a experiência do usuário não piora três vezes, piora <strong>nove vezes</strong>. Foi exatamente isso que aconteceu no dia 5: aquela folga de utilização que parecia desperdício de dinheiro era, literalmente, o que separava "lento" de "fora do ar". Quando alguém na sua empresa disser "esses servidores estão a 40%, dá para cortar metade", você agora tem a tabela para responder.</p>
+  <div class="fig">
+    <div style="display:flex;align-items:flex-end;gap:6px;height:150px;">
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;"><div style="background:#9FE1CB;width:100%;height:6px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:var(--text-secondary);">50%<br><b>1,0</b></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;"><div style="background:#9FE1CB;width:100%;height:14px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:var(--text-secondary);">70%<br><b>2,3</b></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;"><div style="background:#FAC775;width:100%;height:24px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:#412402;">80%<br><b>4,0</b></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;"><div style="background:#EF9F27;width:100%;height:54px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:#412402;">90%<br><b>9,0</b></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;"><div style="background:#E24B4A;width:100%;height:100px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:#501313;">95%<br><b>19</b></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;"><div style="background:#A32D2D;width:100%;height:130px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:#501313;">99%<br><b>99</b></div></div>
+    </div>
+    <div style="font-size:17px;color:var(--text-muted);text-align:center;margin-top:4px;">utiliza&ccedil;&atilde;o (&rho;) &rarr; fator de espera &rho;/(1&minus;&rho;)</div>
+    <div class="box" style="margin-top:10px;background:#FCEBEB;border:2px solid #F7C1C1;font-size:18px;color:#501313;">
+      <b>O encadeamento do dia 5:</b> tr&aacute;fego 3&times; &rarr; utiliza&ccedil;&atilde;o 30%&rarr;90% &rarr; W explode (0,4&rarr;9) &rarr; L explode (45&rarr;450 conex&otilde;es) &rarr; pool de 100 esgota &rarr; timeout &rarr; <b>retry</b> &rarr; volta ao in&iacute;cio, pior. Isso &eacute; <b>retry storm</b>: o sistema se atacando.
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">
+      <div class="box" style="background:#EAF3DE;border:2px solid #C0DD97;font-size:17px;color:#173404;"><b>Backoff + jitter</b> &mdash; sem jitter, mil clientes retentam no mesmo instante e voc&ecirc; sincroniza as tempestades.</div>
+      <div class="box" style="background:#EAF3DE;border:2px solid #C0DD97;font-size:17px;color:#173404;"><b>Retry budget</b> &mdash; acima de ~10% do tr&aacute;fego, pare de retentar. Existe ponto em que insistir &eacute; pior que desistir.</div>
+      <div class="box" style="background:#EAF3DE;border:2px solid #C0DD97;font-size:17px;color:#173404;"><b>Load shedding</b> &mdash; recusar tr&aacute;fego mant&eacute;m a utiliza&ccedil;&atilde;o abaixo do cotovelo. Recusar protege.</div>
+    </div>
+    <div class="box" style="margin-top:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;">
+      A idempot&ecirc;ncia da Aula 1 protegeu a <b>corre&ccedil;&atilde;o</b> (1 d&eacute;bito), n&atilde;o a <b>disponibilidade</b> (3&times; recurso consumido). S&atilde;o dois problemas diferentes.
+    </div>
+    <div class="box" style="margin-top:8px;background:#F0EEFF;border:2px solid #534AB7;">
+      <span style="font-weight:600;color:#534AB7;">↯ Insight:</span> <strong>Nunca dimensionem um sistema financeiro para operar acima de 70% no pico.</strong> Aquela folga que parece desperdício de dinheiro é o que separa "lento" de "fora do ar". Entre 80% e 95% de utilização, a espera quintuplica — a intuição linear não serve aqui.
+    </div>
+  </div>
+  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">A curva do cotovelo explica <em>como</em> o sistema colapsa. Antes de correr para o particionamento como solução, vale fazer a conta que a maioria dos times esquece.</p>
+
+  <h2>5 · A conta quente <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(por que 8 parti&ccedil;&otilde;es n&atilde;o d&atilde;o 8&times; de capacidade)</span></h2>
+  <p class="teach">Ensina: antes de escrever o ADR, preciso fazer uma conta que a maioria dos times esquece — e que evita uma decepção caríssima. A promessa intuitiva do particionamento é linear: 8 partições = 8&times; mais capacidade. Isso só é verdade se o tráfego se distribuir uniformemente — e tráfego financeiro real quase nunca é uniforme. O ganho é limitado pela partição mais quente — Lei de Amdahl aplicada a dados. Antes de particionar, meça a distribuição real das suas chaves.</p>
+  <p class="lead">No cenário realista do TechPix: você particiona por <code style="font-family:monospace;background:#f0eee6;padding:1px 5px;border-radius:4px;">hash(conta_id)</code> em 8 partições. Mas há uma conta de marketplace que concentra 15% de todo o volume de recebimento — coisa comum em qualquer PSP que atenda um grande vendedor. Sete partições ficam com ~12% cada; a do marketplace absorve ~27%. Aplique a curva do cotovelo: se o sistema está a 60% de utilização média, essa partição específica está perto de 100% — e ela sozinha está no colapso. O sistema tem 8 partições e 1 gargalo. A Lei de Amdahl é implacável: 100 partições não resolvem uma conta que é inerentemente quente.</p>
+  <div class="fig">
+    <div style="display:flex;align-items:flex-end;gap:5px;height:110px;">
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;"><div style="background:#9FE1CB;width:100%;height:34px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:var(--text-secondary);">P1<br>12%</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;"><div style="background:#9FE1CB;width:100%;height:34px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:var(--text-secondary);">P2<br>12%</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;"><div style="background:#9FE1CB;width:100%;height:34px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:var(--text-secondary);">P3<br>12%</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;"><div style="background:#E24B4A;width:100%;height:78px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:#501313;"><b>P4</b><br><b>27%</b></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;"><div style="background:#9FE1CB;width:100%;height:34px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:var(--text-secondary);">P5<br>12%</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;"><div style="background:#9FE1CB;width:100%;height:34px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:var(--text-secondary);">P6<br>12%</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;"><div style="background:#9FE1CB;width:100%;height:34px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:var(--text-secondary);">P7<br>12%</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;"><div style="background:#9FE1CB;width:100%;height:34px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:var(--text-secondary);">P8<br>12%</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;background:#FCEBEB;border:2px solid #F7C1C1;font-size:18px;color:#501313;">
+      Uma conta de marketplace com 15% do volume cai na P4. Sistema a <b>60% de utiliza&ccedil;&atilde;o m&eacute;dia</b>, mas a P4 est&aacute; perto de <b>100%</b>. S&atilde;o 8 parti&ccedil;&otilde;es &mdash; e 1 gargalo.
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-secondary);"><b style="color:var(--text-primary);">Sub-particionar</b> &mdash; N baldes somados na leitura. Escrita r&aacute;pida, leitura mais caras.</div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-secondary);"><b style="color:var(--text-primary);">Agregar antes de escrever</b> &mdash; janela de 1s. Menos escritas, granularidade menor.</div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-secondary);"><b style="color:var(--text-primary);">Isolar</b> &mdash; parti&ccedil;&atilde;o dedicada. Bulkhead aplicado a dados.</div>
+    </div>
+  </div>
+  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">Conhecer os padrões é metade do caminho — a outra metade é saber quais ferramentas de indústria os implementam.</p>
+
+  <h2>6 · As ferramentas reais — nomes, não conceitos</h2>
+  <p class="teach">Ensina: tudo que discutimos tem implementação de indústria. Saber os nomes é o que transforma "eu entendi o conceito" em "eu sei o que pesquisar na segunda-feira". Para cada padrão desta aula existe uma ferramenta que o materializa — e geralmente mais de uma, com trade-offs reais entre elas.</p>
+  <p class="lead">Cada categoria aqui corresponde a um padrão desta aula: fitness functions de arquitetura (ArchUnit e equivalentes), resiliência a dependências externas (Resilience4j / Envoy), publicação confiável de eventos (Debezium), broker distribuído (Kafka / RabbitMQ), feature flags para migração gradual (Unleash) e teste de sobrevivência (k6 com teste de degrau). Conhecer a ferramenta certa — e saber quando <em>não</em> usá-la — é o que transforma o arquiteto de quem entende o diagrama em quem consegue executá-lo.</p>
+  <div class="fig">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;">
+      <div class="box" style="background:#fff;border:2px solid var(--border);">
+        <div style="font-size:16px;font-weight:500;">ArchUnit</div>
+        <div style="font-size:17px;color:var(--text-secondary);margin-top:5px;line-height:1.45;">Java/Kotlin — fitness function de dependência como teste de unidade; quebra o build se o módulo <b>cartoes</b> importar de <b>ledger.internal</b>.</div>
+        <div style="margin-top:7px;font-size:17px;color:var(--text-muted);">Equivalentes: import-linter (Python) · dependency-cruiser (JS/TS) · go-arch-lint (Go)</div>
+      </div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);">
+        <div style="font-size:16px;font-weight:500;">Resilience4j</div>
+        <div style="font-size:17px;color:var(--text-secondary);margin-top:5px;line-height:1.45;">Java, padrão atual (sucessor do Hystrix) — circuit breaker + bulkhead + rate limiter + retry com backoff em uma biblioteca.</div>
+        <div style="margin-top:7px;font-size:17px;color:var(--text-secondary);line-height:1.4;"><b style="color:var(--text-primary);">Envoy</b> — circuit breaking na camada de rede, sem tocar no código. <span style="color:var(--text-muted);">Trade-off: biblioteca conhece semântica do domínio; malha é transparente mas genérica.</span></div>
+      </div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);">
+        <div style="font-size:16px;font-weight:500;">Debezium</div>
+        <div style="font-size:17px;color:var(--text-secondary);margin-top:5px;line-height:1.45;">Implementação de referência de CDC — lê o WAL do Postgres e publica mudanças como evento, sem consultar tabela.</div>
+        <div style="margin-top:7px;font-size:17px;color:var(--text-secondary);line-height:1.4;"><b style="color:var(--text-primary);">Alternativa:</b> poller (mais simples). <span style="color:var(--text-muted);">Comece com poller; migre para CDC quando latência ou carga virarem problema medido.</span></div>
+      </div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);">
+        <div style="font-size:16px;font-weight:500;">Kafka</div>
+        <div style="font-size:17px;color:var(--text-secondary);margin-top:5px;line-height:1.45;">Log distribuído — retenção + reprocessamento; combina naturalmente com o ledger append-only.</div>
+        <div style="margin-top:7px;font-size:17px;color:var(--text-secondary);line-height:1.4;"><b style="color:var(--text-primary);">RabbitMQ / SQS</b> — filas tradicionais, mais simples operacionalmente. <span style="color:var(--text-muted);">Escolha real: retenção e reprocessamento vs. simplicidade operacional.</span></div>
+      </div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);">
+        <div style="font-size:16px;font-weight:500;">Unleash</div>
+        <div style="font-size:17px;color:var(--text-secondary);margin-top:5px;line-height:1.45;">Open source madura para feature flags. <b style="color:var(--text-primary);">LaunchDarkly</b> — opção comercial.</div>
+        <div style="margin-top:7px;background:#FAEEDA;border-radius:6px;padding:7px 9px;font-size:17px;color:#412402;line-height:1.4;">Começar com sistema próprio é tentador e subestimado — o difícil não é o <b>if</b>, é a propagação de mudança em segundos para centenas de instâncias com auditoria.</div>
+      </div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);">
+        <div style="font-size:16px;font-weight:500;">k6</div>
+        <div style="font-size:17px;color:var(--text-secondary);margin-top:5px;line-height:1.45;">Script JS, roda em CI. Alternativas: <b style="color:var(--text-primary);">Gatling</b>, <b style="color:var(--text-primary);">JMeter</b>.</div>
+        <div style="margin-top:7px;background:#FCEBEB;border-radius:6px;padding:7px 9px;font-size:17px;color:#501313;line-height:1.4;"><b>Teste de degrau:</b> salta de 30% para 300% instantaneamente — expõe comportamento do pool, autoscaling lento e retry storm. Teste suave mede <em>capacidade</em>; teste de degrau mede <em>sobrevivência</em>.</div>
+      </div>
+    </div>
+  </div>
+  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">Com as ferramentas no radar, voltamos ao incidente para ver exatamente onde, anatomicamente, o TechPix quebrou.</p>
+
+  <h2>7 · Anatomia da fratura <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(diagrama-estrela da aula)</span></h2>
+  <p class="teach">Ensina: o dia 5 não foi um mistério — foi a soma de dois pontos de fratura previsíveis. Nenhum deles invalida o ADR-001. O problema não é a decisão de consistência forte; é a implementação ingênua que concentra contenção onde não precisava. Saber nomear e separar os dois pontos é o que permite corrigir cirurgicamente, sem desfazer o que foi bem decidido.</p>
+  <p class="lead">Com a matemática da curva de filas na mão, abre-se o capô. São dois pontos de fratura — e os dois já estavam plantados desde a Aula 1. Eu até avisei: "racha na Aula 2: ledger e DICT síncrono." Chegou a hora. O hotspot no ledger não significa que o ADR-001 estava errado; significa que a implementação de consistência forte foi feita de forma ingênua, concentrando toda a contenção num único lock onde não precisava. E o DICT síncrono não é o problema em si — é o pool compartilhado que deixa essa dependência lenta contaminar operações que não têm nada a ver com ela.</p>
+  <div class="fig">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;">
+        <div style="font-size:16px;color:#501313;font-weight:500;margin-bottom:6px;">A · Hotspot no ledger</div>
+        <div style="font-size:18px;color:#791F1F;line-height:1.5;">Muitas escritas na mesma conta de liquidação → competem pelo mesmo lock → fila cresce → orçamento de latência comido pelo próprio sistema.</div>
+      </div>
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;">
+        <div style="font-size:16px;color:#501313;font-weight:500;margin-bottom:6px;">B · DICT síncrono + pool esgotado</div>
+        <div style="font-size:18px;color:#791F1F;line-height:1.5;">Chamada ao DICT segura thread/conexão → sob pico, esgota o pool → falha em cascata contamina partes sem relação com o DICT.</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="chip" style="background:#EAF3DE;color:#173404;">Defesa: bulkhead — isolar pools por dependência</span>
+      <span class="chip" style="background:#EAF3DE;color:#173404;">Defesa: circuit breaker — falhar rápido</span>
+      <span class="chip" style="background:#EAF3DE;color:#173404;">Defesa: timeout calibrado ao p99 real</span>
+    </div>
+    <div class="box" style="margin-top:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;">
+      O ADR-001 continua certo: o ledger precisa de consistência forte. O que muda é <b>como</b> ele particiona o trabalho.
+    </div>
+  </div>
+  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">Sabemos onde dói. Agora vamos falar de como tratar — sem criar, no processo, um incidente pior que o primeiro.</p>
+
+  <h2>8 · Strangler Fig</h2>
+  <p class="teach">Ensina: depois de um susto como o do dia 5, a tentação é reescrever tudo do zero em microsserviços — e isso quase sempre piora as coisas. O Strangler Fig é a estratégia inversa: migração incremental e reversível, colocando uma fachada de roteamento na frente do monólito e desviando o tráfego gradualmente para o novo componente, até que o antigo possa ser desligado sem drama. Nenhum big bang, nenhum rollout de alto risco.</p>
+  <p class="lead">A imagem da figueira estranguladora — uma planta que cresce em volta de uma árvore hospedeira até substituí-la completamente — é de Martin Fowler, e é precisa: o novo componente cresce em paralelo ao antigo, sem substituição abrupta. No TechPix, a estratégia seria colocar uma fachada na frente do módulo de Pagamentos e migrar gradualmente a lógica de resolução de chave para um componente isolado, com seu próprio pool de conexões dedicado, sem arrastar o resto do sistema quando ficasse sobrecarregado.</p>
+  <div class="fig">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <div class="box" style="flex:1;min-width:150px;background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:16px;font-weight:500;">Cliente</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;min-width:150px;background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:16px;font-weight:500;color:#26215C;">Fachada / roteador</div><div style="font-size:17px;color:#534AB7;">decide % de tráfego</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex:1.4;min-width:170px;">
+        <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:8px;"><div style="font-size:18px;color:var(--text-secondary);">↳ monólito (antigo)</div></div>
+        <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;padding:8px;"><div style="font-size:18px;color:#04342C;">↳ novo componente isolado</div></div>
+      </div>
+    </div>
+    <div class="box" style="margin-top:8px;background:#fff;border:2px solid var(--border);font-size:18px;color:var(--text-secondary);">
+      Aos poucos, mais tráfego migra para o novo componente — até o monólito, naquele pedaço, poder ser desligado sem drama.
+    </div>
+  </div>
+  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">O Strangler Fig funciona quando existe um ponto de entrada único para redirecionar o tráfego. Mas e quando a lógica está espalhada demais para um corte limpo?</p>
+
+  <h2>9 · Branch by Abstraction</h2>
+  <p class="teach">Ensina: quando a lógica está espalhada demais para um corte limpo de fachada, não existe um único ponto de entrada para redirecionar. Para esses casos existe uma tática mais cirúrgica: inserir uma camada de abstração <em>dentro</em> do monólito primeiro, migrar todos os chamadores para ela, e só então trocar o que está atrás. O "quem chama" fica completamente desacoplado do "quem implementa" — a troca de implementação vira detalhe interno invisível para o resto do sistema.</p>
+  <p class="lead">Às vezes um corte limpo por fachada não é possível — a lógica está espalhada demais, ou seria necessário um corte coordenado em dezenas de lugares ao mesmo tempo. Para esses casos existe o Branch by Abstraction: uma interface inserida dentro do próprio monólito, por trás da qual a implementação antiga continua rodando enquanto todos os chamadores migram para ela. Só depois, com a abstração já no lugar, você troca o que está atrás — seja por uma nova implementação interna, seja por uma chamada para um serviço externo. Os callers não sabem e não precisam saber.</p>
+  <div class="fig">
+    <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;margin-bottom:8px;">
+      <div style="font-size:16px;color:#501313;font-weight:500;margin-bottom:8px;">Situação — lógica espalhada, sem ponto de corte limpo</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="box" style="background:#fff;border:2px solid #F7C1C1;font-size:18px;padding:6px 12px;color:#791F1F;">Chamador A</div>
+          <div class="box" style="background:#fff;border:2px solid #F7C1C1;font-size:18px;padding:6px 12px;color:#791F1F;">Chamador B</div>
+          <div class="box" style="background:#fff;border:2px solid #F7C1C1;font-size:18px;padding:6px 12px;color:#791F1F;">Chamador C</div>
+        </div>
+        <div class="arrow"><i class="ti ti-arrows-right" aria-hidden="true"></i></div>
+        <div class="box" style="background:#FCEBEB;border:2px solid #E24B4A;font-size:18px;color:#791F1F;padding:12px 16px;font-weight:500;text-align:center;">Implementação<br>Concreta</div>
+      </div>
+    </div>
+    <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;margin-bottom:8px;">
+      <div style="font-size:16px;color:#412402;font-weight:500;margin-bottom:8px;">Passo 1 — inserir a abstração: todos os chamadores migram para a interface (implementação antiga segue rodando)</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="box" style="background:#fff;border:2px solid #FAC775;font-size:18px;padding:6px 12px;">Chamador A</div>
+          <div class="box" style="background:#fff;border:2px solid #FAC775;font-size:18px;padding:6px 12px;">Chamador B</div>
+          <div class="box" style="background:#fff;border:2px solid #FAC775;font-size:18px;padding:6px 12px;">Chamador C</div>
+        </div>
+        <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+        <div class="box" style="background:#EEEDFE;border:2px solid #534AB7;font-size:18px;color:#26215C;padding:12px 16px;font-weight:500;text-align:center;">«interface»<br>Abstração</div>
+        <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+        <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;font-size:18px;padding:12px 16px;text-align:center;">Impl. Antiga<br><span style="font-size:17px;color:var(--text-muted);">(segue rodando)</span></div>
+      </div>
+    </div>
+    <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;margin-bottom:8px;">
+      <div style="font-size:16px;color:#04342C;font-weight:500;margin-bottom:8px;">Passo 2 — trocar o que está atrás da abstração: callers não mudam nada — a troca é detalhe interno</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="box" style="background:#fff;border:2px solid #9FE1CB;font-size:18px;padding:6px 12px;">Chamador A</div>
+          <div class="box" style="background:#fff;border:2px solid #9FE1CB;font-size:18px;padding:6px 12px;">Chamador B</div>
+          <div class="box" style="background:#fff;border:2px solid #9FE1CB;font-size:18px;padding:6px 12px;">Chamador C</div>
+        </div>
+        <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+        <div class="box" style="background:#EEEDFE;border:2px solid #534AB7;font-size:18px;color:#26215C;padding:12px 16px;font-weight:500;text-align:center;">«interface»<br>Abstração</div>
+        <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+        <div class="box" style="background:#E1F5EE;border:2px solid #0F6E56;font-size:18px;color:#04342C;padding:12px 16px;font-weight:500;text-align:center;">Novo Serviço<br><span style="font-size:17px;color:#0F6E56;">✓ migrado</span></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;font-size:17px;color:var(--text-secondary);line-height:1.45;">
+        <b style="color:var(--text-primary);">Strangler Fig</b> — fachada de roteamento <em>externa</em>; funciona quando existe um ponto de entrada único para redirecionar o tráfego.
+      </div>
+      <div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;font-size:17px;color:#26215C;line-height:1.45;">
+        <b>Branch by Abstraction</b> — interface <em>interna</em> ao monólito; funciona quando a lógica está espalhada e não há ponto de entrada único.
+      </div>
+    </div>
+  </div>
+  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">Com o desacoplamento no lugar — seja por fachada ou por abstração — surge o problema mais sutil da aula: como gravar e notificar de forma confiável ao mesmo tempo.</p>
+
+  <h2>10 · Outbox pattern + CQRS materializado</h2>
+  <p class="teach">Ensina: o <em>dual write problem</em> é um dos jeitos mais silenciosos de um sistema ficar inconsistente — gravar no banco e publicar num broker como duas operações separadas abre uma janela de falha real. O Outbox resolve gravando dado e evento na <em>mesma</em> transação ACID; um relay publica de forma assíncrona depois. É a mesma ideia do ledger da Aula 1 — log append-only como fonte da verdade — reaplicada numa nova camada do sistema.</p>
+  <p class="lead">Aqui está o ponto mais sutil e, para mim, o mais bonito desta aula: o problema da escrita dupla. O que acontece quando o TechPix precisa, na mesma operação, gravar um lançamento no ledger <em>e</em> avisar o resto do sistema que aquilo aconteceu — para atualizar o extrato, disparar uma notificação, alimentar o feed? Se as duas escritas forem operações separadas, existe uma janela de falha real: o sistema pode gravar no banco e cair exatamente antes de publicar o evento. O lançamento existe; ninguém jamais soube. Semanas depois, o extrato de alguém estará errado — e ninguém vai saber dizer quando e por quê.</p>
+  <div class="fig">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <div class="box" style="flex:1.3;min-width:220px;background:#E1F5EE;border:2px solid #9FE1CB;">
+        <div style="font-size:16px;color:#04342C;font-weight:500;">1 transação atômica</div>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px;">
+          <div style="background:#fff;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:5px 8px;font-size:18px;">grava lançamento no ledger</div>
+          <div style="background:#fff;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:5px 8px;font-size:18px;">grava evento na tabela outbox</div>
+        </div>
+      </div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;min-width:150px;background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:16px;color:#26215C;font-weight:500;">Relay</div><div style="font-size:17px;color:#534AB7;">publica assíncrono</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;min-width:150px;background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;">extrato · feed · notificação</div><div style="font-size:17px;color:#185FA5;">read model, eventual</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;background:#fff;border:2px solid var(--border);font-size:18px;color:var(--text-secondary);">
+      Escrita continua forte e síncrona (ADR-001 intacto). Leitura escala independente, alimentada pelo outbox.
+    </div>
+    <div class="box" style="margin-top:8px;background:#F0EEFF;border:2px solid #534AB7;">
+      <span style="font-weight:600;color:#534AB7;">↯ Insight:</span> A tabela de Outbox é, estruturalmente, a mesma ideia do ledger da Aula 1 — um log append-only que registra fatos, um por um, sem sobrescrever. Você não está aprendendo um padrão novo; está reaplicando o mesmo princípio numa nova camada do sistema.
+    </div>
+    <div class="box" style="margin-top:8px;background:#E6F1FB;border:2px solid #B5D4F4;font-size:17px;color:#042C53;">
+      <strong>Isso fecha o círculo aberto na Aula 1:</strong> write model e read model são coisas diferentes. Com o Outbox publicando eventos de forma confiável, o caminho de escrita continua sendo o ledger — forte, síncrono, protegido pelo ADR-001. O caminho de leitura — extrato, saldo exibido, feed — é alimentado pelos eventos, em base otimizada para consulta, escalando de forma completamente independente.
+    </div>
+  </div>
+  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">Com esses padrões consolidados, chegou a hora de registrar formalmente a decisão — não para arquivar, mas para que o raciocínio e os trade-offs fiquem explícitos para o time.</p>
+
+  <h2>11 · ADR-002</h2>
+  <p class="teach">Ensina: um bom ADR não descreve só o que foi decidido — descreve o raciocínio, as alternativas rejeitadas e os trade-offs aceitos de olhos abertos. Um ADR sem consequências negativas não é uma decisão honesta; é uma venda. A decisão de hoje complementa a Aula 1, não a reverte, e deixa propositalmente uma porta aberta para revisão futura quando a evidência de produção chegar.</p>
+  <p class="lead">O ADR-002 aceita a consistência eventual no extrato — 100 a 300 ms de atraso — como consequência conhecida e mensurável, em troca de escala independente de escrita e leitura. O ADR-001 fica intacto: o ledger continua ACID e fortemente consistente no núcleo. A linha "Revisão em aberto" é deixada de propósito: se a contenção no ponto quente do ledger persistir mesmo após o Outbox separar leitura de escrita, o próximo passo é reparticionar a própria escrita — candidato a ADR-003.</p>
+  <div class="fig">
+    <div class="box" style="background:#fff;border:2px solid var(--border);padding:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="font-size:18px;font-weight:500;">ADR-002 · Outbox + CQRS para o caminho de leitura</div>
+        <div style="background:#E1F5EE;color:#04342C;font-size:17px;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:3px 9px;white-space:nowrap;">aceito</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div><span style="font-size:17px;color:var(--text-secondary);">contexto</span><div style="font-size:16px;line-height:1.5;">Incidente do dia 5: leitura competia com escrita pelo mesmo recurso. ADR-001 permanece válido.</div></div>
+        <div><span style="font-size:17px;color:var(--text-secondary);">decisão</span><div style="font-size:16px;line-height:1.5;">Outbox na mesma transação do ledger; relay publica eventos; leitura alimentada de forma assíncrona.</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:18px;background:#EAF3DE;color:#173404;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:3px 9px;">+ escrita e leitura escalam separado</span>
+          <span style="font-size:18px;background:#FAECE7;color:#4A1B0C;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:3px 9px;">− extrato com atraso eventual</span>
+        </div>
+      </div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;align-items:flex-start;gap:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;">
+      <i class="ti ti-arrow-ramp-right-2" aria-hidden="true" style="margin-top:2px;"></i><span><b>Revisão em aberto:</b> se a contenção do ledger persistir, o próximo passo é reparticionar a própria escrita — candidato a ADR-003.</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =============================================
+   TECH ICONS — auto-injection inside .fig boxes
+   Uses Simple Icons CDN + letter-badge fallback
+   ============================================= */
+(function () {
+  var SI = 'https://cdn.simpleicons.org/';
+
+  /* ── Icon map ────────────────────────────────────────────────
+     img: Simple Icons slug + brand color (hex, no #)
+     letter: fallback badge letter  bg: badge bg color
+  ───────────────────────────────────────────────────────────── */
+  var ICONS = {
+    // ── Databases ─────────────────────────────────────────────
+    'PostgreSQL':    { img: SI+'postgresql/336791' },
+    'MySQL':         { img: SI+'mysql/4479A1' },
+    'InnoDB':        { img: SI+'mysql/4479A1' },
+    'CockroachDB':   { img: SI+'cockroachdb/6933FF' },
+    'TiDB':          { img: SI+'pingcap/CC0000' },
+    'YugabyteDB':    { letter:'Y', bg:'#3D3D4F' },
+    'Yugabyte':      { letter:'Y', bg:'#3D3D4F' },
+    'Spanner':       { img: SI+'googlecloud/4285F4' },
+    'DynamoDB':      { img: SI+'amazondynamodb/4053D6' },
+    'Vitess':        { letter:'V', bg:'#F10737' },
+    // ── Cache ─────────────────────────────────────────────────
+    'Redis':         { img: SI+'redis/DC382D' },
+    'Cache':         { img: SI+'redis/DC382D' },
+    // ── Messaging / Streaming ─────────────────────────────────
+    'Kafka':         { img: SI+'apachekafka/231F20' },
+    'Broker':        { img: SI+'apachekafka/231F20' },
+    // ── CDC ───────────────────────────────────────────────────
+    'Debezium':      { letter:'D', bg:'#FF4040' },
+    // ── Connection pooling ────────────────────────────────────
+    'PgBouncer':     { img: SI+'postgresql/336791' },
+    'Pooler':        { img: SI+'postgresql/8B5E3C' },
+    // ── Testing ───────────────────────────────────────────────
+    'k6':            { img: SI+'k6/7D64FF' },
+    // ── Feature flags ─────────────────────────────────────────
+    'Unleash':       { img: SI+'unleash/1A4A52' },
+    // ── Resilience ────────────────────────────────────────────
+    'Resilience4j':  { letter:'R4', bg:'#27ae60' },
+    // ── Architecture testing ──────────────────────────────────
+    'ArchUnit':      { letter:'A', bg:'#e67e22' },
+    // ── Proxy / Service Mesh ──────────────────────────────────
+    'Envoy':         { img: SI+'envoy/AC6199' },
+    // ── Version control ───────────────────────────────────────
+    'GitHub':        { img: SI+'github/181717' },
+    // ── Containers ────────────────────────────────────────────
+    'Docker':        { img: SI+'docker/2496ED' },
+    'Kubernetes':    { img: SI+'kubernetes/326CE5' },
+    // ── Cloud ─────────────────────────────────────────────────
+    'AWS':           { img: SI+'amazonaws/FF9900' },
+    'GCP':           { img: SI+'googlecloud/4285F4' },
+    // ── Load balancers / WAF ──────────────────────────────────
+    'Cloudflare':    { img: SI+'cloudflare/F38020' },
+  };
+
+  /* Sort by key length desc so longer matches win
+     (e.g. "CockroachDB" beats "Cockroach") */
+  var SORTED = Object.keys(ICONS).sort(function(a,b){ return b.length - a.length; });
+
+  function makeIcon(data) {
+    if (data.img) {
+      var img = document.createElement('img');
+      img.src = data.img;
+      img.width = 22; img.height = 22;
+      img.alt = '';
+      img.style.cssText =
+        'vertical-align:middle;margin-right:7px;border-radius:3px;' +
+        'flex-shrink:0;display:inline-block;';
+      img.onerror = function(){ this.style.display='none'; };
+      return img;
+    }
+    if (data.letter) {
+      var span = document.createElement('span');
+      span.textContent = data.letter;
+      span.style.cssText =
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'width:22px;height:22px;min-width:22px;' +
+        'background:' + data.bg + ';color:#fff;' +
+        'border-radius:4px;font-size:11px;font-weight:700;' +
+        'margin-right:7px;vertical-align:middle;flex-shrink:0;' +
+        'font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+      return span;
+    }
+    return null;
+  }
+
+  function injectInto(el) {
+    if (!el || el._ti) return;   // already processed
+    var text = el.textContent.trim();
+    for (var i = 0; i < SORTED.length; i++) {
+      var tech = SORTED[i];
+      /* Match at word-boundary start (avoid "MySQL" matching inside words) */
+      if (text === tech ||
+          text.startsWith(tech + ' ') ||
+          text.startsWith(tech + '/') ||
+          text.startsWith(tech + ',') ||
+          text.startsWith(tech + ':') ||
+          text.startsWith(tech + ' —') ||
+          (text.indexOf(tech) === 0)) {
+        var icon = makeIcon(ICONS[tech]);
+        if (icon) {
+          /* Wrap text in a flex row */
+          el.style.display = 'flex';
+          el.style.alignItems = 'center';
+          el.style.flexWrap = 'nowrap';
+          el.insertBefore(icon, el.firstChild);
+          el._ti = true;
+        }
+        return;
+      }
+    }
+  }
+
+  function run() {
+    /* ── Aulas 1–8: .fig .box > first div child with font-weight ── */
+    document.querySelectorAll(
+      '.fig .box > div:first-child, ' +
+      '.fig .box > [style*="font-weight:500"]:first-child, ' +
+      '.fig .box > [style*="font-weight: 500"]:first-child'
+    ).forEach(injectInto);
+
+    /* ── Topologia: .t class titles ──────────────────────────── */
+    document.querySelectorAll('.fig .box .t, .fig .t').forEach(injectInto);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+})();
+</script>
+
+</body>
+</html>

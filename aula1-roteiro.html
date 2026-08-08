@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aula 1 — Caderno visual de System Design</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+<style>
+:root{
+  --surface-0:#F0EEE6; --surface-1:#ffffff;
+  --text-primary:#1f1e1c; --text-secondary:#5F5E5A; --text-muted:#8a897f;
+  --border:#E4E1D8;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:var(--font-sans);line-height:1.6;}
+.wrap{max-width:920px;margin:0 auto;padding:44px 24px 90px;}
+h1{font-size:36px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em;}
+.sub{color:var(--text-muted);font-size:17px;margin:0 0 18px;}
+h2{font-size:26px;font-weight:600;margin:40px 0 4px;border-top:1px solid var(--border);padding-top:26px;}
+.teach{color:var(--text-secondary);font-size:18px;margin:4px 0 14px;}
+.lead{color:var(--text-secondary);font-size:18px;background:var(--surface-1);border:2px solid var(--border);border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:14px 16px;}
+.fig{margin:6px 0 6px;}
+.cap{font-size:16px;color:var(--text-muted);margin:8px 0 2px;}
+.box{border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:12px;}
+.arrow{display:flex;align-items:center;justify-content:center;color:var(--text-muted);}
+.tag{font-size:17px;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:2px 7px;white-space:nowrap;}
+.chip{font-size:18px;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:5px 9px;display:inline-block;}
+.navlink{font-size:18px;text-decoration:none;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:5px 12px;display:inline-block;border:2px solid var(--border);color:var(--text-secondary);background:var(--surface-1);}
+.navlink:hover{border-color:#534AB7;color:#534AB7;}
+.navlink.active{background:#534AB7;border-color:#534AB7;color:#fff;}
+@media print{ body{background:#fff;} .wrap{padding:0;max-width:none;} .fig,.box{break-inside:avoid;} h2{break-after:avoid;} }
+/* mapa do curso */
+.grid5{display:grid;grid-template-columns:118px repeat(5,1fr);gap:8px;align-items:stretch;}
+.rowlabel{font-size:17px;color:var(--text-secondary);text-align:right;align-self:center;line-height:1.35;padding-right:6px;}
+.mcard{background:#fff;border:2px solid var(--border);border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:11px;display:flex;flex-direction:column;gap:6px;}
+.mdim{opacity:.55;border-style:dashed;}
+.mbadge{width:26px;height:26px;border-radius:50%;background:#D3D1C7;color:#2C2C2A;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:18px;}
+.mtitle{font-size:17px;font-weight:500;line-height:1.25;}
+.gancho{font-style:italic;color:var(--text-secondary);font-size:18px;line-height:1.4;}
+.theme{font-size:17px;color:var(--text-muted);line-height:1.4;}
+.mchip{font-size:18px;line-height:1.35;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:6px 8px;align-self:center;}
+.chip-fin{background:#E1F5EE;color:#04342C;}
+.chip-ia{background:#EEEDFE;color:#26215C;}
+/* ladder (sequência) */
+.lad{display:flex;flex-direction:column;gap:6px;}
+.lrow{display:grid;grid-template-columns:26px 1.3fr 1.7fr auto;gap:10px;align-items:center;background:#fff;border:2px solid var(--border);border-radius:3px 8px 5px 7px / 7px 5px 8px 3px;padding:9px 11px;}
+.lnum{width:22px;height:22px;border-radius:50%;background:#EEEDFE;color:#26215C;font-size:18px;display:flex;align-items:center;justify-content:center;}
+.actors{font-size:18px;color:var(--text-primary);font-weight:500;}
+.act{font-size:18px;color:var(--text-secondary);line-height:1.35;}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   EXCALIDRAW DIAGRAMS — scoped to .fig only
+   v2: page chrome reverted; diagrams get the hand-drawn treatment
+   ================================================================ */
+
+/* ── 1. REVERT PAGE CHROME (undo global bumps) ───────────────── */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important;
+  background-image: none !important;
+}
+h1 { font-size: 27px !important; font-weight: 600 !important;
+     letter-spacing: -.01em !important;
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+h2 { font-size: 20px !important; font-weight: 600 !important;
+     border-top: 1px solid var(--border) !important;
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.sub   { font-size: 14px   !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.teach { font-size: 14.5px !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.lead  { font-size: 15px  !important;
+         border: 1px solid var(--border) !important;
+         border-radius: 12px !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.lead::before { display: none !important; }
+.navlink {
+  font-size: 12.5px !important;
+  border-radius: 8px !important;
+  border-width: 1px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important;
+}
+.navlink.active { background: #534AB7 !important; border-color: #534AB7 !important; color: #fff !important; }
+
+/* Revert .mcard outside .fig (course-map cards in h2/grid area) */
+.mcard          { border: 1px solid var(--border) !important; border-radius: 12px !important; }
+.mcard::before  { display: none !important; }
+.mbadge         { font-size: 12px !important; border: none !important; width: 26px !important; height: 26px !important; }
+.mtitle         { font-size: 14px !important; }
+.gancho         { font-size: 12px !important; }
+.theme          { font-size: 11px !important; }
+.mchip          { font-size: 12px !important; border-radius: 8px !important; border: none !important; }
+.chip-fin       { background: #E1F5EE !important; color: #04342C !important; border: none !important; }
+.chip-ia        { background: #EEEDFE !important; color: #26215C !important; border: none !important; }
+.lrow           { border: 1px solid var(--border) !important; border-radius: 10px !important; background: #fff !important; }
+.lnum           { font-size: 12px !important; border: none !important; width: 22px !important; height: 22px !important; }
+.actors         { font-size: 12.5px !important; font-weight: 500 !important; }
+.act            { font-size: 12.5px !important; }
+.box            { border-radius: 12px !important; }
+.rowlabel       { font-size: 11px !important; }
+.chip           { font-size: 12px !important; border-radius: 8px !important; }
+.tag            { font-size: 11px !important; border-radius: 8px !important; padding: 2px 7px !important; }
+
+/* ── 2. EXCALIDRAW: scoped to .fig ──────────────────────────── */
+
+/* Dot-grid whiteboard container */
+.fig {
+  background: #fdfcf8 !important;
+  background-image: radial-gradient(circle, #c3c0b8 1.3px, transparent 1.3px) !important;
+  background-size: 22px 22px !important;
+  border-radius: 14px !important;
+  padding: 18px !important;
+  margin: 8px 0 18px !important;
+  border: 1.5px solid #dbd8cf !important;
+}
+
+/* Caveat everywhere inside diagrams */
+.fig * { font-family: 'Caveat', cursive !important; }
+
+/* Hand-drawn boxes */
+.fig .box {
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  position: relative !important;
+}
+/* Upgrade inline border to 2px on boxes inside .fig */
+.fig .box[style*="border:2px solid"],
+.fig .box[style*="border: 2px solid"] {
+  /* already 2px from prior script; just ensure radius */
+}
+
+/* Course-map cards inside .fig get the hand-drawn treatment */
+.fig .mcard {
+  border: 2px solid #1a1a1a !important;
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  position: relative !important;
+}
+.fig .mcard::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 3px 2px 2px 3px !important;
+  border: 1.5px solid rgba(26,26,26,0.13) !important;
+  border-radius: 4px 7px 4px 7px / 7px 4px 7px 4px !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+.fig .mcard > * { position: relative !important; z-index: 1 !important; }
+
+.fig .mbadge {
+  font-size: 16px !important; font-weight: 700 !important;
+  border: 2px solid rgba(0,0,0,0.28) !important;
+  width: 28px !important; height: 28px !important;
+}
+.fig .mtitle  { font-size: 19px !important; font-weight: 600 !important; }
+.fig .gancho  { font-size: 16px !important; }
+.fig .theme   { font-size: 15px !important; }
+
+/* Chip colors inside diagrams: stronger stroke */
+.fig .mchip   { font-size: 16px !important; border-radius: 3px 8px 5px 7px / 7px 5px 8px 3px !important; }
+.fig .chip-fin { background: #d5f5e3 !important; color: #0a4f35 !important; border: 2.5px solid #27ae60 !important; }
+.fig .chip-ia  { background: #e8daef !important; color: #4a235a !important; border: 2.5px solid #8e44ad !important; }
+
+/* Ladder rows inside .fig */
+.fig .lrow {
+  border: 2px solid var(--border) !important;
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  background: #fdfcf8 !important;
+}
+.fig .lnum {
+  font-size: 16px !important; font-weight: 700 !important;
+  width: 26px !important; height: 26px !important;
+  border: 2px solid #CECBF6 !important;
+}
+.fig .actors { font-size: 17px !important; font-weight: 700 !important; }
+.fig .act    { font-size: 16px !important; }
+
+/* Tags and chips inside .fig */
+.fig .chip { font-size: 16px !important; border-radius: 2px 7px 4px 6px / 6px 4px 7px 2px !important; }
+.fig .tag  { font-size: 15px !important; border-radius: 2px 7px 4px 6px / 6px 4px 7px 2px !important; padding: 4px 10px !important; }
+
+/* Rowlabel inside .fig */
+.fig .rowlabel { font-size: 15px !important; }
+
+/* Arrow icons inside diagrams: slightly bigger */
+.fig .arrow i { font-size: 22px !important; }
+/* Fix: preserve Tabler icon font inside diagrams */
+.fig i[class*="ti"],
+.fig .ti { font-family: 'tabler-icons' !important; }
+
+/* Stronger box borders inside diagrams for better visibility */
+.fig .box[style*="border:2px solid #"],
+.fig .box[style*="border: 2px solid #"] {
+  box-shadow: 1px 2px 0 rgba(0,0,0,0.08) !important;
+}
+
+/* Remove spurious ::before on plain boxes (keep only on .mcard) */
+.fig .box:not(.mcard)::before { display: none !important; }
+
+
+/* Bar chart labels inside .fig (cotovelo, conta quente) */
+.fig [style*="font-size:13px"] { font-size: 16px !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Aula 1 — Caderno visual de System Design</h1>
+  <nav style="display:flex;gap:8px;margin:2px 0 14px;flex-wrap:wrap;">
+    <a href="aula1-roteiro.html" class="navlink active">Aula 1</a>
+    <a href="aula2-roteiro.html" class="navlink">Aula 2</a>
+    <a href="aula3-roteiro.html" class="navlink">Aula 3</a>
+    <a href="aula8-roteiro.html" class="navlink">Aula 8</a>
+    <a href="topologia-progressiva.html" class="navlink">Topologia</a>
+  </nav>
+  <p class="sub">Arquitetura de Sistemas Financeiros com IA · diagramas para desenhar/projetar ao vivo</p>
+  <div class="lead">Fintech fictícia <b>TechPix</b>. Dois eixos atravessam tudo: <b>BACEN</b> (Banco Central do Brasil — como o dinheiro se move) e <b>IA</b> (como agentes mudam o que é arquitetar). Cada diagrama vem com uma nota do que ele <i>ensina</i>.</div>
+
+  <div class="fig">
+    <div class="box" style="background:#fff;border:2px solid var(--border);">
+      <div style="font-size:18px;color:var(--text-secondary);font-weight:500;margin-bottom:8px;">Legenda de siglas — consulte sempre que aparecer um termo</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 16px;font-size:18px;color:var(--text-secondary);line-height:1.4;">
+        <div><b style="color:var(--text-primary);">SPI</b> — Sist. de Pagamentos Instantâneos (liquida o Pix)</div>
+        <div><b style="color:var(--text-primary);">DICT</b> — diretório de chaves (chave → conta)</div>
+        <div><b style="color:var(--text-primary);">STR</b> — Sist. de Transferência de Reservas (TED)</div>
+        <div><b style="color:var(--text-primary);">RSFN</b> — rede segura do Sistema Financeiro Nacional</div>
+        <div><b style="color:var(--text-primary);">Conta PI</b> — conta de liquidação do participante no BC</div>
+        <div><b style="color:var(--text-primary);">PSP</b> — Prestador de Serviço de Pagamento</div>
+        <div><b style="color:var(--text-primary);">E2E ID</b> — identificador único do Pix, ponta a ponta</div>
+        <div><b style="color:var(--text-primary);">pacs.008/002/004</b> — mensagens ISO 20022 (ordem / status / devolução)</div>
+        <div><b style="color:var(--text-primary);">MED</b> — Mecanismo Especial de Devolução</div>
+        <div><b style="color:var(--text-primary);">ACL</b> — Anti-Corruption Layer (DDD; conceito da aula 3)</div>
+        <div><b style="color:var(--text-primary);">ADR</b> — Architecture Decision Record</div>
+        <div><b style="color:var(--text-primary);">SDD</b> — Spec-Driven Development</div>
+        <div><b style="color:var(--text-primary);">MCP</b> — Model Context Protocol</div>
+        <div><b style="color:var(--text-primary);">RLHF</b> — Reinforcement Learning from Human Feedback</div>
+        <div><b style="color:var(--text-primary);">CQRS</b> — Command Query Responsibility Segregation</div>
+        <div><b style="color:var(--text-primary);">CAP / PACELC</b> — teoremas de trade-off em sistemas distribuídos</div>
+        <div><b style="color:var(--text-primary);">Recuperação de Valores</b> — extensão do MED; rastreia fraude por grafo</div>
+        <div><b style="color:var(--text-primary);">Grafo de rastreamento</b> — caminho do dinheiro a partir da transação raiz</div>
+        <div><b style="color:var(--text-primary);">Serializable</b> — nível de isolamento que protege invariantes multi-linha</div>
+        <div><b style="color:var(--text-primary);">Saga</b> — consistência eventual entre partições, com compensação</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>1 · Mapa narrativo do curso</h2>
+  <p class="teach">Ensina: a jornada do sistema e os dois fios condutores — BACEN (como o dinheiro se move) e IA (como agentes mudam o que é arquitetar). Cada aula é um passo na evolução do TechPix, de uma startup que decide "na fé" até um sistema que decide "na evidência". A aula 8 fecha o loop sobre a aula 1: o ADR-001 que abrimos hoje será validado em produção.</p>
+  <div class="fig">
+    <div class="grid5">
+      <div class="rowlabel" style="font-size:18px;color:var(--text-primary);">A jornada do<br>TechPix →</div>
+      <div class="mcard"><div class="mbadge">1</div><div class="mtitle">Nascimento</div><div class="gancho">"Decisão na fé"</div><div class="theme">Ledger, trade-offs, o papel do arquiteto</div></div>
+      <div class="mcard"><div class="mbadge">2</div><div class="mtitle">Crescimento</div><div class="gancho">"O monólito rachou"</div><div class="theme">Evolução e fitness functions</div></div>
+      <div class="mcard"><div class="mbadge">3</div><div class="mtitle">Linguagem</div><div class="gancho">"Palavras são arquitetura"</div><div class="theme">DDD, bounded contexts, SDD</div></div>
+      <div class="mcard mdim"><div class="mbadge" style="background:#B4B2A9;">4–7</div><div class="mtitle" style="color:var(--text-secondary);">Comunicação → operação</div><div class="theme">Outros professores</div></div>
+      <div class="mcard"><div class="mbadge">8</div><div class="mtitle">Evolui sozinho</div><div class="gancho">"Decisão na evidência"</div><div class="theme">IA, agentes, feedback</div></div>
+
+      <div class="rowlabel">Eixo<br>BACEN</div>
+      <div class="mchip chip-fin">Ledger · idempotência · SLA 40s</div>
+      <div class="mchip chip-fin">DICT/SPI sob carga</div>
+      <div class="mchip chip-fin">Contexts · MED · ACL</div>
+      <div class="mchip chip-fin">Eventos, resiliência</div>
+      <div class="mchip chip-fin">Flags · canary · rollback</div>
+
+      <div class="rowlabel">Eixo<br>IA</div>
+      <div class="mchip chip-ia">ADR → spec (SDD)</div>
+      <div class="mchip chip-ia">Fitness = evals</div>
+      <div class="mchip chip-ia">Context engineering</div>
+      <div class="mchip chip-ia">MCP · agentes</div>
+      <div class="mchip chip-ia">Harness · looping · RLHF</div>
+    </div>
+  </div>
+
+  <h2>2 · Quatro propriedades do dinheiro → quatro decisões</h2>
+  <p class="teach">Ensina: antes de qualquer caixinha, é preciso internalizar que arquitetura de fintech não é arquitetura de e-commerce com um cadeado. Existem quatro propriedades do dinheiro que <i>forçam</i> decisões específicas — não como preferências de gosto, mas como restrições do domínio. Um bom arquiteto consegue mostrar, com essas quatro leis na mão, que o ledger imutável não está na moda: ele é <b>exigido</b>. As decisões grandes são <b>deriváveis</b> das leis do domínio — não surgem do boteco.</p>
+  <div class="fig">
+    <div style="display:grid;grid-template-columns:1fr 34px 1fr;gap:8px 4px;align-items:center;">
+      <div class="box" style="background:#E1F5EE;"><div style="font-size:16px;color:#04342C;font-weight:500;">Conservação</div><div style="font-size:18px;color:#0F6E56;">dinheiro só se move, não some</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:16px;font-weight:500;">Ledger de partida dobrada</div><div style="font-size:18px;color:var(--text-secondary);">registrar movimento, nunca "update saldo"</div></div>
+
+      <div class="box" style="background:#E1F5EE;"><div style="font-size:16px;color:#04342C;font-weight:500;">Irreversibilidade</div><div style="font-size:18px;color:#0F6E56;">liquidou, acabou</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:16px;font-weight:500;">Idempotência + falhar fechado</div><div style="font-size:18px;color:var(--text-secondary);">prudência acima de otimismo</div></div>
+
+      <div class="box" style="background:#E1F5EE;"><div style="font-size:16px;color:#04342C;font-weight:500;">Auditabilidade</div><div style="font-size:18px;color:#0F6E56;">explicável por anos (BACEN/LGPD)</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:16px;font-weight:500;">Imutabilidade (append-only)</div><div style="font-size:18px;color:var(--text-secondary);">o passado não se sobrescreve</div></div>
+
+      <div class="box" style="background:#E1F5EE;"><div style="font-size:16px;color:#04342C;font-weight:500;">Correção &gt; disponibilidade</div><div style="font-size:18px;color:#0F6E56;">no núcleo do dinheiro</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:16px;font-weight:500;">Consistência forte no core</div><div style="font-size:18px;color:var(--text-secondary);">eventual só na borda</div></div>
+    </div>
+    <div class="box" style="margin-top:10px;background:#F0EEFF;border:2px solid #534AB7;font-size:18px;color:#26215C;">
+      <span style="font-weight:600;color:#534AB7;">↯ Insight:</span> Reparem que escrevi "no núcleo" na quarta propriedade, entre parênteses. Isso é de propósito: nem tudo precisa de correção máxima — extrato e notificações toleram atraso. Saber <i>onde</i> cada propriedade vale, e onde pode ser relaxada, é o trabalho central do arquiteto.
+    </div>
+  </div>
+  <p class="teach">Agora que as quatro leis estão na mão, a próxima pergunta é: como elas se traduzem num único artefato técnico? A resposta tem 500 anos — e foi descoberta antes de existir qualquer banco de dados.</p>
+
+  <h2>3 · O ledger: a verdade (escrita) e as projeções (leitura)</h2>
+  <p class="teach">Ensina: o log imutável é a fonte da verdade; saldo/extrato são projeções derivadas. Guardar só o saldo numa coluna e fazer UPDATE a cada transação parece simples — mas abre três buracos ao mesmo tempo: sem auditoria, risco de <i>lost update</i> (duas escritas concorrentes se sobrepõem, criando ou destruindo dinheiro), e irreconstituível quando corrompido. O ledger append-only resolve os três de uma tacada. É a semente de CQRS — forte no núcleo, eventual na borda.</p>
+  <div class="lead">Em 1494, um matemático italiano chamado Luca Pacioli documentou a técnica das <b>partidas dobradas</b>: todo evento econômico registrado em dois lados que sempre se equilibram — Σ débitos = Σ créditos. Sobreviveu 500 anos porque resolve <i>conservação</i>, <i>auditoria</i> e <i>reconstrução</i> ao mesmo tempo. Toda vez que um engenheiro "inventa" um log append-only e balanceado, ele está redescobrindo Pacioli sem saber. No TechPix, a Ana manda R$100 ao Bruno não como "saldo −= 100", mas como dois pares balanceados: reserva primeiro, liquidação depois.</div>
+  <div class="fig">
+    <div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;">
+      <div class="box" style="flex:1.2;min-width:230px;background:#E1F5EE;border:2px solid #9FE1CB;">
+        <div style="font-size:16px;color:#04342C;font-weight:500;">Write model · log imutável <span style="font-weight:400;color:#0F6E56;">(a verdade)</span></div>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;font-size:18px;color:#04342C;">
+          <div style="background:#fff;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:5px 8px;">+ débito carteira_ana 100 · crédito a_liquidar 100</div>
+          <div style="background:#fff;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:5px 8px;">+ débito a_liquidar 100 · crédito reserva_BC 100</div>
+          <div style="color:#0F6E56;font-size:17px;">append-only · Σ débitos = Σ créditos · consistência forte</div>
+        </div>
+      </div>
+      <div class="arrow" style="flex-direction:column;gap:2px;"><i class="ti ti-arrow-right" aria-hidden="true"></i><span style="font-size:16px;color:var(--text-muted);">projeta</span></div>
+      <div class="box" style="flex:1;min-width:190px;background:#E6F1FB;border:2px solid #B5D4F4;">
+        <div style="font-size:16px;color:#042C53;font-weight:500;">Read models · projeções <span style="font-weight:400;color:#185FA5;">(eventual)</span></div>
+        <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
+          <span class="chip" style="background:#fff;color:#042C53;">saldo</span>
+          <span class="chip" style="background:#fff;color:#042C53;">extrato</span>
+          <span class="chip" style="background:#fff;color:#042C53;">feed</span>
+          <span class="chip" style="background:#fff;color:#042C53;">notificação</span>
+        </div>
+        <div style="font-size:17px;color:#185FA5;margin-top:8px;">recalculáveis a partir do log · escala de leitura</div>
+      </div>
+    </div>
+    <div class="box" style="margin-top:10px;background:#F0EEFF;border:2px solid #534AB7;font-size:18px;color:#26215C;">
+      <span style="font-weight:600;color:#534AB7;">↯ Insight:</span> A fonte da verdade é o log; o saldo é só uma projeção. Se aquela coluna de saldo corromper e o log não existir, a verdade se perdeu para sempre. Se o log existir e o saldo corromper, você recalcula — é só uma soma.
+    </div>
+  </div>
+  <p class="teach">Entendido o que o ledger precisa registrar, a próxima pergunta é de escala: quantas dessas escritas o sistema precisa aguentar — e o que acontece quando a carga dobra na hora do almoço de uma sexta de pagamento?</p>
+
+  <h2>4 · Capacidade: matemática de guardanapo com números reais</h2>
+  <p class="teach">Ensina: dado oficial + fator de pico estimado com critério = capacidade defensável. A técnica importa mais que o número — toda vez que alguém chutar uma capacidade sem fonte, a pergunta certa é "de onde veio isso?". A Lei de Little (L = λ × W) transforma "a fila cresceu" em número calculável antes do incidente: se a latência de escrita dobra por contenção, a concorrência necessária dobra junto — e é isso que esgota o pool de conexões na Aula 2.</p>
+  <div class="fig">
+    <div class="lad">
+      <div class="lrow"><div class="lnum">1</div><div class="actors">Dado oficial (BACEN)</div><div class="act">36,3 bi transações em 5 meses (jan-mai/2026)</div><span class="tag" style="background:#E1F5EE;color:#04342C;">real</span></div>
+      <div class="lrow"><div class="lnum">2</div><div class="actors">Anualizar</div><div class="act">36,3bi / 5 × 12 ≈ 87 bilhões/ano</div><span class="tag" style="background:#E1F5EE;color:#04342C;">cálculo</span></div>
+      <div class="lrow"><div class="lnum">3</div><div class="actors">Diário</div><div class="act">87bi / 365 ≈ 238 milhões/dia · recorde real: 313,3 mi (5/dez/2025)</div><span class="tag" style="background:#E1F5EE;color:#04342C;">cálculo</span></div>
+      <div class="lrow"><div class="lnum">4</div><div class="actors">TPS médio</div><div class="act">238mi / 86.400s ≈ 2.750 TPS — bate com "quase 3 mil/s" do BACEN</div><span class="tag" style="background:#E1F5EE;color:#04342C;">confere ✓</span></div>
+      <div class="lrow" style="border-color:#FAC775;"><div class="lnum">5</div><div class="actors">TPS de pico</div><div class="act">dia recorde ≈3.626 TPS médio × fator 5 ≈ 18 mil TPS no pico nacional</div><span class="tag" style="background:#FAEEDA;color:#412402;">estimativa</span></div>
+      <div class="lrow" style="border-color:#FAC775;"><div class="lnum">6</div><div class="actors">Armazenamento</div><div class="act">×3 lançamentos/tx × ~400 bytes ≈ 75-130 TB/ano só de ledger</div><span class="tag" style="background:#FAEEDA;color:#412402;">estimativa</span></div>
+    </div>
+    <div class="box" style="margin-top:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;">
+      Verde = dado oficial ou cálculo direto dele. Âmbar = estimativa com critério explícito — nunca confundir os dois com a turma.
+    </div>
+    <div style="font-size:18px;color:var(--text-secondary);font-weight:500;margin:14px 0 6px;">Lei de Little — L = λ × W (concorrência = taxa de chegada × tempo no sistema)</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <div class="box" style="flex:1;min-width:150px;background:#E1F5EE;border:2px solid #9FE1CB;text-align:center;"><div style="font-size:17px;color:#0F6E56;">900 TPS (5% do pico) × 50 ms</div><div style="font-size:18px;color:#04342C;font-weight:500;margin-top:3px;">45 conexões</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;min-width:150px;background:#FCEBEB;border:2px solid #F7C1C1;text-align:center;"><div style="font-size:17px;color:#791F1F;">sob contenção: 900 TPS × 500 ms</div><div style="font-size:18px;color:#501313;font-weight:500;margin-top:3px;">450 conexões</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;min-width:150px;background:#FAEEDA;border:2px solid #FAC775;text-align:center;"><div style="font-size:17px;color:#854F0B;">pool dimensionado p/ 100</div><div style="font-size:18px;color:#412402;font-weight:500;margin-top:3px;">esgota (Aula 2)</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;background:#fff;border:2px solid var(--border);font-size:18px;color:var(--text-secondary);">
+      900 TPS × 3 lançamentos ≈ 2.700 IOPS — muito abaixo de um SSD NVMe (500k-1M IOPS). <b>O disco não é o gargalo. É coordenação.</b>
+    </div>
+  </div>
+  <p class="teach">Os números mostram que o gargalo real é coordenação — lock, consenso, fila de espera. A próxima seção nomeia isso tecnicamente: o que "consistência forte" significa de verdade num banco de dados, e qual o custo concreto dessa escolha.</p>
+
+  <h2>5 · Isolamento e particionamento — a implementação de verdade</h2>
+  <p class="teach">Ensina: "consistência forte" vira nome técnico concreto — e vem com um custo real. O nível <i>serializable</i> protege a invariante Σ=Σ, mas gera mais abortos e retentativas quando duas transações disputam os mesmos dados. É exatamente aí que nasce o ponto quente que a Aula 2 investiga: sob alta contenção, o pool de conexões esgota antes de qualquer disco.</p>
+  <div class="fig">
+    <div style="display:flex;gap:6px;align-items:stretch;">
+      <div class="box" style="flex:1;background:#FCEBEB;border:2px solid #F7C1C1;text-align:center;"><div style="font-size:18px;color:#791F1F;font-weight:500;">read committed</div><div style="font-size:17px;color:#501313;margin-top:3px;">insuficiente p/ ledger</div></div>
+      <div class="box" style="flex:1;background:#FAEEDA;border:2px solid #FAC775;text-align:center;"><div style="font-size:18px;color:#412402;font-weight:500;">snapshot / repeatable read</div><div style="font-size:17px;color:#854F0B;margin-top:3px;">melhor, mas write skew</div></div>
+      <div class="box" style="flex:1;background:#E1F5EE;border:2px solid #9FE1CB;text-align:center;"><div style="font-size:18px;color:#04342C;font-weight:500;">serializable</div><div style="font-size:17px;color:#0F6E56;margin-top:3px;">protege Σ=Σ · mais aborto sob contenção</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:18px;font-weight:500;">Locking pessimista</div><div style="font-size:17px;color:var(--text-secondary);margin-top:3px;">trava a linha antes — fila cresce sob contenção (o ponto quente)</div></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:18px;font-weight:500;">Concorrência otimista</div><div style="font-size:17px;color:var(--text-secondary);margin-top:3px;">coluna de versão — sob alta contenção vira tempestade de retentativas</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;align-items:flex-start;gap:8px;background:#E6F1FB;border:2px solid #B5D4F4;font-size:18px;color:#042C53;">
+      <i class="ti ti-git-branch" aria-hidden="true" style="margin-top:2px;"></i><span><b>Particionar por hash(conta_id):</b> caso fácil = 1 partição, transação local rápida. Caso difícil = atravessa partições → two-phase commit (forte, frágil) ou saga (eventual, com compensação — mesma ideia do Outbox da Aula 2).</span>
+    </div>
+    <div style="font-size:18px;color:var(--text-secondary);font-weight:500;margin:14px 0 6px;">Quem faz isso, na prática</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:18px;font-weight:500;">PostgreSQL</div><div style="font-size:17px;color:var(--text-secondary);margin-top:2px;">serializable via SSI (aborta ao detectar conflito)</div></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:18px;font-weight:500;">MySQL/InnoDB</div><div style="font-size:17px;color:var(--text-secondary);margin-top:2px;">repeatable read via next-key locking</div></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:18px;font-weight:500;">CockroachDB / Yugabyte / TiDB</div><div style="font-size:17px;color:var(--text-secondary);margin-top:2px;">particiona e rebalanceia via Raft — só serializable</div></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:18px;font-weight:500;">Spanner</div><div style="font-size:17px;color:var(--text-secondary);margin-top:2px;">serializable + consistência externa (TrueTime)</div></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:18px;font-weight:500;">DynamoDB</div><div style="font-size:17px;color:var(--text-secondary);margin-top:2px;">forte por item; multi-item tem limites</div></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:18px;font-weight:500;">Vitess (YouTube, Slack)</div><div style="font-size:17px;color:var(--text-secondary);margin-top:2px;">hash(conta_id) mod N em produção, sobre MySQL</div></div>
+    </div>
+  </div>
+  <p class="teach">Agora que sabemos o que o ledger precisa garantir internamente, a próxima pergunta é: o que acontece quando a rede falha e o cliente tenta de novo? Aqui nasce a história da Ana — e a resposta só existe na arquitetura.</p>
+
+  <h2>6 · Idempotência: "tocou 3× → aconteceu 1×"</h2>
+  <p class="teach">Ensina: o timeout é ambíguo — você não sabe se a operação falhou antes de executar ou se executou e a confirmação se perdeu na rede. A chave de idempotência, nascida no cliente (= E2E ID no Pix), somada ao estado do registro ("em andamento" vs "concluído"), produz <b>efeito exactly-once</b>, mesmo com retries concorrentes. Sem isso, três tentativas da Ana viram três débitos — e no Pix, estorno exige MED.</p>
+  <div class="lead">São 2h47 da manhã de uma Black Friday. A Ana abre o app, toca em pagar R$5.000, a tela gira, nada acontece — ela toca de novo, e uma terceira vez. <b>Pagou 1×, 3× ou 0×?</b> Essa pergunta não tem resposta no código da tela do celular. Ela está na arquitetura — especificamente, na presença ou ausência de uma chave de idempotência guardada com estado no servidor.</div>
+  <div class="fig">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div style="flex:1.1;min-width:165px;">
+        <div style="font-size:18px;color:var(--text-secondary);margin-bottom:6px;">cliente · timeout → reenvio</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:6px 9px;font-size:18px;color:#2C2C2A;">POST /pix · key abc-123</div>
+          <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:6px 9px;font-size:18px;color:#2C2C2A;">POST /pix · key abc-123</div>
+          <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:6px 9px;font-size:18px;color:#2C2C2A;">POST /pix · key abc-123</div>
+        </div>
+      </div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1.5;min-width:210px;background:#fff;border:2px solid var(--border);">
+        <div style="font-size:16px;font-weight:500;margin-bottom:4px;">API · dedup por chave <span style="font-weight:400;color:var(--text-secondary);">(com estado)</span></div>
+        <div style="font-size:18px;color:var(--text-secondary);line-height:1.5;">1ª: <span style="color:#185FA5;">em andamento</span> → executa → <span style="color:#0F6E56;">concluído</span>, guarda resultado.<br>2ª e 3ª: devolvem o resultado. Não reexecutam.</div>
+      </div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:.9;min-width:120px;background:#E1F5EE;border:2px solid #9FE1CB;">
+        <div style="font-size:18px;color:#0F6E56;">ledger</div>
+        <div style="font-size:18px;color:#04342C;font-weight:500;">débito 1×</div>
+      </div>
+    </div>
+    <div class="box" style="margin-top:10px;display:flex;align-items:flex-start;gap:8px;background:#FAECE7;border:2px solid #F5C4B3;font-size:16px;color:#4A1B0C;">
+      <i class="ti ti-alert-triangle" aria-hidden="true" style="margin-top:2px;"></i>
+      <span><span style="font-weight:500;">Sem a chave:</span> 3 tentativas = 3 débitos. No PIX, estorno só via MED.</span>
+    </div>
+  </div>
+  <p class="teach">O componente de idempotência resolve "tocou 3× → aconteceu 1×". Mas isso pressupõe que a rede entrega pelo menos uma vez. Existem três formas de classificar como um sistema trata mensagens duplicadas — e só uma é aceitável para dinheiro.</p>
+
+  <h2>7 · As três semânticas</h2>
+  <p class="teach">Ensina: a rede real entrega at-least-once — nunca perde, mas pode duplicar. Exactly-once é impossível de garantir numa rede assíncrona: existe uma verdade que muita gente não fala, que vem do problema dos dois generais — você nunca sabe, com certeza, se a mensagem chegou. O que existe é <b>efeito exactly-once</b>, construído em cima de at-least-once com idempotência no ledger. O Banco Central já projetou isso para vocês: o EndToEndId é a chave de deduplicação embutida no protocolo — o pagamento fantasma foi proibido por desenho regulatório.</p>
+  <div class="lead">Existem três formas de um sistema tratar uma mensagem que pode estar duplicada — e só uma é aceitável para dinheiro. Antes de mostrar as três, uma verdade incômoda: <b>entregar exactly-once é impossível numa rede assíncrona.</b> O que existe não é entrega exactly-once — é <i>efeito</i> exactly-once, construído deliberadamente em cima de at-least-once + idempotência. A diferença é fundamental: não se trata de uma propriedade da rede, mas de uma propriedade que você projeta no sistema.</div>
+  <div class="fig">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;">
+        <div style="font-size:16px;color:#791F1F;font-weight:500;">At-most-once</div>
+        <div style="font-size:18px;color:#501313;margin-top:4px;">não repete, pode perder</div>
+        <div style="margin-top:8px;font-size:17px;color:#791F1F;">inaceitável para dinheiro</div>
+      </div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;">
+        <div style="font-size:16px;color:#412402;font-weight:500;">At-least-once</div>
+        <div style="font-size:18px;color:#854F0B;margin-top:4px;">nunca perde, pode duplicar</div>
+        <div style="margin-top:8px;font-size:17px;color:#854F0B;">é o que a rede real entrega</div>
+      </div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;">
+        <div style="font-size:16px;color:#04342C;font-weight:500;">Exactly-once</div>
+        <div style="font-size:18px;color:#0F6E56;margin-top:4px;">impossível de entregar na rede</div>
+        <div style="margin-top:8px;font-size:17px;color:#0F6E56;">efeito via idempotência ✓</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;">
+      <div class="box" style="flex:1;background:#E6F1FB;border:2px solid #B5D4F4;font-size:18px;color:#042C53;">
+        <span style="font-size:17px;color:var(--text-secondary);">At-least-once</span> <i class="ti ti-plus" aria-hidden="true"></i> <span style="font-size:17px;color:var(--text-secondary);">idempotência no ledger</span>
+        <div style="font-size:18px;color:#042C53;font-weight:500;margin-top:4px;">= efeito exactly-once</div>
+      </div>
+    </div>
+    <div class="box" style="display:flex;align-items:flex-start;gap:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;">
+      <i class="ti ti-arrows-exchange" aria-hidden="true" style="margin-top:2px;"></i>
+      <span><b>A ponte:</b> a mensagem pode chegar várias vezes, mas o efeito no ledger acontece uma única vez — garantido pelo EndToEndId como chave de idempotência.</span>
+    </div>
+    <div class="box" style="margin-top:10px;background:#F0EEFF;border:2px solid #534AB7;font-size:18px;color:#26215C;">
+      <span style="font-weight:600;color:#534AB7;">↯ Insight:</span> At-least-once + idempotência no ledger = efeito exactly-once. Essa equação é o coração da seção. O Banco Central formalizou isso no protocolo com o EndToEndId — o pagamento fantasma foi proibido por desenho regulatório. Cabe a vocês, na implementação, honrar esse desenho.
+    </div>
+  </div>
+
+  <h2>8 · Trade-off: CAP → PACELC</h2>
+  <p class="teach">Ensina: o CAP é frequentemente mal-entendido — partição não é opcional, então a escolha real é entre C e A <i>quando há partição</i>. O PACELC completa o quadro: mesmo sem falha, existe um trade-off permanente entre latência e consistência. No TechPix, essa escolha tem endereço concreto — forte no ledger (escrita), eventual no extrato e feed (leitura) — e é o que justifica CQRS e as fronteiras de bounded context da Aula 3.</p>
+  <div class="fig">
+    <div style="display:flex;gap:10px;align-items:stretch;">
+      <div class="box" style="flex:1;background:#E1F5EE;border:2px solid #9FE1CB;">
+        <div style="font-size:16px;color:#04342C;font-weight:500;">consistência forte</div>
+        <div style="font-size:18px;color:#0F6E56;margin-top:2px;">+ latência · − disponibilidade</div>
+        <div style="margin-top:10px;"><span class="chip" style="background:#04342C;color:#E1F5EE;">● ledger (escrita)</span></div>
+      </div>
+      <div class="box" style="flex:1;background:#E6F1FB;border:2px solid #B5D4F4;text-align:right;">
+        <div style="font-size:16px;color:#042C53;font-weight:500;">consistência eventual</div>
+        <div style="font-size:18px;color:#185FA5;margin-top:2px;">− latência · + disponibilidade · + leitura</div>
+        <div style="margin-top:10px;"><span class="chip" style="background:#042C53;color:#E6F1FB;">extrato / feed ●</span></div>
+      </div>
+    </div>
+    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
+      <div class="box" style="flex:2;min-width:230px;background:#fff;border:2px solid var(--border);font-size:16px;line-height:1.5;">
+        <span style="color:var(--text-secondary);">PACELC:</span> se <b>P</b>articiona → <b>A</b> ou <b>C</b> · senão (<b>E</b>lse) → <b>L</b>atency ou <b>C</b>onsistency
+      </div>
+      <div style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:5px;">
+        <span class="chip" style="background:#F1EFE8;color:#2C2C2A;">Spanner · PC/PC</span>
+        <span class="chip" style="background:#F1EFE8;color:#2C2C2A;">DynamoDB · PA/EL</span>
+        <span class="chip" style="background:#F1EFE8;color:#2C2C2A;">Postgres 1 nó · forte</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>9 · O orçamento de latência — 40 s normativos</h2>
+  <p class="teach">Ensina: o teto do BACEN é <b>40 s</b> (não 10 s — esse número é mito de comunicação, não norma). O SPI real liquida em p99 4,6 s, e a consulta ao DICT tem SLA p99 ≤1 s: o teto é generoso, a experiência-alvo é de poucos segundos. Fonte: Manual de Tempos do Pix v7.0. O trabalho do arquiteto é <i>distribuir e defender</i> esse orçamento — e toda chamada síncrona nova no caminho crítico precisa justificar de qual fatia vai sair, especialmente sob pico.</p>
+  <div class="fig">
+    <div style="display:flex;height:46px;border-radius:3px 8px 5px 7px / 7px 5px 8px 3px;overflow:hidden;border:2px solid var(--border);font-size:16px;">
+      <div style="flex:1;background:#E6F1FB;color:#042C53;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px solid #fff;">DICT<br>p99 ≤1 s</div>
+      <div style="flex:4;background:#F1EFE8;color:#2C2C2A;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px solid #fff;">validações<br>+ antifraude</div>
+      <div style="flex:3;background:#E1F5EE;color:#04342C;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px solid #fff;">reserva<br>ledger</div>
+      <div style="flex:5;background:#E6F1FB;color:#042C53;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px solid #fff;">SPI<br>p99 4,6 s</div>
+      <div style="flex:12;background:#FAEEDA;color:#412402;display:flex;align-items:center;justify-content:center;text-align:center;">folga — teto de 40 s é generoso; alvo ~poucos s</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:17px;color:var(--text-muted);margin-top:4px;"><span>0 ms</span><span>teto normativo · canal primário do SPI (t0'→t4)</span><span>40.000 ms</span></div>
+  </div>
+
+  <h2>10 · BACEN: topologia do SPB <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(eixo aprofundado)</span></h2>
+  <p class="teach">Ensina: o BACEN é operador, regulador e liquidante final — poucos sistemas no mundo concentram tanto papel numa entidade só. O dinheiro liquida em moeda de banco central na Conta PI: a fintech não tem o dinheiro do cliente "guardado" — tem saldo na Conta PI dentro do BC, e o ledger interno precisa <i>espelhar e reconciliar</i> com isso continuamente. Uma falha silenciosa de reconciliação vira incidente regulatório.</p>
+  <div class="lead">A partir daqui o curso deixa de ser genérico. Vamos ver o <b>encanamento de verdade</b> do sistema financeiro brasileiro — o mesmo encanamento que move trilhões de reais por ano. Tratem essa seção como um estudo de System Design de uma plataforma nacional: cada caixinha que aparece no diagrama existe de verdade, com SLA regulatório e consequência se cair.</div>
+  <div class="fig">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+      <div class="box" style="flex:1;min-width:150px;background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:16px;font-weight:500;">TechPix <span style="font-weight:400;color:var(--text-secondary);">(PSP, direto)</span></div><div style="font-size:18px;color:var(--text-secondary);">liquida com Conta PI própria</div></div>
+      <div class="box" style="flex:1;min-width:150px;background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:16px;font-weight:500;">Banco Beta <span style="font-weight:400;color:var(--text-secondary);">(direto)</span></div><div style="font-size:18px;color:var(--text-secondary);">recebedor</div></div>
+      <div class="box" style="flex:1;min-width:150px;background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:16px;font-weight:500;">Fintech X <span style="font-weight:400;color:var(--text-secondary);">(indireto)</span></div><div style="font-size:18px;color:var(--text-secondary);">acessa via liquidante</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin:8px 0;">
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+      <span style="font-size:18px;color:var(--text-secondary);"><i class="ti ti-arrows-up-down" aria-hidden="true"></i> RSFN · rede segura do Sistema Financeiro Nacional</span>
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+    </div>
+    <div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;">
+      <div style="font-size:16px;color:#042C53;font-weight:500;margin-bottom:8px;">Banco Central — infraestrutura</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div class="box" style="flex:1;min-width:150px;background:#fff;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">SPI</div><div style="font-size:17px;color:#185FA5;">liquidação instantânea, moeda de BC, 24/7 · Conta PI</div></div>
+        <div class="box" style="flex:1;min-width:150px;background:#fff;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">DICT</div><div style="font-size:17px;color:#185FA5;">chave → conta · síncrono · consulta p99 ≤1 s · anti-scraping (token bucket)</div></div>
+        <div class="box" style="flex:1;min-width:150px;background:#fff;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">STR</div><div style="font-size:17px;color:#185FA5;">alto valor / TED · tempo real</div></div>
+      </div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;align-items:flex-start;gap:8px;background:#FAEEDA;border:2px solid #FAC775;font-size:18px;color:#412402;">
+      <i class="ti ti-shield-lock" aria-hidden="true" style="margin-top:2px;"></i><span><span style="font-weight:500;">Anti-scraping do DICT (token bucket):</span> achar a chave (HTTP 200) custa 1 token; não achar (404) custa 20 — procurar chave inexistente esvazia o balde 20× mais rápido. Bucket zerado → HTTP 429.</span>
+    </div>
+    <div class="box" style="margin-top:8px;background:#F0EEFF;border:2px solid #534AB7;font-size:18px;color:#26215C;">
+      <span style="font-weight:600;color:#534AB7;">↯ Insight:</span> O custo assimétrico do 404 é design de segurança por incentivo: quem faz scraping esgota o balde 20× mais rápido. Consequência de design: validar localmente antes de consultar, consolidar consultas e cachear respostas são ao mesmo tempo resiliência e compliance — uma decisão que resolve dois problemas com um artefato.
+    </div>
+  </div>
+
+  <h2>11 · BACEN: anatomia de um PIX <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(diagrama-estrela)</span></h2>
+  <p class="teach">Ensina: quantos sistemas <b>externos</b> (DICT, SPI, banco do recebedor) estão no caminho crítico — cada um é latência e ponto de falha que você não controla. Passos 1–7 mapeiam o Pix completo; passos 1–6 precisam caber sob teto de 40 s (SPI p99 4,6 s). Azul = externo. Projetar o Pix é, em grande parte, projetar resiliência contra dependências externas — e cada conceito visto nesta aula aparece em pelo menos um passo desse fluxo.</p>
+  <div class="lead"><b>O caminho completo de um Pix da Ana (TechPix) para o Bruno (Banco Beta):</b> <b>1.</b> App da Ana envia chave + valor ao TechPix. <b>2.</b> TechPix consulta o DICT — resolve chave em conta/titular, consome orçamento de latência e um token do rate limit. <b>3.</b> TechPix valida localmente: saldo, limites, antifraude, PLD-FT — na dúvida, falha fechado. <b>4.</b> Reserva no ledger: débito carteira_ana / crédito a_liquidar, idempotente pelo E2E ID — o dinheiro entra no estado "a liquidar". <b>5.</b> TechPix envia <code>pacs.008</code> ao SPI com esse mesmo E2E ID. <b>6.</b> SPI debita Conta PI do TechPix e credita Conta PI do Banco Beta — liquidação final, irrevogável, em moeda de banco central. <b>7.</b> SPI responde <code>pacs.002</code>; TechPix reconcilia o ledger; Banco Beta credita Bruno. Borda assíncrona: notificações e extrato atualizados.</div>
+  <div class="fig">
+    <div class="lad">
+      <div class="lrow"><div class="lnum">1</div><div class="actors">App Ana → TechPix</div><div class="act">inicia PIX (chave + valor)</div><span class="tag" style="background:#F1EFE8;color:#2C2C2A;">interno</span></div>
+      <div class="lrow" style="border-color:#B5D4F4;"><div class="lnum">2</div><div class="actors">TechPix → DICT</div><div class="act">resolve chave → conta/titular <span style="color:var(--text-muted);">(rate-limited · p99 ≤1 s)</span></div><span class="tag" style="background:#E6F1FB;color:#042C53;">externo</span></div>
+      <div class="lrow"><div class="lnum">3</div><div class="actors">TechPix</div><div class="act">valida saldo, limites, antifraude, PLD</div><span class="tag" style="background:#F1EFE8;color:#2C2C2A;">interno</span></div>
+      <div class="lrow" style="border-color:#9FE1CB;"><div class="lnum">4</div><div class="actors">TechPix · ledger</div><div class="act">reserva: débito/crédito, idempotente por E2E ID</div><span class="tag" style="background:#E1F5EE;color:#04342C;">ledger</span></div>
+      <div class="lrow" style="border-color:#B5D4F4;"><div class="lnum">5</div><div class="actors">TechPix → SPI</div><div class="act">ordem de liquidação</div><span class="tag" style="background:#E6F1FB;color:#042C53;">pacs.008</span></div>
+      <div class="lrow" style="border-color:#B5D4F4;"><div class="lnum">6</div><div class="actors">SPI</div><div class="act">debita Conta PI TechPix / credita Conta PI Beta (final)</div><span class="tag" style="background:#E6F1FB;color:#042C53;">externo</span></div>
+      <div class="lrow" style="border-color:#B5D4F4;"><div class="lnum">7</div><div class="actors">SPI → TechPix</div><div class="act">confirmação de liquidação</div><span class="tag" style="background:#E6F1FB;color:#042C53;">pacs.002</span></div>
+      <div class="lrow"><div class="lnum">8</div><div class="actors">Banco Beta → Bruno</div><div class="act">credita conta; ambos notificados <span style="color:var(--text-muted);">(borda eventual)</span></div><span class="tag" style="background:#F1EFE8;color:#2C2C2A;">async</span></div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#FAEEDA;border:2px solid #FAC775;font-size:18px;color:#412402;">
+      <i class="ti ti-clock" aria-hidden="true"></i><span>Passos 1–6 sob teto de 40 s (SPI p99 4,6 s) · falha ou fraude → <b>pacs.004</b> (devolução) / MED · pacs.xxx = mensagens do padrão ISO 20022</span>
+    </div>
+  </div>
+
+  <h2>12 · Recuperação de Valores: fraude como grafo <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(conteúdo mais recente da aula)</span></h2>
+  <p class="teach">Ensina: fraudadores sofisticados não deixam o dinheiro parado — pulverizam o valor em múltiplos saltos, entre contas de instituições diferentes, exatamente para que quando a vítima perceba, o dinheiro já tenha "sumido" da conta original. O MED evoluiu para um problema de <b>grafo federado</b>: a partir da transação raiz, o sistema rastreia cada salto por onde o dinheiro passou, coordenado pelo DICT como autoridade central, sob SLAs regulatórios apertados (p99 6 h para fraude, bloqueio cautelar até 72 h). Não é uma query local — é travessia de grafo entre instituições.</p>
+  <div class="fig">
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;text-align:center;min-width:110px;"><div style="font-size:17px;color:#791F1F;">transação raiz</div><div style="font-size:18px;color:#501313;font-weight:500;">conta A</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;text-align:center;min-width:110px;"><div style="font-size:17px;color:#854F0B;">salto 1</div><div style="font-size:18px;color:#412402;font-weight:500;">conta B</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;text-align:center;min-width:110px;"><div style="font-size:17px;color:#854F0B;">salto 2</div><div style="font-size:18px;color:#412402;font-weight:500;">conta C · outra instituição</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;text-align:center;min-width:110px;"><div style="font-size:17px;color:#791F1F;">marcada</div><div style="font-size:18px;color:#501313;font-weight:500;">conta D</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;">
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:17px;color:var(--text-secondary);">Bloqueio cautelar</div><div style="font-size:16px;font-weight:500;">até 72 h</div></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:17px;color:var(--text-secondary);">SLA conclusão (fraude)</div><div style="font-size:16px;font-weight:500;">p99 6 h</div></div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);"><div style="font-size:17px;color:var(--text-secondary);">SLA (falha operacional)</div><div style="font-size:16px;font-weight:500;">p95 48 h</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;align-items:flex-start;gap:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;">
+      <i class="ti ti-affiliate" aria-hidden="true" style="margin-top:2px;"></i><span>Todas as contas do caminho contribuem para a recuperação; recebedores no fluxo de desvio também podem ser marcados como fraudadores no DICT. Devolução viaja como <b>pacs.004</b> com código <b>MD06</b>. Fonte: Guia de Implementação MED v4.3.</span>
+    </div>
+  </div>
+
+  <h2>13 · O Pix não é estático</h2>
+  <p class="teach">Ensina: a infraestrutura do Pix muda debaixo dos pés — e muda em ritmo regulatório, não em ritmo de produto. Quatro frentes em movimento simultâneo, cada uma introduzindo domínios novos com invariantes novas. O recado de arquitetura não é "suportar o Pix atual", mas "ser desenhado para evoluir junto com o trilho" — esse é o fio que a Aula 2 puxa e a Aula 8 fecha.</p>
+  <div class="fig">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;">
+        <div style="font-size:16px;color:#04342C;font-weight:500;">Pix Automático</div>
+        <div style="font-size:18px;color:#0F6E56;margin-top:3px;">em produção · mandato recorrente</div>
+        <div style="font-size:17px;color:#0F6E56;margin-top:3px;">IGA desde 1/jul/2025</div>
+      </div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;">
+        <div style="font-size:16px;color:#04342C;font-weight:500;">Pix por Aproximação</div>
+        <div style="font-size:18px;color:#0F6E56;margin-top:3px;">NFC · compete com cartão por aproximação</div>
+      </div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;">
+        <div style="font-size:16px;color:#412402;font-weight:500;">MED → Recuperação de Valores</div>
+        <div style="font-size:18px;color:#854F0B;margin-top:3px;">grafo de rastreamento · evolução em curso</div>
+      </div>
+      <div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;">
+        <div style="font-size:16px;color:#26215C;font-weight:500;">Drex — Real Digital</div>
+        <div style="font-size:18px;color:#534AB7;margin-top:3px;">em pilotos · DLT · programável via contratos inteligentes</div>
+        <div style="font-size:17px;color:#534AB7;margin-top:3px;">futuro, não presente</div>
+      </div>
+    </div>
+    <div class="box" style="display:flex;align-items:flex-start;gap:8px;background:#E6F1FB;border:2px solid #B5D4F4;font-size:18px;color:#042C53;">
+      <i class="ti ti-refresh" aria-hidden="true" style="margin-top:2px;"></i>
+      <span><b>Recado arquitetural:</b> a infraestrutura muda debaixo dos pés → fintech precisa ser desenhada para evoluir.</span>
+    </div>
+  </div>
+
+  <h2>14 · O que o BACEN impõe à arquitetura</h2>
+  <p class="teach">Ensina: esta tabela sintetiza tudo que o BACEN impõe. Cada linha é uma norma que virou uma decisão de arquitetura — não burocracia, mas requisito não-funcional com fonte oficial e consequência regulatória se violado. O valor desse exercício é duplo: vocês saem com uma checklist de arquitetura, e qualquer decisão que contradiga uma linha desta tabela precisa de um ADR que explique o porquê.</p>
+  <div class="fig">
+    <div style="display:grid;grid-template-columns:1.5fr 1.2fr 1.5fr;gap:5px 8px;">
+      <div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;font-size:15px;color:#042C53;font-weight:500;text-align:center;padding:8px 12px;">O que o BACEN impõe</div>
+      <div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;font-size:15px;color:#042C53;font-weight:500;text-align:center;padding:8px 12px;">Restrição concreta</div>
+      <div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;font-size:15px;color:#042C53;font-weight:500;text-align:center;padding:8px 12px;">Decisão de arquitetura</div>
+
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-primary);">SPI liquida em moeda de BC, final</div>
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;font-size:17px;color:#501313;">irreversibilidade absoluta</div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;font-size:17px;color:#04342C;">Ledger forte + reconciliação contínua</div>
+
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-primary);">DICT síncrono no caminho crítico</div>
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;font-size:17px;color:#501313;">latência + ponto de falha externo</div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;font-size:17px;color:#04342C;">Timeout, circuit breaker, cache disciplinado</div>
+
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-primary);">Anti-scraping token bucket (404 custa 20×)</div>
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;font-size:17px;color:#501313;">balde esgota 20× mais rápido</div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;font-size:17px;color:#04342C;">Cache, consolidar consultas, evitar 404</div>
+
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-primary);">SLA de disponibilidade exigido</div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;font-size:17px;color:#412402;">sem janela de manutenção</div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;font-size:17px;color:#04342C;">Redundância, degradação graciosa</div>
+
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-primary);">Teto 40s (SPI real p99 4,6s)</div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;font-size:17px;color:#412402;">orçamento finito de latência</div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;font-size:17px;color:#04342C;">Distribuir e defender o orçamento</div>
+
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-primary);">Recuperação de Valores (p99 6h), bloqueio cautelar (72h)</div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;font-size:17px;color:#412402;">busca em grafo federado</div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;font-size:17px;color:#04342C;">Bounded context Devoluções com busca em grafo</div>
+
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-primary);">Evolução constante (Pix Automático, Drex)</div>
+      <div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;font-size:17px;color:#26215C;">infraestrutura muda sob os pés</div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;font-size:17px;color:#04342C;">Arquitetura evolutiva</div>
+    </div>
+  </div>
+
+  <h2>15 · IA: as quatro disciplinas <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(eixo aprofundado)</span></h2>
+  <p class="teach">Ensina: a IA não é uma feature que se adiciona a um sistema — ela muda o que significa arquitetar. Com agentes no loop, a spec permanece viva, o código é derivado dela, e a produção realimenta as próprias decisões arquiteturais. As quatro disciplinas formam um sistema coerente, integradas pelo MCP. O arquiteto não desaparece — ele sobe de altitude: em vez de "como escrevo essa função", a pergunta vira "como esse sistema decide, valida e evolui com humanos e agentes no mesmo loop, sob as leis do dinheiro e do Banco Central".</p>
+  <div class="fig">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:16px;color:#26215C;font-weight:500;">Spec-Driven Development</div><div style="font-size:18px;color:#534AB7;">a spec é a verdade executável; invariantes viram testes</div></div>
+      <div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:16px;color:#26215C;font-weight:500;">Context Engineering</div><div style="font-size:18px;color:#534AB7;">o que o agente sabe: spec, ADRs, glossário, dados — janela escassa</div></div>
+      <div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:16px;color:#26215C;font-weight:500;">Harness Engineering</div><div style="font-size:18px;color:#534AB7;">evals + guardrails + flags/canary desenhados no sistema</div></div>
+      <div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:16px;color:#26215C;font-weight:500;">Looping Engineering</div><div style="font-size:18px;color:#534AB7;">loop agêntico (planejar→agir→observar→refletir) + feedback (RLHF)</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;align-items:flex-start;gap:8px;background:#fff;border:2px solid var(--border);font-size:18px;color:var(--text-primary);">
+      <i class="ti ti-plug-connected" aria-hidden="true" style="margin-top:2px;color:#534AB7;"></i>
+      <span><b style="font-weight:500;">MCP</b> integra as quatro — conecta o agente a ferramentas/dados com fronteira de permissão: <b>lê</b> produção, <b>propõe</b> mudanças, <b>não move</b> dinheiro.</span>
+    </div>
+  </div>
+
+  <h2>16 · ADR-001 — Consistência forte no ledger do core</h2>
+  <p class="teach">Ensina: um ADR (Architecture Decision Record, formato criado por Michael Nygard em 2011) é um documento curto, datado e <b>imutável</b>, que registra uma única decisão — contexto, decisão, consequências honestas (incluindo o custo), alternativas rejeitadas e status. Vocês nunca editam um ADR antigo; escrevem um novo que o substitui. Assim, a história do pensamento arquitetural fica preservada — e um agente lendo essa sequência de ADRs entende <i>como o sistema pensou</i>, não só como está hoje. Este é o ADR que abre o TechPix, e a produção vai validá-lo.</p>
+  <div class="fig">
+    <div class="box" style="background:#fff;border:2px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:17px;color:var(--text-primary);font-weight:500;">ADR-001 · Consistência forte no ledger do core</div>
+        <span class="tag" style="background:#E1F5EE;color:#04342C;">Status: Aceito (2025-07-30)</span>
+      </div>
+      <div style="display:grid;grid-template-columns:110px 1fr;gap:8px 14px;align-items:start;font-size:17px;">
+        <div style="font-weight:500;color:var(--text-secondary);">Contexto</div>
+        <div style="color:var(--text-primary);line-height:1.5;">O Pix é irreversível e liquida em moeda de banco central (SPI). O ledger não pode criar/destruir dinheiro nem permitir saldo negativo; cada movimento é auditável (BACEN/LGPD). Operamos sob teto normativo de 40 s ponta a ponta (SPI real: p99 4,6 s).</div>
+
+        <div style="font-weight:500;color:var(--text-secondary);">Decisão</div>
+        <div style="color:var(--text-primary);line-height:1.5;">Escrita no ledger será ACID e fortemente consistente (linearizável), síncrona no caminho crítico, idempotente pelo EndToEndId.</div>
+
+        <div style="font-weight:500;color:var(--text-secondary);">Consequências</div>
+        <div style="line-height:1.6;">
+          <div style="color:#04342C;">(+) Correção garantida; trilha de auditoria completa.</div>
+          <div style="color:#04342C;">(+) As invariantes viram testes — base do Harness.</div>
+          <div style="color:#791F1F;">(−) Custo de latência na escrita — consome parte do teto de 40 s.</div>
+          <div style="color:#791F1F;">(−) Escrita não escala na horizontal como a leitura.</div>
+        </div>
+
+        <div style="font-weight:500;color:var(--text-secondary);">Alternativas</div>
+        <div style="line-height:1.7;">
+          <span class="tag" style="background:#FCEBEB;color:#791F1F;">REJEITADO</span> <span style="color:var(--text-primary);">Ledger eventual — viola conservação/auditoria.</span><br>
+          <span class="tag" style="background:#FCEBEB;color:#791F1F;">REJEITADO</span> <span style="color:var(--text-primary);">Saldo em coluna única — sem auditoria; não reconstruível.</span>
+        </div>
+
+        <div style="font-weight:500;color:var(--text-secondary);">Revisão</div>
+        <div style="color:var(--text-primary);line-height:1.5;">A consequência de latência será MEDIDA em produção. Se o p99 ameaçar o SLA, reavaliar em novo ADR — via agente + MCP.</div>
+      </div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;align-items:flex-start;gap:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;">
+      <i class="ti ti-bulb" aria-hidden="true" style="margin-top:2px;"></i>
+      <span>O ADR-001 é a <b>hipótese central da Aula 1</b>. A Aula 8 fecha o loop: produção mede, agente analisa via MCP, humano decide se abre um ADR-002.</span>
+    </div>
+  </div>
+
+  <h2>17 · O loop: da fé à evidência <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(fecha aula 1 ↔ aula 8)</span></h2>
+  <p class="teach">Ensina: o ADR-001 é uma hipótese decidida na fé — sem dados de produção, apoiada em princípios, nas leis do Banco Central e na experiência acumulada. A produção realimenta; um agente analisa via MCP; um humano decide (sob guardrails). Arquitetura vira um loop vivo e governado — não um documento que apodrece numa gaveta. Isso é o que o curso chama de "da fé à evidência".</p>
+  <div class="fig">
+    <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;">
+      <div class="box" style="flex:1;min-width:135px;background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#185FA5;">Observar</div><div style="font-size:18px;color:#042C53;font-weight:500;">métricas de produção</div><div style="font-size:17px;color:#185FA5;">p99 do ledger vs SLA</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;min-width:135px;background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#534AB7;">Orientar</div><div style="font-size:18px;color:#26215C;font-weight:500;">agente analisa</div><div style="font-size:17px;color:#534AB7;">lê via MCP</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;min-width:135px;background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#534AB7;">Decidir</div><div style="font-size:18px;color:#26215C;font-weight:500;">propõe ADR-003</div><div style="font-size:17px;color:#534AB7;">humano aprova</div></div>
+      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="box" style="flex:1;min-width:135px;background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#0F6E56;">Agir</div><div style="font-size:18px;color:#04342C;font-weight:500;">Harness</div><div style="font-size:17px;color:#0F6E56;">flag → canary → guardrail</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#E1F5EE;border:2px solid #9FE1CB;font-size:18px;color:#04342C;">
+      <i class="ti ti-refresh" aria-hidden="true"></i><span><span style="font-weight:500;">↺ volta a observar.</span> O ADR-001 (aula 1, na fé) é validado em produção (aula 8, na evidência) — com humano e agente no mesmo loop.</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =============================================
+   TECH ICONS — auto-injection inside .fig boxes
+   Uses Simple Icons CDN + letter-badge fallback
+   ============================================= */
+(function () {
+  var SI = 'https://cdn.simpleicons.org/';
+
+  /* ── Icon map ────────────────────────────────────────────────
+     img: Simple Icons slug + brand color (hex, no #)
+     letter: fallback badge letter  bg: badge bg color
+  ───────────────────────────────────────────────────────────── */
+  var ICONS = {
+    // ── Databases ─────────────────────────────────────────────
+    'PostgreSQL':    { img: SI+'postgresql/336791' },
+    'MySQL':         { img: SI+'mysql/4479A1' },
+    'InnoDB':        { img: SI+'mysql/4479A1' },
+    'CockroachDB':   { img: SI+'cockroachdb/6933FF' },
+    'TiDB':          { img: SI+'pingcap/CC0000' },
+    'YugabyteDB':    { letter:'Y', bg:'#3D3D4F' },
+    'Yugabyte':      { letter:'Y', bg:'#3D3D4F' },
+    'Spanner':       { img: SI+'googlecloud/4285F4' },
+    'DynamoDB':      { img: SI+'amazondynamodb/4053D6' },
+    'Vitess':        { letter:'V', bg:'#F10737' },
+    // ── Cache ─────────────────────────────────────────────────
+    'Redis':         { img: SI+'redis/DC382D' },
+    'Cache':         { img: SI+'redis/DC382D' },
+    // ── Messaging / Streaming ─────────────────────────────────
+    'Kafka':         { img: SI+'apachekafka/231F20' },
+    'Broker':        { img: SI+'apachekafka/231F20' },
+    // ── CDC ───────────────────────────────────────────────────
+    'Debezium':      { letter:'D', bg:'#FF4040' },
+    // ── Connection pooling ────────────────────────────────────
+    'PgBouncer':     { img: SI+'postgresql/336791' },
+    'Pooler':        { img: SI+'postgresql/8B5E3C' },
+    // ── Testing ───────────────────────────────────────────────
+    'k6':            { img: SI+'k6/7D64FF' },
+    // ── Feature flags ─────────────────────────────────────────
+    'Unleash':       { img: SI+'unleash/1A4A52' },
+    // ── Resilience ────────────────────────────────────────────
+    'Resilience4j':  { letter:'R4', bg:'#27ae60' },
+    // ── Architecture testing ──────────────────────────────────
+    'ArchUnit':      { letter:'A', bg:'#e67e22' },
+    // ── Proxy / Service Mesh ──────────────────────────────────
+    'Envoy':         { img: SI+'envoy/AC6199' },
+    // ── Version control ───────────────────────────────────────
+    'GitHub':        { img: SI+'github/181717' },
+    // ── Containers ────────────────────────────────────────────
+    'Docker':        { img: SI+'docker/2496ED' },
+    'Kubernetes':    { img: SI+'kubernetes/326CE5' },
+    // ── Cloud ─────────────────────────────────────────────────
+    'AWS':           { img: SI+'amazonaws/FF9900' },
+    'GCP':           { img: SI+'googlecloud/4285F4' },
+    // ── Load balancers / WAF ──────────────────────────────────
+    'Cloudflare':    { img: SI+'cloudflare/F38020' },
+  };
+
+  /* Sort by key length desc so longer matches win
+     (e.g. "CockroachDB" beats "Cockroach") */
+  var SORTED = Object.keys(ICONS).sort(function(a,b){ return b.length - a.length; });
+
+  function makeIcon(data) {
+    if (data.img) {
+      var img = document.createElement('img');
+      img.src = data.img;
+      img.width = 22; img.height = 22;
+      img.alt = '';
+      img.style.cssText =
+        'vertical-align:middle;margin-right:7px;border-radius:3px;' +
+        'flex-shrink:0;display:inline-block;';
+      img.onerror = function(){ this.style.display='none'; };
+      return img;
+    }
+    if (data.letter) {
+      var span = document.createElement('span');
+      span.textContent = data.letter;
+      span.style.cssText =
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'width:22px;height:22px;min-width:22px;' +
+        'background:' + data.bg + ';color:#fff;' +
+        'border-radius:4px;font-size:11px;font-weight:700;' +
+        'margin-right:7px;vertical-align:middle;flex-shrink:0;' +
+        'font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+      return span;
+    }
+    return null;
+  }
+
+  function injectInto(el) {
+    if (!el || el._ti) return;   // already processed
+    var text = el.textContent.trim();
+    for (var i = 0; i < SORTED.length; i++) {
+      var tech = SORTED[i];
+      /* Match at word-boundary start (avoid "MySQL" matching inside words) */
+      if (text === tech ||
+          text.startsWith(tech + ' ') ||
+          text.startsWith(tech + '/') ||
+          text.startsWith(tech + ',') ||
+          text.startsWith(tech + ':') ||
+          text.startsWith(tech + ' —') ||
+          (text.indexOf(tech) === 0)) {
+        var icon = makeIcon(ICONS[tech]);
+        if (icon) {
+          /* Wrap text in a flex row */
+          el.style.display = 'flex';
+          el.style.alignItems = 'center';
+          el.style.flexWrap = 'nowrap';
+          el.insertBefore(icon, el.firstChild);
+          el._ti = true;
+        }
+        return;
+      }
+    }
+  }
+
+  function run() {
+    /* ── Aulas 1–8: .fig .box > first div child with font-weight ── */
+    document.querySelectorAll(
+      '.fig .box > div:first-child, ' +
+      '.fig .box > [style*="font-weight:500"]:first-child, ' +
+      '.fig .box > [style*="font-weight: 500"]:first-child'
+    ).forEach(injectInto);
+
+    /* ── Topologia: .t class titles ──────────────────────────── */
+    document.querySelectorAll('.fig .box .t, .fig .t').forEach(injectInto);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+})();
+</script>
+
+</body>
+</html>

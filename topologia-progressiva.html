@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Topologia progressiva — TechPix</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+<style>
+:root{
+  --surface-0:#F0EEE6; --surface-1:#ffffff;
+  --text-primary:#1f1e1c; --text-secondary:#5F5E5A; --text-muted:#8a897f;
+  --border:#E4E1D8;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:var(--font-sans);line-height:1.6;}
+.wrap{max-width:960px;margin:0 auto;padding:44px 24px 90px;}
+h1{font-size:36px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em;}
+.sub{color:var(--text-muted);font-size:17px;margin:0 0 18px;}
+h2{font-size:19px;font-weight:600;margin:38px 0 4px;border-top:1px solid var(--border);padding-top:24px;}
+.teach{color:var(--text-secondary);font-size:18px;margin:4px 0 6px;}
+.pain{font-size:16px;color:#791F1F;background:#FCEBEB;border:2px solid #F7C1C1;border-radius:3px 8px 5px 7px / 7px 5px 8px 3px;padding:8px 11px;margin:8px 0 12px;}
+.lead{color:var(--text-secondary);font-size:18px;background:var(--surface-1);border:2px solid var(--border);border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:14px 16px;}
+.fig{margin:8px 0;}
+.box{border-radius:3px 8px 5px 7px / 7px 5px 8px 3px;padding:9px 10px;}
+.arrow{display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:16px;}
+.chip{font-size:18px;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:5px 9px;display:inline-block;}
+.navlink{font-size:18px;text-decoration:none;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:5px 12px;display:inline-block;border:2px solid var(--border);color:var(--text-secondary);background:var(--surface-1);}
+.navlink:hover{border-color:#534AB7;color:#534AB7;}
+.navlink.active{background:#534AB7;border-color:#534AB7;color:#fff;}
+.flow{display:flex;align-items:stretch;gap:5px;flex-wrap:wrap;}
+.n{background:#F1EFE8;border:2px solid #D3D1C7;color:#2C2C2A;}
+.led{background:#E1F5EE;border:2px solid #9FE1CB;color:#04342C;}
+.ext{background:#E6F1FB;border:2px solid #B5D4F4;color:#042C53;}
+.new{background:#EEEDFE;border:2px solid #534AB7;color:#26215C;}
+.t{font-size:18px;font-weight:500;line-height:1.25;}
+.s{font-size:16px;opacity:.85;line-height:1.3;}
+.badge{font-size:9.5px;background:#534AB7;color:#fff;border-radius:5px;padding:1px 5px;display:inline-block;margin-bottom:3px;letter-spacing:.03em;}
+.tag{font-size:16px;border-radius:7px;padding:2px 7px;white-space:nowrap;}
+.az{border:2px dashed #9FE1CB;border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:10px;background:rgba(225,245,238,.35);}
+@media print{ body{background:#fff;} .wrap{padding:0;max-width:none;} .fig,.box{break-inside:avoid;} h2{break-after:avoid;} }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   EXCALIDRAW DIAGRAMS — scoped to .fig only
+   v2: page chrome reverted; diagrams get the hand-drawn treatment
+   ================================================================ */
+
+/* ── 1. REVERT PAGE CHROME (undo global bumps) ───────────────── */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important;
+  background-image: none !important;
+}
+h1 { font-size: 27px !important; font-weight: 600 !important;
+     letter-spacing: -.01em !important;
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+h2 { font-size: 20px !important; font-weight: 600 !important;
+     border-top: 1px solid var(--border) !important;
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.sub   { font-size: 14px   !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.teach { font-size: 14.5px !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.lead  { font-size: 15px  !important;
+         border: 1px solid var(--border) !important;
+         border-radius: 12px !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.lead::before { display: none !important; }
+.navlink {
+  font-size: 12.5px !important;
+  border-radius: 8px !important;
+  border-width: 1px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important;
+}
+.navlink.active { background: #534AB7 !important; border-color: #534AB7 !important; color: #fff !important; }
+
+/* Revert .mcard outside .fig (course-map cards in h2/grid area) */
+.mcard          { border: 1px solid var(--border) !important; border-radius: 12px !important; }
+.mcard::before  { display: none !important; }
+.mbadge         { font-size: 12px !important; border: none !important; width: 26px !important; height: 26px !important; }
+.mtitle         { font-size: 14px !important; }
+.gancho         { font-size: 12px !important; }
+.theme          { font-size: 11px !important; }
+.mchip          { font-size: 12px !important; border-radius: 8px !important; border: none !important; }
+.chip-fin       { background: #E1F5EE !important; color: #04342C !important; border: none !important; }
+.chip-ia        { background: #EEEDFE !important; color: #26215C !important; border: none !important; }
+.lrow           { border: 1px solid var(--border) !important; border-radius: 10px !important; background: #fff !important; }
+.lnum           { font-size: 12px !important; border: none !important; width: 22px !important; height: 22px !important; }
+.actors         { font-size: 12.5px !important; font-weight: 500 !important; }
+.act            { font-size: 12.5px !important; }
+.box            { border-radius: 12px !important; }
+.rowlabel       { font-size: 11px !important; }
+.chip           { font-size: 12px !important; border-radius: 8px !important; }
+.tag            { font-size: 11px !important; border-radius: 8px !important; padding: 2px 7px !important; }
+
+/* ── 2. EXCALIDRAW: scoped to .fig ──────────────────────────── */
+
+/* Dot-grid whiteboard container */
+.fig {
+  background: #fdfcf8 !important;
+  background-image: radial-gradient(circle, #c3c0b8 1.3px, transparent 1.3px) !important;
+  background-size: 22px 22px !important;
+  border-radius: 14px !important;
+  padding: 18px !important;
+  margin: 8px 0 18px !important;
+  border: 1.5px solid #dbd8cf !important;
+}
+
+/* Caveat everywhere inside diagrams */
+.fig * { font-family: 'Caveat', cursive !important; }
+
+/* Hand-drawn boxes */
+.fig .box {
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  position: relative !important;
+}
+/* Upgrade inline border to 2px on boxes inside .fig */
+.fig .box[style*="border:2px solid"],
+.fig .box[style*="border: 2px solid"] {
+  /* already 2px from prior script; just ensure radius */
+}
+
+/* Course-map cards inside .fig get the hand-drawn treatment */
+.fig .mcard {
+  border: 2px solid #1a1a1a !important;
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  position: relative !important;
+}
+.fig .mcard::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 3px 2px 2px 3px !important;
+  border: 1.5px solid rgba(26,26,26,0.13) !important;
+  border-radius: 4px 7px 4px 7px / 7px 4px 7px 4px !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+.fig .mcard > * { position: relative !important; z-index: 1 !important; }
+
+.fig .mbadge {
+  font-size: 16px !important; font-weight: 700 !important;
+  border: 2px solid rgba(0,0,0,0.28) !important;
+  width: 28px !important; height: 28px !important;
+}
+.fig .mtitle  { font-size: 19px !important; font-weight: 600 !important; }
+.fig .gancho  { font-size: 16px !important; }
+.fig .theme   { font-size: 15px !important; }
+
+/* Chip colors inside diagrams: stronger stroke */
+.fig .mchip   { font-size: 16px !important; border-radius: 3px 8px 5px 7px / 7px 5px 8px 3px !important; }
+.fig .chip-fin { background: #d5f5e3 !important; color: #0a4f35 !important; border: 2.5px solid #27ae60 !important; }
+.fig .chip-ia  { background: #e8daef !important; color: #4a235a !important; border: 2.5px solid #8e44ad !important; }
+
+/* Ladder rows inside .fig */
+.fig .lrow {
+  border: 2px solid var(--border) !important;
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  background: #fdfcf8 !important;
+}
+.fig .lnum {
+  font-size: 16px !important; font-weight: 700 !important;
+  width: 26px !important; height: 26px !important;
+  border: 2px solid #CECBF6 !important;
+}
+.fig .actors { font-size: 17px !important; font-weight: 700 !important; }
+.fig .act    { font-size: 16px !important; }
+
+/* Tags and chips inside .fig */
+.fig .chip { font-size: 16px !important; border-radius: 2px 7px 4px 6px / 6px 4px 7px 2px !important; }
+.fig .tag  { font-size: 15px !important; border-radius: 2px 7px 4px 6px / 6px 4px 7px 2px !important; padding: 4px 10px !important; }
+
+/* Rowlabel inside .fig */
+.fig .rowlabel { font-size: 15px !important; }
+
+/* Arrow icons inside diagrams: slightly bigger */
+.fig .arrow i { font-size: 22px !important; }
+/* Fix: preserve Tabler icon font inside diagrams */
+.fig i[class*="ti"],
+.fig .ti { font-family: 'tabler-icons' !important; }
+
+/* Stronger box borders inside diagrams for better visibility */
+.fig .box[style*="border:2px solid #"],
+.fig .box[style*="border: 2px solid #"] {
+  box-shadow: 1px 2px 0 rgba(0,0,0,0.08) !important;
+}
+
+/* Remove spurious ::before on plain boxes (keep only on .mcard) */
+.fig .box:not(.mcard)::before { display: none !important; }
+
+
+/* Bar chart labels inside .fig (cotovelo, conta quente) */
+.fig [style*="font-size:13px"] { font-size: 16px !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Topologia progressiva — TechPix</h1>
+  <nav style="display:flex;gap:8px;margin:2px 0 14px;flex-wrap:wrap;">
+    <a href="aula1-roteiro.html" class="navlink">Aula 1</a>
+    <a href="aula2-roteiro.html" class="navlink">Aula 2</a>
+    <a href="aula3-roteiro.html" class="navlink">Aula 3</a>
+    <a href="aula8-roteiro.html" class="navlink">Aula 8</a>
+    <a href="topologia-progressiva.html" class="navlink active">Topologia</a>
+  </nav>
+  <p class="sub">O desenho de System Design construído ao vivo, camada por camada · roxo = o que entra agora</p>
+  <div class="lead"><b>Regra de condução:</b> nunca desenhe uma caixa antes de a turma sentir a dor que a justifica. Load balancer desenhado no início é decoração; desenhado depois de mostrar o ponto único de falha, significa algo.</div>
+
+  <h2>Camada 0 · O guardanapo <span style="font-size:18px;color:var(--text-muted);font-weight:400;">— Aula 1</span></h2>
+  <p class="teach">Tecnicamente correto, operacionalmente inviável. Descreve o fluxo lógico com precisão e não sobreviveria a dez minutos de produção.</p>
+  <div class="fig">
+    <div class="flow">
+      <div class="box n" style="flex:1;min-width:110px;"><div class="t">app do cliente</div></div>
+      <div class="arrow">→</div>
+      <div class="box n" style="flex:1;min-width:110px;"><div class="t">API</div></div>
+      <div class="arrow">→</div>
+      <div class="box led" style="flex:1.2;min-width:130px;"><div class="t">core + ledger</div><div class="s">a verdade do dinheiro</div></div>
+      <div class="arrow">→</div>
+      <div class="box ext" style="flex:1;min-width:110px;"><div class="t">BACEN</div></div>
+    </div>
+  </div>
+
+  <h2>Camada 1 · A borda <span style="font-size:18px;color:var(--text-muted);font-weight:400;">— Aula 1</span></h2>
+  <p class="teach">Ensina: escolha L4 vs L7 (o L7 é o que habilita o Strangler Fig da Aula 2), health check que checa dependência própria mas não externa, e criptografia interna após a terminação TLS.</p>
+  <div class="pain">Dor: a API é uma caixa só — logo é ponto único de falha do Pix inteiro. Deploy, reinício ou um cabo derrubam tudo.</div>
+  <div class="fig">
+    <div class="flow">
+      <div class="box n" style="flex:.9;min-width:95px;"><div class="t">cliente</div></div>
+      <div class="arrow">→</div>
+      <div class="box new" style="flex:.9;min-width:100px;"><div class="badge">NOVO</div><div class="t">DNS</div><div class="s">TTL baixo (30-60s)</div></div>
+      <div class="arrow">→</div>
+      <div class="box new" style="flex:.9;min-width:100px;"><div class="badge">NOVO</div><div class="t">WAF</div><div class="s">protege o orçamento</div></div>
+      <div class="arrow">→</div>
+      <div class="box new" style="flex:1.1;min-width:120px;"><div class="badge">NOVO</div><div class="t">LB L7</div><div class="s">roteia por rota · health check</div></div>
+      <div class="arrow">→</div>
+      <div style="flex:1.1;min-width:120px;display:flex;flex-direction:column;gap:4px;">
+        <div class="box new" style="padding:6px 9px;"><div class="t">API ×5-9</div><div class="s">900 TPS ÷ ~150 rps</div></div>
+        <div class="box n" style="padding:4px 9px;"><div class="s">instâncias replicadas</div></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="box led" style="flex:1;min-width:105px;"><div class="t">core + ledger</div></div>
+    </div>
+  </div>
+
+  <h2>Camada 2 · Gateway / BFF <span style="font-size:18px;color:var(--text-muted);font-weight:400;">— Aula 1</span></h2>
+  <p class="teach">Ensina: autenticação no gateway, autorização de negócio no domínio. Rate limit distribuído precisa de estado compartilhado (9 instâncias × contador local = 9× o limite configurado).</p>
+  <div class="pain">Dor: cada instância repete — e faz divergir — a mesma validação de identidade, limite e idempotência. Divergência em validação é como vulnerabilidade nasce.</div>
+  <div class="fig">
+    <div class="flow">
+      <div class="box n" style="flex:.8;min-width:90px;"><div class="t">cliente → borda</div><div class="s">DNS · WAF · LB</div></div>
+      <div class="arrow">→</div>
+      <div class="box new" style="flex:1.6;min-width:200px;">
+        <div class="badge">NOVO</div><div class="t">Gateway / BFF</div>
+        <div class="s" style="margin-top:4px;">autenticação (quem é) · rate limit próprio · exige idempotency-key · propaga trace-id</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="box led" style="flex:1.1;min-width:130px;"><div class="t">core + ledger</div><div class="s">autorização de negócio mora aqui</div></div>
+      <div class="arrow">→</div>
+      <div class="box ext" style="flex:.8;min-width:90px;"><div class="t">BACEN</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;background:#FAEEDA;border:2px solid #FAC775;font-size:18px;color:#412402;">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i> Armadilha: o gateway tem tendência gravitacional a acumular regra de negócio e virar um monólito novo — no caminho crítico de tudo. Se a lógica precisa conhecer o domínio, não pertence ao gateway.
+    </div>
+  </div>
+
+  <h2>Camada 3 · Os serviços <span style="font-size:18px;color:var(--text-muted);font-weight:400;">— Aula 1, refinado na Aula 3</span></h2>
+  <p class="teach">Ensina: stateless habilita autoscaling. Escale por profundidade de fila (o <i>L</i> da Lei de Little), não por CPU, em serviços que esperam. Síncrono é dívida; assíncrono é o padrão.</p>
+  <div class="pain">Dor: o "core" é uma caixa só. Cada chamada síncrona no caminho crítico multiplica falha (3 dependências a 99,9% → ~99,7%) e soma latência ao teto de 40 s.</div>
+  <div class="fig">
+    <div class="flow">
+      <div class="box n" style="flex:.8;min-width:95px;"><div class="t">borda + gateway</div></div>
+      <div class="arrow">→</div>
+      <div style="flex:2.4;min-width:250px;display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+        <div class="box new" style="padding:7px 9px;"><div class="badge">NOVO</div><div class="t">Pagamentos</div><div class="s">stateless · autoscaling</div></div>
+        <div class="box new" style="padding:7px 9px;"><div class="t" style="margin-top:13px;">Antifraude</div><div class="s">síncrono no fluxo</div></div>
+        <div class="box led" style="padding:7px 9px;"><div class="t">Contas & Ledger</div><div class="s">escrita forte</div></div>
+        <div class="box new" style="padding:7px 9px;"><div class="t">Devoluções</div><div class="s">MED · grafo</div></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="box ext" style="flex:.8;min-width:95px;"><div class="t">BACEN</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;background:#fff;border:2px solid var(--border);font-size:18px;color:var(--text-secondary);">
+      Autoscaling tem latência de reação (dezenas de segundos). Protege contra crescimento de carga, <b>não</b> contra pico abrupto — contra pico, é capacidade pré-provisionada + Camada 8.
+    </div>
+  </div>
+
+  <h2>Camada 4 · Integração BACEN <span style="font-size:18px;color:var(--text-muted);font-weight:400;">— Aula 1</span></h2>
+  <p class="teach">Ensina: o ACL da Aula 3 como componente real e desenhável — isola o formato ISO 20022, absorve mudança regulatória, e tem pool próprio (o bulkhead da Aula 2 na topologia).</p>
+  <div class="pain">Dor: "BACEN" esconde que você sai da sua infraestrutura e entra numa rede regulada, com exigências que não se negociam. E certificado expira num instante previsível que ninguém previu.</div>
+  <div class="fig">
+    <div class="flow">
+      <div class="box led" style="flex:1;min-width:110px;"><div class="t">Pagamentos</div></div>
+      <div class="arrow">→</div>
+      <div class="box new" style="flex:1.5;min-width:180px;">
+        <div class="badge">NOVO</div><div class="t">ACL — adaptador BACEN</div>
+        <div class="s" style="margin-top:3px;">traduz pacs.008/002/004 ↔ evento de domínio · pool isolado</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="box new" style="flex:1;min-width:120px;"><div class="badge">NOVO</div><div class="t">mTLS + certificado</div><div class="s">rotação antes do vencimento</div></div>
+      <div class="arrow">→</div>
+      <div class="box new" style="flex:.9;min-width:105px;"><div class="badge">NOVO</div><div class="t">RSFN</div><div class="s">rede dedicada, redundante</div></div>
+      <div class="arrow">→</div>
+      <div class="box ext" style="flex:1;min-width:110px;"><div class="t">SPI · DICT</div><div class="s">p99 4,6s · p99 ≤1s</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;gap:8px;align-items:flex-start;background:#E1F5EE;border:2px solid #9FE1CB;font-size:18px;color:#04342C;">
+      <i class="ti ti-refresh" aria-hidden="true" style="margin-top:2px;"></i><span><b>Reconciliação</b> não é opcional: compara o que você registrou contra o que o BACEN registrou. É o que impede que incerteza de rede vire dinheiro divergente.</span>
+    </div>
+  </div>
+
+  <h2>Camada 5 · Os dados <span style="font-size:18px;color:var(--text-muted);font-weight:400;">— Aula 2</span></h2>
+  <p class="teach">Ensina: primary único para escrita mantém Σ=Σ simples. Replica lag produz o bug mais confuso do CQRS. Pooler externo resolve o esgotamento que a Lei de Little previu.</p>
+  <div class="pain">Dor: o dia 5. Fila de lock no ledger, pool esgotado. 900 TPS × 500 ms = 450 conexões contra um pool de 100.</div>
+  <div class="fig">
+    <div class="flow">
+      <div class="box led" style="flex:1;min-width:110px;"><div class="t">serviços</div></div>
+      <div class="arrow">→</div>
+      <div class="box new" style="flex:1;min-width:115px;"><div class="badge">NOVO</div><div class="t">Pooler</div><div class="s">multiplexa conexões (ex.: PgBouncer)</div></div>
+      <div class="arrow">→</div>
+      <div style="flex:2.2;min-width:240px;display:flex;flex-direction:column;gap:5px;">
+        <div class="box new" style="padding:7px 9px;"><div class="badge">NOVO</div><div class="t">Primary — escrita · serializable</div><div class="s">particionado: hash(conta_id) mod N</div></div>
+        <div class="box new" style="padding:7px 9px;"><div class="t">Réplicas ×N — leitura</div><div class="s">lag 100-300 ms, cresce sob carga de escrita</div></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-secondary);"><b style="color:var(--text-primary);">Read-your-own-writes</b> — roteia leitura ao primary por alguns segundos, ou devolve o resultado já conhecido na resposta da escrita (mais simples, subestimado).</div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-secondary);"><b style="color:var(--text-primary);">Conta quente</b> — cliente de volume gigantesco satura a própria partição; precisa de tratamento dedicado.</div>
+    </div>
+  </div>
+
+  <h2>Camada 6 · Cache <span style="font-size:18px;color:var(--text-muted);font-weight:400;">— Aula 2</span></h2>
+  <p class="teach">Ensina: o limite do cache do DICT não é técnico, é regulatório — e essa é uma lição de System Design que vale além do Pix. Em domínio regulado, a norma é restrição de projeto de primeira classe.</p>
+  <div class="pain">Dor: cada leitura que bate no banco é capacidade que você poderia ter usado para escrever. E leitura é ordens de magnitude mais frequente que escrita.</div>
+  <div class="fig">
+    <div class="flow">
+      <div class="box led" style="flex:1;min-width:105px;"><div class="t">serviços</div></div>
+      <div class="arrow">→</div>
+      <div class="box new" style="flex:1.4;min-width:165px;"><div class="badge">NOVO</div><div class="t">Cache (cache-aside)</div><div class="s">hit → usa · miss → busca, popula, devolve</div></div>
+      <div class="arrow">→</div>
+      <div class="box n" style="flex:1;min-width:110px;"><div class="t">primary / réplicas</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;font-size:17px;color:#501313;"><b>Invalidação</b> — cache é cópia; cópia de dado que muda fica errada. Saldo não se cacheia com TTL longo.</div>
+      <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;font-size:17px;color:#501313;"><b>Thundering herd</b> — chave popular expira, todos dão miss juntos. Defesa: lock ou TTL com jitter.</div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;font-size:17px;color:#412402;"><b>Cache do DICT</b> — dado pessoal. O TTL é decidido pela norma, não pela taxa de acerto desejada.</div>
+    </div>
+  </div>
+
+  <h2>Camada 7 · O caminho assíncrono <span style="font-size:18px;color:var(--text-muted);font-weight:400;">— Aula 2</span></h2>
+  <p class="teach">Ensina: partition key é decisão de <b>correção</b>, não de performance (ordem por conta). Nº de partições é o teto do paralelismo. Consumidor precisa ser idempotente porque a entrega é at-least-once.</p>
+  <div class="pain">Dor: o Outbox da Aula 2 publicava "para um relay". Para onde, exatamente? Essa caixa precisa de nome e trade-off.</div>
+  <div class="fig">
+    <div class="flow">
+      <div class="box led" style="flex:1.2;min-width:135px;"><div class="t">1 transação atômica</div><div class="s">ledger + tabela outbox</div></div>
+      <div class="arrow">→</div>
+      <div class="box new" style="flex:1.3;min-width:150px;"><div class="badge">NOVO</div><div class="t">Relay</div><div class="s">poller (simples) ou CDC/WAL (menor latência)</div></div>
+      <div class="arrow">→</div>
+      <div class="box new" style="flex:1.3;min-width:150px;"><div class="badge">NOVO</div><div class="t">Broker — log distribuído</div><div class="s">partition key = conta_id · retém e reprocessa</div></div>
+      <div class="arrow">→</div>
+      <div class="box ext" style="flex:1.1;min-width:125px;"><div class="t">consumidores</div><div class="s">extrato · feed · notificação</div></div>
+    </div>
+    <div class="box" style="margin-top:8px;display:flex;gap:8px;align-items:flex-start;background:#FCEBEB;border:2px solid #F7C1C1;font-size:18px;color:#501313;">
+      <i class="ti ti-skull" aria-hidden="true" style="margin-top:2px;"></i><span><b>DLQ sem alarme é um cemitério.</b> Depois de N tentativas a mensagem vai para quarentena — e alguém precisa ser avisado. Já vi DLQ com meses de mensagens que ninguém sabia que existiam.</span>
+    </div>
+  </div>
+
+  <h2>Camada 8 · Continuidade <span style="font-size:18px;color:var(--text-muted);font-weight:400;">— Aula 1 (fundamento) → validada na Aula 8</span></h2>
+  <p class="teach">Ensina: RTO e RPO <b>não são iguais para todo o sistema</b> — são por componente. É a mesma lógica de "forte no núcleo, eventual na borda", agora no eixo da continuidade.</p>
+  <div class="pain">Dor: tudo acima está num único datacenter. Para um PSP, parar não é só perda de receita — é descumprimento de índice de disponibilidade regulado.</div>
+  <div class="fig">
+    <div class="az">
+      <div style="font-size:17px;color:#0F6E56;margin-bottom:7px;">MULTI-AZ · latência de poucos ms entre zonas permite replicação síncrona → RPO zero no ledger</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+        <div class="box new" style="padding:7px 9px;text-align:center;"><div class="badge">NOVO</div><div class="t">AZ-a</div><div class="s">serviços + réplica</div></div>
+        <div class="box new" style="padding:7px 9px;text-align:center;"><div class="t" style="margin-top:13px;">AZ-b</div><div class="s">serviços + primary</div></div>
+        <div class="box new" style="padding:7px 9px;text-align:center;"><div class="t" style="margin-top:13px;">AZ-c</div><div class="s">serviços + réplica</div></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-secondary);"><b style="color:var(--text-primary);">RPO do ledger = zero</b> — nenhuma transação liquidada pode desaparecer. É isso que exige replicação síncrona e limita a distância.</div>
+      <div class="box" style="background:#fff;border:2px solid var(--border);font-size:17px;color:var(--text-secondary);"><b style="color:var(--text-primary);">Multi-região</b> — latência de dezenas/centenas de ms força replicação assíncrona → risco de perder as últimas transações no failover.</div>
+    </div>
+    <div style="font-size:18px;color:var(--text-secondary);font-weight:500;margin:14px 0 6px;">Degradação graciosa — por dependência</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;font-size:17px;color:#412402;"><b>DICT caiu</b> → não é "Pix indisponível"; é "pagamento por chave indisponível, use dados da conta".</div>
+      <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;font-size:17px;color:#412402;"><b>SPI caiu</b> → aceita a ordem, enfileira com estado explícito, comunica "em processamento". Jamais diz "concluído".</div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;font-size:17px;color:#04342C;"><b>Réplica caiu</b> → outra réplica serve o extrato. Quase invisível, se bem desenhado.</div>
+      <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;font-size:17px;color:#04342C;"><b>Broker caiu</b> → escrita continua. O evento está na tabela outbox; o relay publica depois. <b>Este é o payoff da Aula 2.</b></div>
+    </div>
+    <div class="box" style="margin-top:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;">
+      <b>Load shedding</b> — recusar 5% das requisições com erro claro e imediato é melhor que aceitar 100% e entregar timeout para todas. E liquidação em andamento tem prioridade sobre consulta de extrato.
+    </div>
+  </div>
+
+  <h2>O desenho final — e a pergunta que fecha</h2>
+  <p class="teach">Mais de vinte caixas. Cada uma existe porque uma falha concreta a justificou.</p>
+  <div class="fig">
+    <div class="flow" style="gap:4px;">
+      <div class="box n" style="flex:1;min-width:70px;"><div class="s">cliente</div></div>
+      <div class="arrow">→</div>
+      <div class="box n" style="flex:1;min-width:70px;"><div class="s">DNS · WAF</div></div>
+      <div class="arrow">→</div>
+      <div class="box n" style="flex:1;min-width:70px;"><div class="s">LB L7</div></div>
+      <div class="arrow">→</div>
+      <div class="box n" style="flex:1;min-width:70px;"><div class="s">gateway</div></div>
+      <div class="arrow">→</div>
+      <div class="box led" style="flex:1.2;min-width:85px;"><div class="s">serviços por contexto</div></div>
+      <div class="arrow">→</div>
+      <div class="box n" style="flex:1;min-width:70px;"><div class="s">cache</div></div>
+      <div class="arrow">→</div>
+      <div class="box led" style="flex:1.2;min-width:85px;"><div class="s">pooler · primary/réplicas particionados</div></div>
+      <div class="arrow">→</div>
+      <div class="box n" style="flex:1;min-width:70px;"><div class="s">broker · DLQ</div></div>
+      <div class="arrow">→</div>
+      <div class="box ext" style="flex:1.2;min-width:85px;"><div class="s">ACL · mTLS · RSFN</div></div>
+      <div class="arrow">→</div>
+      <div class="box ext" style="flex:1;min-width:70px;"><div class="s">SPI · DICT</div></div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+      <span class="chip" style="background:#E1F5EE;color:#04342C;">transversal: multi-AZ</span>
+      <span class="chip" style="background:#E1F5EE;color:#04342C;">RTO/RPO por componente</span>
+      <span class="chip" style="background:#E1F5EE;color:#04342C;">observabilidade (Aula 7)</span>
+      <span class="chip" style="background:#E1F5EE;color:#04342C;">degradação graciosa</span>
+    </div>
+    <div class="box" style="margin-top:10px;background:#EEEDFE;border:2px solid #CECBF6;font-size:16px;color:#26215C;line-height:1.55;">
+      Se você desenhar isso tudo no dia 1 de uma fintech nova, construiu um sistema que o time não entende e a operação não sustenta. <b>O guardanapo de 4 caixas era certo para o dia 1.</b> A habilidade não é "sei desenhar essa arquitetura" — é saber <b>em que ordem</b> as caixas aparecem, e o que precisa doer antes de cada uma se justificar.
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =============================================
+   TECH ICONS — auto-injection inside .fig boxes
+   Uses Simple Icons CDN + letter-badge fallback
+   ============================================= */
+(function () {
+  var SI = 'https://cdn.simpleicons.org/';
+
+  /* ── Icon map ────────────────────────────────────────────────
+     img: Simple Icons slug + brand color (hex, no #)
+     letter: fallback badge letter  bg: badge bg color
+  ───────────────────────────────────────────────────────────── */
+  var ICONS = {
+    // ── Databases ─────────────────────────────────────────────
+    'PostgreSQL':    { img: SI+'postgresql/336791' },
+    'MySQL':         { img: SI+'mysql/4479A1' },
+    'InnoDB':        { img: SI+'mysql/4479A1' },
+    'CockroachDB':   { img: SI+'cockroachdb/6933FF' },
+    'TiDB':          { img: SI+'pingcap/CC0000' },
+    'YugabyteDB':    { letter:'Y', bg:'#3D3D4F' },
+    'Yugabyte':      { letter:'Y', bg:'#3D3D4F' },
+    'Spanner':       { img: SI+'googlecloud/4285F4' },
+    'DynamoDB':      { img: SI+'amazondynamodb/4053D6' },
+    'Vitess':        { letter:'V', bg:'#F10737' },
+    // ── Cache ─────────────────────────────────────────────────
+    'Redis':         { img: SI+'redis/DC382D' },
+    'Cache':         { img: SI+'redis/DC382D' },
+    // ── Messaging / Streaming ─────────────────────────────────
+    'Kafka':         { img: SI+'apachekafka/231F20' },
+    'Broker':        { img: SI+'apachekafka/231F20' },
+    // ── CDC ───────────────────────────────────────────────────
+    'Debezium':      { letter:'D', bg:'#FF4040' },
+    // ── Connection pooling ────────────────────────────────────
+    'PgBouncer':     { img: SI+'postgresql/336791' },
+    'Pooler':        { img: SI+'postgresql/8B5E3C' },
+    // ── Testing ───────────────────────────────────────────────
+    'k6':            { img: SI+'k6/7D64FF' },
+    // ── Feature flags ─────────────────────────────────────────
+    'Unleash':       { img: SI+'unleash/1A4A52' },
+    // ── Resilience ────────────────────────────────────────────
+    'Resilience4j':  { letter:'R4', bg:'#27ae60' },
+    // ── Architecture testing ──────────────────────────────────
+    'ArchUnit':      { letter:'A', bg:'#e67e22' },
+    // ── Proxy / Service Mesh ──────────────────────────────────
+    'Envoy':         { img: SI+'envoy/AC6199' },
+    // ── Version control ───────────────────────────────────────
+    'GitHub':        { img: SI+'github/181717' },
+    // ── Containers ────────────────────────────────────────────
+    'Docker':        { img: SI+'docker/2496ED' },
+    'Kubernetes':    { img: SI+'kubernetes/326CE5' },
+    // ── Cloud ─────────────────────────────────────────────────
+    'AWS':           { img: SI+'amazonaws/FF9900' },
+    'GCP':           { img: SI+'googlecloud/4285F4' },
+    // ── Load balancers / WAF ──────────────────────────────────
+    'Cloudflare':    { img: SI+'cloudflare/F38020' },
+  };
+
+  /* Sort by key length desc so longer matches win
+     (e.g. "CockroachDB" beats "Cockroach") */
+  var SORTED = Object.keys(ICONS).sort(function(a,b){ return b.length - a.length; });
+
+  function makeIcon(data) {
+    if (data.img) {
+      var img = document.createElement('img');
+      img.src = data.img;
+      img.width = 22; img.height = 22;
+      img.alt = '';
+      img.style.cssText =
+        'vertical-align:middle;margin-right:7px;border-radius:3px;' +
+        'flex-shrink:0;display:inline-block;';
+      img.onerror = function(){ this.style.display='none'; };
+      return img;
+    }
+    if (data.letter) {
+      var span = document.createElement('span');
+      span.textContent = data.letter;
+      span.style.cssText =
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'width:22px;height:22px;min-width:22px;' +
+        'background:' + data.bg + ';color:#fff;' +
+        'border-radius:4px;font-size:11px;font-weight:700;' +
+        'margin-right:7px;vertical-align:middle;flex-shrink:0;' +
+        'font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+      return span;
+    }
+    return null;
+  }
+
+  function injectInto(el) {
+    if (!el || el._ti) return;   // already processed
+    var text = el.textContent.trim();
+    for (var i = 0; i < SORTED.length; i++) {
+      var tech = SORTED[i];
+      /* Match at word-boundary start (avoid "MySQL" matching inside words) */
+      if (text === tech ||
+          text.startsWith(tech + ' ') ||
+          text.startsWith(tech + '/') ||
+          text.startsWith(tech + ',') ||
+          text.startsWith(tech + ':') ||
+          text.startsWith(tech + ' —') ||
+          (text.indexOf(tech) === 0)) {
+        var icon = makeIcon(ICONS[tech]);
+        if (icon) {
+          /* Wrap text in a flex row */
+          el.style.display = 'flex';
+          el.style.alignItems = 'center';
+          el.style.flexWrap = 'nowrap';
+          el.insertBefore(icon, el.firstChild);
+          el._ti = true;
+        }
+        return;
+      }
+    }
+  }
+
+  function run() {
+    /* ── Aulas 1–8: .fig .box > first div child with font-weight ── */
+    document.querySelectorAll(
+      '.fig .box > div:first-child, ' +
+      '.fig .box > [style*="font-weight:500"]:first-child, ' +
+      '.fig .box > [style*="font-weight: 500"]:first-child'
+    ).forEach(injectInto);
+
+    /* ── Topologia: .t class titles ──────────────────────────── */
+    document.querySelectorAll('.fig .box .t, .fig .t').forEach(injectInto);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+})();
+</script>
+
+</body>
+</html>
