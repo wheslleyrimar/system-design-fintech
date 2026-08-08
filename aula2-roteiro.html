@@ -442,7 +442,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="fig">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <div class="box" style="flex:1;min-width:150px;background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:16px;font-weight:500;">Cliente</div></div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="chamada síncrona: pedido → resposta"><i class="ti ti-arrow-left-right" aria-hidden="true"></i></div>
       <div class="box" style="flex:1;min-width:150px;background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:16px;font-weight:500;color:#26215C;">Fachada / roteador</div><div style="font-size:17px;color:#534AB7;">decide % de tráfego</div></div>
       <div style="display:flex;flex-direction:column;gap:6px;flex:1.4;min-width:170px;">
         <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:8px;"><div style="font-size:18px;color:var(--text-secondary);">↳ monólito (antigo)</div></div>
@@ -467,7 +467,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
           <div class="box" style="background:#fff;border:2px solid #F7C1C1;font-size:18px;padding:6px 12px;color:#791F1F;">Chamador B</div>
           <div class="box" style="background:#fff;border:2px solid #F7C1C1;font-size:18px;padding:6px 12px;color:#791F1F;">Chamador C</div>
         </div>
-        <div class="arrow"><i class="ti ti-arrows-right" aria-hidden="true"></i></div>
+        <div class="arrow" title="chamada de método: pedido → retorno"><i class="ti ti-arrow-left-right" aria-hidden="true"></i></div>
         <div class="box" style="background:#FCEBEB;border:2px solid #E24B4A;font-size:18px;color:#791F1F;padding:12px 16px;font-weight:500;text-align:center;">Implementação<br>Concreta</div>
       </div>
     </div>
@@ -479,9 +479,9 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
           <div class="box" style="background:#fff;border:2px solid #FAC775;font-size:18px;padding:6px 12px;">Chamador B</div>
           <div class="box" style="background:#fff;border:2px solid #FAC775;font-size:18px;padding:6px 12px;">Chamador C</div>
         </div>
-        <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+        <div class="arrow" title="chamada de método: pedido → retorno"><i class="ti ti-arrow-left-right" aria-hidden="true"></i></div>
         <div class="box" style="background:#EEEDFE;border:2px solid #534AB7;font-size:18px;color:#26215C;padding:12px 16px;font-weight:500;text-align:center;">«interface»<br>Abstração</div>
-        <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+        <div class="arrow" title="chamada de método: pedido → retorno"><i class="ti ti-arrow-left-right" aria-hidden="true"></i></div>
         <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;font-size:18px;padding:12px 16px;text-align:center;">Impl. Antiga<br><span style="font-size:17px;color:var(--text-muted);">(segue rodando)</span></div>
       </div>
     </div>
@@ -493,9 +493,9 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
           <div class="box" style="background:#fff;border:2px solid #9FE1CB;font-size:18px;padding:6px 12px;">Chamador B</div>
           <div class="box" style="background:#fff;border:2px solid #9FE1CB;font-size:18px;padding:6px 12px;">Chamador C</div>
         </div>
-        <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+        <div class="arrow" title="chamada de método: pedido → retorno"><i class="ti ti-arrow-left-right" aria-hidden="true"></i></div>
         <div class="box" style="background:#EEEDFE;border:2px solid #534AB7;font-size:18px;color:#26215C;padding:12px 16px;font-weight:500;text-align:center;">«interface»<br>Abstração</div>
-        <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+        <div class="arrow" title="chamada síncrona: pedido → resposta"><i class="ti ti-arrow-left-right" aria-hidden="true"></i></div>
         <div class="box" style="background:#E1F5EE;border:2px solid #0F6E56;font-size:18px;color:#04342C;padding:12px 16px;font-weight:500;text-align:center;">Novo Serviço<br><span style="font-size:17px;color:#0F6E56;">✓ migrado</span></div>
       </div>
     </div>
@@ -522,9 +522,9 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
           <div style="background:#fff;border-radius:2px 6px 3px 5px / 5px 3px 6px 2px;padding:5px 8px;font-size:18px;">grava evento na tabela outbox</div>
         </div>
       </div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="publicação assíncrona — quem escreve não espera resposta"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
       <div class="box" style="flex:1;min-width:150px;background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:16px;color:#26215C;font-weight:500;">Relay</div><div style="font-size:17px;color:#534AB7;">publica assíncrono</div></div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="consumo assíncrono — o relay não espera o consumidor"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
       <div class="box" style="flex:1;min-width:150px;background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;">extrato · feed · notificação</div><div style="font-size:17px;color:#185FA5;">read model, eventual</div></div>
     </div>
     <div class="box" style="margin-top:8px;background:#fff;border:2px solid var(--border);font-size:18px;color:var(--text-secondary);">
@@ -581,12 +581,12 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     'PostgreSQL':    { img: SI+'postgresql/336791' },
     'MySQL':         { img: SI+'mysql/4479A1' },
     'InnoDB':        { img: SI+'mysql/4479A1' },
-    'CockroachDB':   { img: SI+'cockroachdb/6933FF' },
-    'TiDB':          { img: SI+'pingcap/CC0000' },
+    'CockroachDB':   { img: SI+'cockroachlabs/6933FF' },
+    'TiDB':          { img: SI+'tidb/CC0000' },
     'YugabyteDB':    { letter:'Y', bg:'#3D3D4F' },
     'Yugabyte':      { letter:'Y', bg:'#3D3D4F' },
     'Spanner':       { img: SI+'googlecloud/4285F4' },
-    'DynamoDB':      { img: SI+'amazondynamodb/4053D6' },
+    'DynamoDB':      { ti:'ti-database', bg:'#4053D6' },
     'Vitess':        { letter:'V', bg:'#F10737' },
     // ── Cache ─────────────────────────────────────────────────
     'Redis':         { img: SI+'redis/DC382D' },
@@ -602,23 +602,58 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     // ── Testing ───────────────────────────────────────────────
     'k6':            { img: SI+'k6/7D64FF' },
     // ── Feature flags ─────────────────────────────────────────
-    'Unleash':       { img: SI+'unleash/1A4A52' },
+    'Unleash':       { ti:'ti-toggle-left', bg:'#1A4A52' },
     // ── Resilience ────────────────────────────────────────────
     'Resilience4j':  { letter:'R4', bg:'#27ae60' },
     // ── Architecture testing ──────────────────────────────────
     'ArchUnit':      { letter:'A', bg:'#e67e22' },
     // ── Proxy / Service Mesh ──────────────────────────────────
-    'Envoy':         { img: SI+'envoy/AC6199' },
+    'Envoy':         { img: SI+'envoyproxy/AC6199' },
     // ── Version control ───────────────────────────────────────
     'GitHub':        { img: SI+'github/181717' },
     // ── Containers ────────────────────────────────────────────
     'Docker':        { img: SI+'docker/2496ED' },
     'Kubernetes':    { img: SI+'kubernetes/326CE5' },
     // ── Cloud ─────────────────────────────────────────────────
-    'AWS':           { img: SI+'amazonaws/FF9900' },
+    'AWS':           { ti:'ti-cloud', bg:'#FF9900' },
     'GCP':           { img: SI+'googlecloud/4285F4' },
-    // ── Load balancers / WAF ──────────────────────────────────
+    // ── Load balancers / WAF / CDN / DNS ──────────────────────
+    'Cloudflare DNS':{ img: SI+'cloudflare/F38020' },
+    'Cloudflare WAF':{ img: SI+'cloudflare/F38020' },
     'Cloudflare':    { img: SI+'cloudflare/F38020' },
+    'NGINX':         { img: SI+'nginx/009639' },
+    // ── PIX / BACEN — sem brasão oficial, ícone genérico ──────
+    'Pix':           { img: SI+'pix/32BCAD' },
+    'BACEN':         { ti:'ti-building-bank', bg:'#374151' },
+    'SPI':           { ti:'ti-building-bank', bg:'#374151' },
+    'DICT':          { ti:'ti-address-book', bg:'#374151' },
+    'RSFN':          { ti:'ti-antenna-bars-5', bg:'#374151' },
+    // ── Segurança / rede — conceito genérico ──────────────────
+    'mTLS':          { ti:'ti-shield-lock', bg:'#475569' },
+    'TLS':           { ti:'ti-lock', bg:'#475569' },
+    'DNS':           { ti:'ti-world', bg:'#0f766e' },
+    'WAF':           { ti:'ti-shield', bg:'#b45309' },
+    'CDN':           { ti:'ti-cloud', bg:'#0f766e' },
+    // ── Cliente / borda — conceito genérico ───────────────────
+    'app do cliente':{ ti:'ti-device-mobile', bg:'#52525b' },
+    'cliente':       { ti:'ti-device-mobile', bg:'#52525b' },
+    'Gateway / BFF': { ti:'ti-route', bg:'#52525b' },
+    'Gateway':       { ti:'ti-route', bg:'#52525b' },
+    // ── Observabilidade ────────────────────────────────────────
+    'Prometheus':    { img: SI+'prometheus/E6522C' },
+    'Grafana':       { img: SI+'grafana/F46800' },
+    'Sentry':        { img: SI+'sentry/362D59' },
+    'Datadog':       { img: SI+'datadog/632CA6' },
+    // ── CI/CD / IaC ────────────────────────────────────────────
+    'GitHub Actions':{ img: SI+'githubactions/2088FF' },
+    'Terraform':     { img: SI+'terraform/7B42BC' },
+    // ── IA / Agentes ───────────────────────────────────────────
+    'Claude':        { img: SI+'anthropic/191919' },
+    'Anthropic':     { img: SI+'anthropic/191919' },
+    'MCP':           { ti:'ti-plug-connected', bg:'#7c3aed' },
+    // ── Outras bases ───────────────────────────────────────────
+    'MongoDB':       { img: SI+'mongodb/47A248' },
+    'RabbitMQ':      { img: SI+'rabbitmq/FF6600' },
   };
 
   /* Sort by key length desc so longer matches win
@@ -626,6 +661,17 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   var SORTED = Object.keys(ICONS).sort(function(a,b){ return b.length - a.length; });
 
   function makeIcon(data) {
+    if (data.ti) {
+      var ic = document.createElement('i');
+      ic.className = 'ti ' + data.ti;
+      ic.setAttribute('aria-hidden', 'true');
+      ic.style.cssText =
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'width:22px;height:22px;min-width:22px;font-size:14px;' +
+        'background:' + data.bg + ';color:#fff;border-radius:4px;' +
+        'margin-right:7px;vertical-align:middle;flex-shrink:0;';
+      return ic;
+    }
     if (data.img) {
       var img = document.createElement('img');
       img.src = data.img;

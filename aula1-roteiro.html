@@ -320,7 +320,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
           <div style="color:#0F6E56;font-size:17px;">append-only · Σ débitos = Σ créditos · consistência forte</div>
         </div>
       </div>
-      <div class="arrow" style="flex-direction:column;gap:2px;"><i class="ti ti-arrow-right" aria-hidden="true"></i><span style="font-size:16px;color:var(--text-muted);">projeta</span></div>
+      <div class="arrow" style="flex-direction:column;gap:2px;" title="projeção assíncrona e unidirecional — o log é a fonte da verdade, os read models são derivados dele, nunca o inverso"><i class="ti ti-arrow-right" aria-hidden="true"></i><span style="font-size:16px;color:var(--text-muted);">projeta</span></div>
       <div class="box" style="flex:1;min-width:190px;background:#E6F1FB;border:2px solid #B5D4F4;">
         <div style="font-size:16px;color:#042C53;font-weight:500;">Read models · projeções <span style="font-weight:400;color:#185FA5;">(eventual)</span></div>
         <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
@@ -355,9 +355,9 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     <div style="font-size:18px;color:var(--text-secondary);font-weight:500;margin:14px 0 6px;">Lei de Little — L = λ × W (concorrência = taxa de chegada × tempo no sistema)</div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <div class="box" style="flex:1;min-width:150px;background:#E1F5EE;border:2px solid #9FE1CB;text-align:center;"><div style="font-size:17px;color:#0F6E56;">900 TPS (5% do pico) × 50 ms</div><div style="font-size:18px;color:#04342C;font-weight:500;margin-top:3px;">45 conexões</div></div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="consequência aritmética da Lei de Little sob contenção — não é uma chamada de rede"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
       <div class="box" style="flex:1;min-width:150px;background:#FCEBEB;border:2px solid #F7C1C1;text-align:center;"><div style="font-size:17px;color:#791F1F;">sob contenção: 900 TPS × 500 ms</div><div style="font-size:18px;color:#501313;font-weight:500;margin-top:3px;">450 conexões</div></div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="consequência: pool dimensionado para o caso médio não sobrevive ao caso de contenção"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
       <div class="box" style="flex:1;min-width:150px;background:#FAEEDA;border:2px solid #FAC775;text-align:center;"><div style="font-size:17px;color:#854F0B;">pool dimensionado p/ 100</div><div style="font-size:18px;color:#412402;font-weight:500;margin-top:3px;">esgota (Aula 2)</div></div>
     </div>
     <div class="box" style="margin-top:8px;background:#fff;border:2px solid var(--border);font-size:18px;color:var(--text-secondary);">
@@ -406,12 +406,12 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
           <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:6px 9px;font-size:18px;color:#2C2C2A;">POST /pix · key abc-123</div>
         </div>
       </div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="chamada síncrona: request / response (o app espera)"><i class="ti ti-arrow-left-right" aria-hidden="true"></i></div>
       <div class="box" style="flex:1.5;min-width:210px;background:#fff;border:2px solid var(--border);">
         <div style="font-size:16px;font-weight:500;margin-bottom:4px;">API · dedup por chave <span style="font-weight:400;color:var(--text-secondary);">(com estado)</span></div>
         <div style="font-size:18px;color:var(--text-secondary);line-height:1.5;">1ª: <span style="color:#185FA5;">em andamento</span> → executa → <span style="color:#0F6E56;">concluído</span>, guarda resultado.<br>2ª e 3ª: devolvem o resultado. Não reexecutam.</div>
       </div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="escrita síncrona: commit / confirmação"><i class="ti ti-arrow-left-right" aria-hidden="true"></i></div>
       <div class="box" style="flex:.9;min-width:120px;background:#E1F5EE;border:2px solid #9FE1CB;">
         <div style="font-size:18px;color:#0F6E56;">ledger</div>
         <div style="font-size:18px;color:#04342C;font-weight:500;">débito 1×</div>
@@ -515,7 +515,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
       <div style="flex:1;height:1px;background:var(--border);"></div>
     </div>
     <div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;">
-      <div style="font-size:16px;color:#042C53;font-weight:500;margin-bottom:8px;">Banco Central — infraestrutura</div>
+      <div style="font-size:16px;color:#042C53;font-weight:500;margin-bottom:8px;">BACEN — infraestrutura</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <div class="box" style="flex:1;min-width:150px;background:#fff;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">SPI</div><div style="font-size:17px;color:#185FA5;">liquidação instantânea, moeda de BC, 24/7 · Conta PI</div></div>
         <div class="box" style="flex:1;min-width:150px;background:#fff;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">DICT</div><div style="font-size:17px;color:#185FA5;">chave → conta · síncrono · consulta p99 ≤1 s · anti-scraping (token bucket)</div></div>
@@ -554,11 +554,11 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="fig">
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
       <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;text-align:center;min-width:110px;"><div style="font-size:17px;color:#791F1F;">transação raiz</div><div style="font-size:18px;color:#501313;font-weight:500;">conta A</div></div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="rastro do dinheiro — direção do grafo de fraude, não uma chamada de rede"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
       <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;text-align:center;min-width:110px;"><div style="font-size:17px;color:#854F0B;">salto 1</div><div style="font-size:18px;color:#412402;font-weight:500;">conta B</div></div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="rastro do dinheiro — direção do grafo de fraude, não uma chamada de rede"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
       <div class="box" style="background:#FAEEDA;border:2px solid #FAC775;text-align:center;min-width:110px;"><div style="font-size:17px;color:#854F0B;">salto 2</div><div style="font-size:18px;color:#412402;font-weight:500;">conta C · outra instituição</div></div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="rastro do dinheiro — direção do grafo de fraude, não uma chamada de rede"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
       <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;text-align:center;min-width:110px;"><div style="font-size:17px;color:#791F1F;">marcada</div><div style="font-size:18px;color:#501313;font-weight:500;">conta D</div></div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;">
@@ -728,12 +728,12 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     'PostgreSQL':    { img: SI+'postgresql/336791' },
     'MySQL':         { img: SI+'mysql/4479A1' },
     'InnoDB':        { img: SI+'mysql/4479A1' },
-    'CockroachDB':   { img: SI+'cockroachdb/6933FF' },
-    'TiDB':          { img: SI+'pingcap/CC0000' },
+    'CockroachDB':   { img: SI+'cockroachlabs/6933FF' },
+    'TiDB':          { img: SI+'tidb/CC0000' },
     'YugabyteDB':    { letter:'Y', bg:'#3D3D4F' },
     'Yugabyte':      { letter:'Y', bg:'#3D3D4F' },
     'Spanner':       { img: SI+'googlecloud/4285F4' },
-    'DynamoDB':      { img: SI+'amazondynamodb/4053D6' },
+    'DynamoDB':      { ti:'ti-database', bg:'#4053D6' },
     'Vitess':        { letter:'V', bg:'#F10737' },
     // ── Cache ─────────────────────────────────────────────────
     'Redis':         { img: SI+'redis/DC382D' },
@@ -749,23 +749,59 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     // ── Testing ───────────────────────────────────────────────
     'k6':            { img: SI+'k6/7D64FF' },
     // ── Feature flags ─────────────────────────────────────────
-    'Unleash':       { img: SI+'unleash/1A4A52' },
+    'Unleash':       { ti:'ti-toggle-left', bg:'#1A4A52' },
     // ── Resilience ────────────────────────────────────────────
     'Resilience4j':  { letter:'R4', bg:'#27ae60' },
     // ── Architecture testing ──────────────────────────────────
     'ArchUnit':      { letter:'A', bg:'#e67e22' },
     // ── Proxy / Service Mesh ──────────────────────────────────
-    'Envoy':         { img: SI+'envoy/AC6199' },
+    'Envoy':         { img: SI+'envoyproxy/AC6199' },
     // ── Version control ───────────────────────────────────────
     'GitHub':        { img: SI+'github/181717' },
     // ── Containers ────────────────────────────────────────────
     'Docker':        { img: SI+'docker/2496ED' },
     'Kubernetes':    { img: SI+'kubernetes/326CE5' },
     // ── Cloud ─────────────────────────────────────────────────
-    'AWS':           { img: SI+'amazonaws/FF9900' },
+    'AWS':           { ti:'ti-cloud', bg:'#FF9900' },
     'GCP':           { img: SI+'googlecloud/4285F4' },
-    // ── Load balancers / WAF ──────────────────────────────────
+    // ── Load balancers / WAF / CDN / DNS ──────────────────────
+    'Cloudflare DNS':{ img: SI+'cloudflare/F38020' },
+    'Cloudflare WAF':{ img: SI+'cloudflare/F38020' },
     'Cloudflare':    { img: SI+'cloudflare/F38020' },
+    'NGINX':         { img: SI+'nginx/009639' },
+    // ── PIX / BACEN — sem brasão oficial, ícone genérico ──────
+    'Pix':           { img: SI+'pix/32BCAD' },
+    'BACEN':         { ti:'ti-building-bank', bg:'#374151' },
+    'SPI':           { ti:'ti-building-bank', bg:'#374151' },
+    'STR':           { ti:'ti-building-bank', bg:'#374151' },
+    'DICT':          { ti:'ti-address-book', bg:'#374151' },
+    'RSFN':          { ti:'ti-antenna-bars-5', bg:'#374151' },
+    // ── Segurança / rede — conceito genérico ──────────────────
+    'mTLS':          { ti:'ti-shield-lock', bg:'#475569' },
+    'TLS':           { ti:'ti-lock', bg:'#475569' },
+    'DNS':           { ti:'ti-world', bg:'#0f766e' },
+    'WAF':           { ti:'ti-shield', bg:'#b45309' },
+    'CDN':           { ti:'ti-cloud', bg:'#0f766e' },
+    // ── Cliente / borda — conceito genérico ───────────────────
+    'app do cliente':{ ti:'ti-device-mobile', bg:'#52525b' },
+    'cliente':       { ti:'ti-device-mobile', bg:'#52525b' },
+    'Gateway / BFF': { ti:'ti-route', bg:'#52525b' },
+    'Gateway':       { ti:'ti-route', bg:'#52525b' },
+    // ── Observabilidade ────────────────────────────────────────
+    'Prometheus':    { img: SI+'prometheus/E6522C' },
+    'Grafana':       { img: SI+'grafana/F46800' },
+    'Sentry':        { img: SI+'sentry/362D59' },
+    'Datadog':       { img: SI+'datadog/632CA6' },
+    // ── CI/CD / IaC ────────────────────────────────────────────
+    'GitHub Actions':{ img: SI+'githubactions/2088FF' },
+    'Terraform':     { img: SI+'terraform/7B42BC' },
+    // ── IA / Agentes ───────────────────────────────────────────
+    'Claude':        { img: SI+'anthropic/191919' },
+    'Anthropic':     { img: SI+'anthropic/191919' },
+    'MCP':           { ti:'ti-plug-connected', bg:'#7c3aed' },
+    // ── Outras bases ───────────────────────────────────────────
+    'MongoDB':       { img: SI+'mongodb/47A248' },
+    'RabbitMQ':      { img: SI+'rabbitmq/FF6600' },
   };
 
   /* Sort by key length desc so longer matches win
@@ -773,6 +809,17 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   var SORTED = Object.keys(ICONS).sort(function(a,b){ return b.length - a.length; });
 
   function makeIcon(data) {
+    if (data.ti) {
+      var ic = document.createElement('i');
+      ic.className = 'ti ' + data.ti;
+      ic.setAttribute('aria-hidden', 'true');
+      ic.style.cssText =
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'width:22px;height:22px;min-width:22px;font-size:14px;' +
+        'background:' + data.bg + ';color:#fff;border-radius:4px;' +
+        'margin-right:7px;vertical-align:middle;flex-shrink:0;';
+      return ic;
+    }
     if (data.img) {
       var img = document.createElement('img');
       img.src = data.img;

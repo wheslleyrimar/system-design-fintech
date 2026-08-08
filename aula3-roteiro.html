@@ -279,7 +279,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="fig">
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:stretch;">
       <div class="sticky">PixIniciado</div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="linha do tempo — ordem cronológica estrita, cada evento é o gatilho do próximo"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
       <div class="sticky">ChaveResolvida</div>
       <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
       <div class="sticky">LimitesValidados</div>
@@ -289,7 +289,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
       <div class="sticky">OrdemEnviadaAoSPI</div>
       <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
       <div class="sticky">PixLiquidado</div>
-      <div class="arrow"><i class="ti ti-corner-down-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="ramo de exceção — só ocorre se o MED abrir disputa depois da liquidação, não é o caminho feliz"><i class="ti ti-corner-down-right" aria-hidden="true"></i></div>
       <div class="sticky" style="background:#FAECE7;border-color:#F5C4B3;color:#4A1B0C;">PixDevolvido</div>
     </div>
     <div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:8px;">
@@ -322,18 +322,19 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
         <div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;min-width:200px;text-align:center;"><div style="font-size:16px;font-weight:500;color:#04342C;">Contas & Ledger</div><div style="font-size:17px;color:#0F6E56;">upstream de quase tudo</div></div>
       </div>
       <div style="display:flex;justify-content:center;gap:40px;">
-        <div style="width:1px;background:var(--border);height:20px;"></div>
-        <div style="width:1px;background:var(--border);height:20px;"></div>
+        <i class="ti ti-arrows-up-down" aria-hidden="true" title="Pagamentos consulta o saldo/reserva no Ledger e espera resposta — síncrono" style="color:var(--text-muted);font-size:18px;"></i>
+        <i class="ti ti-arrows-up-down" aria-hidden="true" title="Devoluções consulta o Ledger para reverter lançamento — síncrono" style="color:var(--text-muted);font-size:18px;"></i>
       </div>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
         <div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;min-width:150px;text-align:center;"><div style="font-size:18px;font-weight:500;color:#042C53;">Pagamentos</div><div style="font-size:16px;color:#185FA5;">↔ Antifraude (síncrono)</div></div>
         <div class="box" style="background:#FAECE7;border:2px solid #F5C4B3;min-width:150px;text-align:center;"><div style="font-size:18px;font-weight:500;color:#4A1B0C;">Devoluções</div></div>
       </div>
-      <div style="display:flex;justify-content:center;"><i class="ti ti-arrow-down" aria-hidden="true" style="color:var(--text-muted);"></i></div>
+      <div style="display:flex;justify-content:center;"><i class="ti ti-arrows-up-down" aria-hidden="true" title="ACL é chamado pelo domínio e chama de volta (traduz request/response) — síncrono" style="color:var(--text-muted);font-size:18px;"></i></div>
       <div class="box" style="background:#F1EFE8;border:2px dashed #B4B2A9;text-align:center;">
         <div style="font-size:18px;color:#5F5E5A;font-weight:500;">ACL — Anti-Corruption Layer</div>
         <div style="font-size:17px;color:var(--text-muted);margin-top:2px;">traduz pacs.008/002/004 e DICT em eventos de domínio; nunca deixa o formato do BACEN vazar pra dentro</div>
       </div>
+      <div style="display:flex;justify-content:center;"><i class="ti ti-arrows-up-down" aria-hidden="true" title="pacs.008 enviado / pacs.002 confirmação — e DICT: chave enviada / instituição resolvida" style="color:var(--text-muted);font-size:18px;"></i></div>
       <div style="display:flex;justify-content:center;">
         <div class="box" style="background:#fff;border:2px solid var(--border);text-align:center;"><div style="font-size:18px;color:var(--text-secondary);">BACEN — SPI · DICT · MED</div></div>
       </div>
@@ -367,7 +368,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
         <div style="font-size:18px;color:#0F6E56;font-weight:500;margin-bottom:6px;">DENTRO do agregado (transacional)</div>
         <div style="font-size:18px;color:#04342C;line-height:1.6;">débito carteira · crédito a_liquidar · invariante Σ=Σ · saldo nunca negativo</div>
       </div>
-      <div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+      <div class="arrow" title="publicação assíncrona — quem escreve não espera resposta do consumidor"><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
       <div class="box" style="flex:1;background:#E6F1FB;border:2px solid #B5D4F4;">
         <div style="font-size:18px;color:#185FA5;font-weight:500;margin-bottom:6px;">FORA (via evento, eventual)</div>
         <div style="font-size:18px;color:#042C53;line-height:1.6;">extrato · notificação · Antifraude · feed</div>
@@ -413,7 +414,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="fig">
     <div class="flow" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
       <div class="box" style="flex:1;min-width:150px;background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">PixLiquidado</div><div style="font-size:17px;color:#0F6E56;">publicado pelo Outbox</div></div>
-      <div class="arrow" style="display:flex;align-items:center;color:var(--text-muted);">&rarr;</div>
+      <div class="arrow" style="display:flex;align-items:center;color:var(--text-muted);" title="publicação assíncrona — o produtor não sabe nem espera quem consome">&rarr;</div>
       <div style="flex:1.4;min-width:170px;display:flex;flex-direction:column;gap:4px;">
         <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:6px 9px;font-size:17px;">consumidor: extrato</div>
         <div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:6px 9px;font-size:17px;">consumidor: notifica&ccedil;&atilde;o</div>
@@ -549,12 +550,12 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     'PostgreSQL':    { img: SI+'postgresql/336791' },
     'MySQL':         { img: SI+'mysql/4479A1' },
     'InnoDB':        { img: SI+'mysql/4479A1' },
-    'CockroachDB':   { img: SI+'cockroachdb/6933FF' },
-    'TiDB':          { img: SI+'pingcap/CC0000' },
+    'CockroachDB':   { img: SI+'cockroachlabs/6933FF' },
+    'TiDB':          { img: SI+'tidb/CC0000' },
     'YugabyteDB':    { letter:'Y', bg:'#3D3D4F' },
     'Yugabyte':      { letter:'Y', bg:'#3D3D4F' },
     'Spanner':       { img: SI+'googlecloud/4285F4' },
-    'DynamoDB':      { img: SI+'amazondynamodb/4053D6' },
+    'DynamoDB':      { ti:'ti-database', bg:'#4053D6' },
     'Vitess':        { letter:'V', bg:'#F10737' },
     // ── Cache ─────────────────────────────────────────────────
     'Redis':         { img: SI+'redis/DC382D' },
@@ -570,23 +571,58 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     // ── Testing ───────────────────────────────────────────────
     'k6':            { img: SI+'k6/7D64FF' },
     // ── Feature flags ─────────────────────────────────────────
-    'Unleash':       { img: SI+'unleash/1A4A52' },
+    'Unleash':       { ti:'ti-toggle-left', bg:'#1A4A52' },
     // ── Resilience ────────────────────────────────────────────
     'Resilience4j':  { letter:'R4', bg:'#27ae60' },
     // ── Architecture testing ──────────────────────────────────
     'ArchUnit':      { letter:'A', bg:'#e67e22' },
     // ── Proxy / Service Mesh ──────────────────────────────────
-    'Envoy':         { img: SI+'envoy/AC6199' },
+    'Envoy':         { img: SI+'envoyproxy/AC6199' },
     // ── Version control ───────────────────────────────────────
     'GitHub':        { img: SI+'github/181717' },
     // ── Containers ────────────────────────────────────────────
     'Docker':        { img: SI+'docker/2496ED' },
     'Kubernetes':    { img: SI+'kubernetes/326CE5' },
     // ── Cloud ─────────────────────────────────────────────────
-    'AWS':           { img: SI+'amazonaws/FF9900' },
+    'AWS':           { ti:'ti-cloud', bg:'#FF9900' },
     'GCP':           { img: SI+'googlecloud/4285F4' },
-    // ── Load balancers / WAF ──────────────────────────────────
+    // ── Load balancers / WAF / CDN / DNS ──────────────────────
+    'Cloudflare DNS':{ img: SI+'cloudflare/F38020' },
+    'Cloudflare WAF':{ img: SI+'cloudflare/F38020' },
     'Cloudflare':    { img: SI+'cloudflare/F38020' },
+    'NGINX':         { img: SI+'nginx/009639' },
+    // ── PIX / BACEN — sem brasão oficial, ícone genérico ──────
+    'Pix':           { img: SI+'pix/32BCAD' },
+    'BACEN':         { ti:'ti-building-bank', bg:'#374151' },
+    'SPI':           { ti:'ti-building-bank', bg:'#374151' },
+    'DICT':          { ti:'ti-address-book', bg:'#374151' },
+    'RSFN':          { ti:'ti-antenna-bars-5', bg:'#374151' },
+    // ── Segurança / rede — conceito genérico ──────────────────
+    'mTLS':          { ti:'ti-shield-lock', bg:'#475569' },
+    'TLS':           { ti:'ti-lock', bg:'#475569' },
+    'DNS':           { ti:'ti-world', bg:'#0f766e' },
+    'WAF':           { ti:'ti-shield', bg:'#b45309' },
+    'CDN':           { ti:'ti-cloud', bg:'#0f766e' },
+    // ── Cliente / borda — conceito genérico ───────────────────
+    'app do cliente':{ ti:'ti-device-mobile', bg:'#52525b' },
+    'cliente':       { ti:'ti-device-mobile', bg:'#52525b' },
+    'Gateway / BFF': { ti:'ti-route', bg:'#52525b' },
+    'Gateway':       { ti:'ti-route', bg:'#52525b' },
+    // ── Observabilidade ────────────────────────────────────────
+    'Prometheus':    { img: SI+'prometheus/E6522C' },
+    'Grafana':       { img: SI+'grafana/F46800' },
+    'Sentry':        { img: SI+'sentry/362D59' },
+    'Datadog':       { img: SI+'datadog/632CA6' },
+    // ── CI/CD / IaC ────────────────────────────────────────────
+    'GitHub Actions':{ img: SI+'githubactions/2088FF' },
+    'Terraform':     { img: SI+'terraform/7B42BC' },
+    // ── IA / Agentes ───────────────────────────────────────────
+    'Claude':        { img: SI+'anthropic/191919' },
+    'Anthropic':     { img: SI+'anthropic/191919' },
+    'MCP':           { ti:'ti-plug-connected', bg:'#7c3aed' },
+    // ── Outras bases ───────────────────────────────────────────
+    'MongoDB':       { img: SI+'mongodb/47A248' },
+    'RabbitMQ':      { img: SI+'rabbitmq/FF6600' },
   };
 
   /* Sort by key length desc so longer matches win
@@ -594,6 +630,17 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   var SORTED = Object.keys(ICONS).sort(function(a,b){ return b.length - a.length; });
 
   function makeIcon(data) {
+    if (data.ti) {
+      var ic = document.createElement('i');
+      ic.className = 'ti ' + data.ti;
+      ic.setAttribute('aria-hidden', 'true');
+      ic.style.cssText =
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'width:22px;height:22px;min-width:22px;font-size:14px;' +
+        'background:' + data.bg + ';color:#fff;border-radius:4px;' +
+        'margin-right:7px;vertical-align:middle;flex-shrink:0;';
+      return ic;
+    }
     if (data.img) {
       var img = document.createElement('img');
       img.src = data.img;

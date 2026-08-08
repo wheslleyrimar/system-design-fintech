@@ -216,17 +216,18 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   </nav>
   <p class="sub">O desenho de System Design construído ao vivo, camada por camada · roxo = o que entra agora</p>
   <div class="lead"><b>Regra de condução:</b> nunca desenhe uma caixa antes de a turma sentir a dor que a justifica. Load balancer desenhado no início é decoração; desenhado depois de mostrar o ponto único de falha, significa algo.</div>
+  <div class="lead" style="font-size:15px;"><b>Leitura das setas:</b> <span style="font-weight:600;">↔</span> = chamada síncrona (quem chama espera resposta pelo mesmo caminho — HTTP, gRPC, query SQL) · <span style="font-weight:600;">→</span> = fluxo de um único sentido (evento assíncrono, replicação de dados, resolução de DNS) — quem envia não espera, e a resposta (se existir) não volta pelo mesmo caminho.</div>
 
   <h2>Camada 0 · O guardanapo <span style="font-size:18px;color:var(--text-muted);font-weight:400;">— Aula 1</span></h2>
   <p class="teach">Tecnicamente correto, operacionalmente inviável. Descreve o fluxo lógico com precisão e não sobreviveria a dez minutos de produção.</p>
   <div class="fig">
     <div class="flow">
       <div class="box n" style="flex:1;min-width:110px;"><div class="t">app do cliente</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow" title="chamada síncrona: pedido → resposta">↔</div>
       <div class="box n" style="flex:1;min-width:110px;"><div class="t">API</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow" title="chamada síncrona: pedido → resposta">↔</div>
       <div class="box led" style="flex:1.2;min-width:130px;"><div class="t">core + ledger</div><div class="s">a verdade do dinheiro</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow" title="pacs.008 enviado / pacs.002 confirmação">↔</div>
       <div class="box ext" style="flex:1;min-width:110px;"><div class="t">BACEN</div></div>
     </div>
   </div>
@@ -237,18 +238,18 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="fig">
     <div class="flow">
       <div class="box n" style="flex:.9;min-width:95px;"><div class="t">cliente</div></div>
-      <div class="arrow">→</div>
-      <div class="box new" style="flex:.9;min-width:100px;"><div class="badge">NOVO</div><div class="t">DNS</div><div class="s">TTL baixo (30-60s)</div></div>
-      <div class="arrow">→</div>
-      <div class="box new" style="flex:.9;min-width:100px;"><div class="badge">NOVO</div><div class="t">WAF</div><div class="s">protege o orçamento</div></div>
-      <div class="arrow">→</div>
-      <div class="box new" style="flex:1.1;min-width:120px;"><div class="badge">NOVO</div><div class="t">LB L7</div><div class="s">roteia por rota · health check</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow" title="lookup unidirecional: resolve nome, a resposta (IP) não segue no caminho de dados">→</div>
+      <div class="box new" style="flex:.9;min-width:100px;"><div class="badge">NOVO</div><div class="t">Cloudflare DNS</div><div class="s">TTL baixo (30-60s)</div></div>
+      <div class="arrow" title="conexão proxied: resposta volta pelo mesmo caminho">↔</div>
+      <div class="box new" style="flex:.9;min-width:100px;"><div class="badge">NOVO</div><div class="t">Cloudflare WAF</div><div class="s">protege o orçamento</div></div>
+      <div class="arrow">↔</div>
+      <div class="box new" style="flex:1.1;min-width:120px;"><div class="badge">NOVO</div><div class="t">NGINX (L7)</div><div class="s">roteia por rota · health check</div></div>
+      <div class="arrow">↔</div>
       <div style="flex:1.1;min-width:120px;display:flex;flex-direction:column;gap:4px;">
         <div class="box new" style="padding:6px 9px;"><div class="t">API ×5-9</div><div class="s">900 TPS ÷ ~150 rps</div></div>
         <div class="box n" style="padding:4px 9px;"><div class="s">instâncias replicadas</div></div>
       </div>
-      <div class="arrow">→</div>
+      <div class="arrow">↔</div>
       <div class="box led" style="flex:1;min-width:105px;"><div class="t">core + ledger</div></div>
     </div>
   </div>
@@ -258,15 +259,15 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="pain">Dor: cada instância repete — e faz divergir — a mesma validação de identidade, limite e idempotência. Divergência em validação é como vulnerabilidade nasce.</div>
   <div class="fig">
     <div class="flow">
-      <div class="box n" style="flex:.8;min-width:90px;"><div class="t">cliente → borda</div><div class="s">DNS · WAF · LB</div></div>
-      <div class="arrow">→</div>
+      <div class="box n" style="flex:.8;min-width:90px;"><div class="t">cliente → borda</div><div class="s">Cloudflare DNS/WAF · NGINX</div></div>
+      <div class="arrow">↔</div>
       <div class="box new" style="flex:1.6;min-width:200px;">
         <div class="badge">NOVO</div><div class="t">Gateway / BFF</div>
         <div class="s" style="margin-top:4px;">autenticação (quem é) · rate limit próprio · exige idempotency-key · propaga trace-id</div>
       </div>
-      <div class="arrow">→</div>
+      <div class="arrow">↔</div>
       <div class="box led" style="flex:1.1;min-width:130px;"><div class="t">core + ledger</div><div class="s">autorização de negócio mora aqui</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow">↔</div>
       <div class="box ext" style="flex:.8;min-width:90px;"><div class="t">BACEN</div></div>
     </div>
     <div class="box" style="margin-top:8px;background:#FAEEDA;border:2px solid #FAC775;font-size:18px;color:#412402;">
@@ -280,14 +281,14 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="fig">
     <div class="flow">
       <div class="box n" style="flex:.8;min-width:95px;"><div class="t">borda + gateway</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow">↔</div>
       <div style="flex:2.4;min-width:250px;display:grid;grid-template-columns:1fr 1fr;gap:5px;">
         <div class="box new" style="padding:7px 9px;"><div class="badge">NOVO</div><div class="t">Pagamentos</div><div class="s">stateless · autoscaling</div></div>
         <div class="box new" style="padding:7px 9px;"><div class="t" style="margin-top:13px;">Antifraude</div><div class="s">síncrono no fluxo</div></div>
         <div class="box led" style="padding:7px 9px;"><div class="t">Contas & Ledger</div><div class="s">escrita forte</div></div>
         <div class="box new" style="padding:7px 9px;"><div class="t">Devoluções</div><div class="s">MED · grafo</div></div>
       </div>
-      <div class="arrow">→</div>
+      <div class="arrow">↔</div>
       <div class="box ext" style="flex:.8;min-width:95px;"><div class="t">BACEN</div></div>
     </div>
     <div class="box" style="margin-top:8px;background:#fff;border:2px solid var(--border);font-size:18px;color:var(--text-secondary);">
@@ -301,17 +302,20 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="fig">
     <div class="flow">
       <div class="box led" style="flex:1;min-width:110px;"><div class="t">Pagamentos</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow" title="chamada síncrona: pedido → resposta">↔</div>
       <div class="box new" style="flex:1.5;min-width:180px;">
         <div class="badge">NOVO</div><div class="t">ACL — adaptador BACEN</div>
         <div class="s" style="margin-top:3px;">traduz pacs.008/002/004 ↔ evento de domínio · pool isolado</div>
       </div>
-      <div class="arrow">→</div>
+      <div class="arrow" title="canal cifrado nas duas direções">↔</div>
       <div class="box new" style="flex:1;min-width:120px;"><div class="badge">NOVO</div><div class="t">mTLS + certificado</div><div class="s">rotação antes do vencimento</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow" title="rede dedicada carrega tráfego nos dois sentidos">↔</div>
       <div class="box new" style="flex:.9;min-width:105px;"><div class="badge">NOVO</div><div class="t">RSFN</div><div class="s">rede dedicada, redundante</div></div>
-      <div class="arrow">→</div>
-      <div class="box ext" style="flex:1;min-width:110px;"><div class="t">SPI · DICT</div><div class="s">p99 4,6s · p99 ≤1s</div></div>
+      <div class="arrow" title="ordem enviada / confirmação recebida">↔</div>
+      <div style="flex:1.1;min-width:120px;display:flex;flex-direction:column;gap:5px;">
+        <div class="box ext" style="padding:6px 9px;"><div class="badge">NOVO</div><div class="t">SPI</div><div class="s">liquidação · p99 4,6s</div></div>
+        <div class="box ext" style="padding:6px 9px;"><div class="t">DICT</div><div class="s">resolução de chave · p99 ≤1s</div></div>
+      </div>
     </div>
     <div class="box" style="margin-top:8px;display:flex;gap:8px;align-items:flex-start;background:#E1F5EE;border:2px solid #9FE1CB;font-size:18px;color:#04342C;">
       <i class="ti ti-refresh" aria-hidden="true" style="margin-top:2px;"></i><span><b>Reconciliação</b> não é opcional: compara o que você registrou contra o que o BACEN registrou. É o que impede que incerteza de rede vire dinheiro divergente.</span>
@@ -324,12 +328,13 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="fig">
     <div class="flow">
       <div class="box led" style="flex:1;min-width:110px;"><div class="t">serviços</div></div>
-      <div class="arrow">→</div>
-      <div class="box new" style="flex:1;min-width:115px;"><div class="badge">NOVO</div><div class="t">Pooler</div><div class="s">multiplexa conexões (ex.: PgBouncer)</div></div>
-      <div class="arrow">→</div>
-      <div style="flex:2.2;min-width:240px;display:flex;flex-direction:column;gap:5px;">
-        <div class="box new" style="padding:7px 9px;"><div class="badge">NOVO</div><div class="t">Primary — escrita · serializable</div><div class="s">particionado: hash(conta_id) mod N</div></div>
-        <div class="box new" style="padding:7px 9px;"><div class="t">Réplicas ×N — leitura</div><div class="s">lag 100-300 ms, cresce sob carga de escrita</div></div>
+      <div class="arrow" title="query enviada / rows devolvidas">↔</div>
+      <div class="box new" style="flex:1;min-width:115px;"><div class="badge">NOVO</div><div class="t">PgBouncer</div><div class="s">multiplexa conexões</div></div>
+      <div class="arrow" title="query enviada / rows devolvidas">↔</div>
+      <div style="flex:2.2;min-width:240px;display:flex;flex-direction:column;gap:0;">
+        <div class="box new" style="padding:7px 9px;"><div class="badge">NOVO</div><div class="t">PostgreSQL — Primary (escrita · serializable)</div><div class="s">particionado: hash(conta_id) mod N</div></div>
+        <div style="text-align:center;font-size:14px;color:var(--text-muted);padding:1px 0;">↓ replicação assíncrona, um único sentido (WAL streaming)</div>
+        <div class="box new" style="padding:7px 9px;"><div class="t">PostgreSQL — Réplicas ×N (leitura)</div><div class="s">lag 100-300 ms, cresce sob carga de escrita</div></div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
@@ -344,10 +349,10 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="fig">
     <div class="flow">
       <div class="box led" style="flex:1;min-width:105px;"><div class="t">serviços</div></div>
-      <div class="arrow">→</div>
-      <div class="box new" style="flex:1.4;min-width:165px;"><div class="badge">NOVO</div><div class="t">Cache (cache-aside)</div><div class="s">hit → usa · miss → busca, popula, devolve</div></div>
-      <div class="arrow">→</div>
-      <div class="box n" style="flex:1;min-width:110px;"><div class="t">primary / réplicas</div></div>
+      <div class="arrow" title="get/set enviado / valor devolvido">↔</div>
+      <div class="box new" style="flex:1.4;min-width:165px;"><div class="badge">NOVO</div><div class="t">Redis (cache-aside)</div><div class="s">hit → usa · miss → busca, popula, devolve</div></div>
+      <div class="arrow" title="só no miss: query enviada / rows devolvidas">↔</div>
+      <div class="box n" style="flex:1;min-width:110px;"><div class="t">PostgreSQL — primary / réplicas</div></div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">
       <div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;font-size:17px;color:#501313;"><b>Invalidação</b> — cache é cópia; cópia de dado que muda fica errada. Saldo não se cacheia com TTL longo.</div>
@@ -362,11 +367,11 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="fig">
     <div class="flow">
       <div class="box led" style="flex:1.2;min-width:135px;"><div class="t">1 transação atômica</div><div class="s">ledger + tabela outbox</div></div>
-      <div class="arrow">→</div>
-      <div class="box new" style="flex:1.3;min-width:150px;"><div class="badge">NOVO</div><div class="t">Relay</div><div class="s">poller (simples) ou CDC/WAL (menor latência)</div></div>
-      <div class="arrow">→</div>
-      <div class="box new" style="flex:1.3;min-width:150px;"><div class="badge">NOVO</div><div class="t">Broker — log distribuído</div><div class="s">partition key = conta_id · retém e reprocessa</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow" title="publicação assíncrona — quem escreve não espera resposta">→</div>
+      <div class="box new" style="flex:1.3;min-width:150px;"><div class="badge">NOVO</div><div class="t">Relay — Debezium (CDC) ou poller</div><div class="s">lê o outbox, nunca é chamado de volta</div></div>
+      <div class="arrow" title="publicação assíncrona — quem escreve não espera resposta">→</div>
+      <div class="box new" style="flex:1.3;min-width:150px;"><div class="badge">NOVO</div><div class="t">Kafka — log distribuído (broker)</div><div class="s">partition key = conta_id · retém e reprocessa</div></div>
+      <div class="arrow" title="consumo assíncrono — o broker não espera o consumidor">→</div>
       <div class="box ext" style="flex:1.1;min-width:125px;"><div class="t">consumidores</div><div class="s">extrato · feed · notificação</div></div>
     </div>
     <div class="box" style="margin-top:8px;display:flex;gap:8px;align-items:flex-start;background:#FCEBEB;border:2px solid #F7C1C1;font-size:18px;color:#501313;">
@@ -407,23 +412,23 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <div class="fig">
     <div class="flow" style="gap:4px;">
       <div class="box n" style="flex:1;min-width:70px;"><div class="s">cliente</div></div>
-      <div class="arrow">→</div>
-      <div class="box n" style="flex:1;min-width:70px;"><div class="s">DNS · WAF</div></div>
-      <div class="arrow">→</div>
-      <div class="box n" style="flex:1;min-width:70px;"><div class="s">LB L7</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow" title="lookup unidirecional; resposta não segue no mesmo caminho">→</div>
+      <div class="box n" style="flex:1;min-width:70px;"><div class="s">Cloudflare DNS/WAF</div></div>
+      <div class="arrow" title="conexão proxied, resposta volta pelo mesmo caminho">↔</div>
+      <div class="box n" style="flex:1;min-width:70px;"><div class="s">NGINX L7</div></div>
+      <div class="arrow">↔</div>
       <div class="box n" style="flex:1;min-width:70px;"><div class="s">gateway</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow">↔</div>
       <div class="box led" style="flex:1.2;min-width:85px;"><div class="s">serviços por contexto</div></div>
-      <div class="arrow">→</div>
-      <div class="box n" style="flex:1;min-width:70px;"><div class="s">cache</div></div>
-      <div class="arrow">→</div>
-      <div class="box led" style="flex:1.2;min-width:85px;"><div class="s">pooler · primary/réplicas particionados</div></div>
-      <div class="arrow">→</div>
-      <div class="box n" style="flex:1;min-width:70px;"><div class="s">broker · DLQ</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow">↔</div>
+      <div class="box n" style="flex:1;min-width:70px;"><div class="s">Redis cache</div></div>
+      <div class="arrow">↔</div>
+      <div class="box led" style="flex:1.2;min-width:85px;"><div class="s">PgBouncer · PostgreSQL primary/réplicas</div></div>
+      <div class="arrow" title="publicação assíncrona, um único sentido">→</div>
+      <div class="box n" style="flex:1;min-width:70px;"><div class="s">Kafka · DLQ</div></div>
+      <div class="arrow">↔</div>
       <div class="box ext" style="flex:1.2;min-width:85px;"><div class="s">ACL · mTLS · RSFN</div></div>
-      <div class="arrow">→</div>
+      <div class="arrow">↔</div>
       <div class="box ext" style="flex:1;min-width:70px;"><div class="s">SPI · DICT</div></div>
     </div>
     <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
@@ -456,12 +461,12 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     'PostgreSQL':    { img: SI+'postgresql/336791' },
     'MySQL':         { img: SI+'mysql/4479A1' },
     'InnoDB':        { img: SI+'mysql/4479A1' },
-    'CockroachDB':   { img: SI+'cockroachdb/6933FF' },
-    'TiDB':          { img: SI+'pingcap/CC0000' },
+    'CockroachDB':   { img: SI+'cockroachlabs/6933FF' },
+    'TiDB':          { img: SI+'tidb/CC0000' },
     'YugabyteDB':    { letter:'Y', bg:'#3D3D4F' },
     'Yugabyte':      { letter:'Y', bg:'#3D3D4F' },
     'Spanner':       { img: SI+'googlecloud/4285F4' },
-    'DynamoDB':      { img: SI+'amazondynamodb/4053D6' },
+    'DynamoDB':      { ti:'ti-database', bg:'#4053D6' },
     'Vitess':        { letter:'V', bg:'#F10737' },
     // ── Cache ─────────────────────────────────────────────────
     'Redis':         { img: SI+'redis/DC382D' },
@@ -477,23 +482,58 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     // ── Testing ───────────────────────────────────────────────
     'k6':            { img: SI+'k6/7D64FF' },
     // ── Feature flags ─────────────────────────────────────────
-    'Unleash':       { img: SI+'unleash/1A4A52' },
+    'Unleash':       { ti:'ti-toggle-left', bg:'#1A4A52' },
     // ── Resilience ────────────────────────────────────────────
     'Resilience4j':  { letter:'R4', bg:'#27ae60' },
     // ── Architecture testing ──────────────────────────────────
     'ArchUnit':      { letter:'A', bg:'#e67e22' },
     // ── Proxy / Service Mesh ──────────────────────────────────
-    'Envoy':         { img: SI+'envoy/AC6199' },
+    'Envoy':         { img: SI+'envoyproxy/AC6199' },
     // ── Version control ───────────────────────────────────────
     'GitHub':        { img: SI+'github/181717' },
     // ── Containers ────────────────────────────────────────────
     'Docker':        { img: SI+'docker/2496ED' },
     'Kubernetes':    { img: SI+'kubernetes/326CE5' },
     // ── Cloud ─────────────────────────────────────────────────
-    'AWS':           { img: SI+'amazonaws/FF9900' },
+    'AWS':           { ti:'ti-cloud', bg:'#FF9900' },
     'GCP':           { img: SI+'googlecloud/4285F4' },
-    // ── Load balancers / WAF ──────────────────────────────────
+    // ── Load balancers / WAF / CDN / DNS ──────────────────────
+    'Cloudflare DNS':{ img: SI+'cloudflare/F38020' },
+    'Cloudflare WAF':{ img: SI+'cloudflare/F38020' },
     'Cloudflare':    { img: SI+'cloudflare/F38020' },
+    'NGINX':         { img: SI+'nginx/009639' },
+    // ── PIX / BACEN — sem brasão oficial, ícone genérico ──────
+    'Pix':           { img: SI+'pix/32BCAD' },
+    'BACEN':         { ti:'ti-building-bank', bg:'#374151' },
+    'SPI':           { ti:'ti-building-bank', bg:'#374151' },
+    'DICT':          { ti:'ti-address-book', bg:'#374151' },
+    'RSFN':          { ti:'ti-antenna-bars-5', bg:'#374151' },
+    // ── Segurança / rede — conceito genérico ──────────────────
+    'mTLS':          { ti:'ti-shield-lock', bg:'#475569' },
+    'TLS':           { ti:'ti-lock', bg:'#475569' },
+    'DNS':           { ti:'ti-world', bg:'#0f766e' },
+    'WAF':           { ti:'ti-shield', bg:'#b45309' },
+    'CDN':           { ti:'ti-cloud', bg:'#0f766e' },
+    // ── Cliente / borda — conceito genérico ───────────────────
+    'app do cliente':{ ti:'ti-device-mobile', bg:'#52525b' },
+    'cliente':       { ti:'ti-device-mobile', bg:'#52525b' },
+    'Gateway / BFF': { ti:'ti-route', bg:'#52525b' },
+    'Gateway':       { ti:'ti-route', bg:'#52525b' },
+    // ── Observabilidade ────────────────────────────────────────
+    'Prometheus':    { img: SI+'prometheus/E6522C' },
+    'Grafana':       { img: SI+'grafana/F46800' },
+    'Sentry':        { img: SI+'sentry/362D59' },
+    'Datadog':       { img: SI+'datadog/632CA6' },
+    // ── CI/CD / IaC ────────────────────────────────────────────
+    'GitHub Actions':{ img: SI+'githubactions/2088FF' },
+    'Terraform':     { img: SI+'terraform/7B42BC' },
+    // ── IA / Agentes ───────────────────────────────────────────
+    'Claude':        { img: SI+'anthropic/191919' },
+    'Anthropic':     { img: SI+'anthropic/191919' },
+    'MCP':           { ti:'ti-plug-connected', bg:'#7c3aed' },
+    // ── Outras bases ───────────────────────────────────────────
+    'MongoDB':       { img: SI+'mongodb/47A248' },
+    'RabbitMQ':      { img: SI+'rabbitmq/FF6600' },
   };
 
   /* Sort by key length desc so longer matches win
@@ -501,6 +541,17 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   var SORTED = Object.keys(ICONS).sort(function(a,b){ return b.length - a.length; });
 
   function makeIcon(data) {
+    if (data.ti) {
+      var ic = document.createElement('i');
+      ic.className = 'ti ' + data.ti;
+      ic.setAttribute('aria-hidden', 'true');
+      ic.style.cssText =
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'width:22px;height:22px;min-width:22px;font-size:14px;' +
+        'background:' + data.bg + ';color:#fff;border-radius:4px;' +
+        'margin-right:7px;vertical-align:middle;flex-shrink:0;';
+      return ic;
+    }
     if (data.img) {
       var img = document.createElement('img');
       img.src = data.img;

@@ -402,9 +402,10 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   <p class="teach">Ensina: a regra de ouro da Aula 1 — "o agente lê, propõe, nunca move dinheiro" — hoje se traduz em desenho concreto de sistema. A fronteira de permissão não se garante instruindo o agente a se comportar bem; se garante excluindo as ferramentas perigosas do conjunto que ele pode chamar. Um agente não faz algo proibido porque foi instruído a não fazer — ele não faz porque a ferramenta para fazer aquilo simplesmente não existe no conjunto que ele recebeu.</p>
   <div class="lead">O MCP — Model Context Protocol — é a forma concreta de materializar essa fronteira. Cada servidor MCP expõe um conjunto bem definido de ferramentas que o agente pode chamar. No TechPix, o agente de evolução arquitetural tem acesso a leitura de métricas, leitura de specs e ADRs, e propostas de ADR — mas a ferramenta que debitaria uma conta ou aprovaria um rollout sem supervisão simplesmente não existe no conjunto dele. Isso não é uma instrução; é a topologia do sistema.</div>
   <div class="fig">
-    <div style="display:flex;justify-content:center;margin-bottom:10px;">
-      <div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;text-align:center;min-width:140px;"><div style="font-size:16px;color:#26215C;font-weight:500;">Agente</div></div>
+    <div style="display:flex;justify-content:center;margin-bottom:2px;">
+      <div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;text-align:center;min-width:140px;"><div style="font-size:16px;color:#26215C;font-weight:500;">Claude (agente)</div></div>
     </div>
+    <div class="arrow" style="margin:0 0 8px;" title="chamada de ferramenta MCP: o agente pede, o servidor MCP responde com dado — é request/response, não fluxo de um sentido só"><i class="ti ti-arrows-up-down" aria-hidden="true"></i></div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
       <div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;text-align:center;"><div style="font-size:18px;color:#042C53;font-weight:500;">Métricas</div><div style="font-size:17px;color:#185FA5;">só leitura</div></div>
       <div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;text-align:center;"><div style="font-size:18px;color:#042C53;font-weight:500;">Specs & ADRs</div><div style="font-size:17px;color:#185FA5;">só leitura</div></div>
@@ -413,7 +414,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     <div style="display:flex;justify-content:center;margin-top:10px;">
       <div class="box" style="background:#F1EFE8;border:2px dashed #B4B2A9;text-align:center;min-width:260px;">
         <div style="font-size:18px;color:var(--text-muted);text-decoration:line-through;">Mover dinheiro / aprovar sem revisão</div>
-        <div style="font-size:17px;color:var(--text-muted);margin-top:2px;">esta ferramenta não existe</div>
+        <div style="font-size:17px;color:var(--text-muted);margin-top:2px;">esta ferramenta não existe — sem seta, porque a chamada nunca acontece</div>
       </div>
     </div>
     <div class="box" style="margin-top:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;">
@@ -562,12 +563,12 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     'PostgreSQL':    { img: SI+'postgresql/336791' },
     'MySQL':         { img: SI+'mysql/4479A1' },
     'InnoDB':        { img: SI+'mysql/4479A1' },
-    'CockroachDB':   { img: SI+'cockroachdb/6933FF' },
-    'TiDB':          { img: SI+'pingcap/CC0000' },
+    'CockroachDB':   { img: SI+'cockroachlabs/6933FF' },
+    'TiDB':          { img: SI+'tidb/CC0000' },
     'YugabyteDB':    { letter:'Y', bg:'#3D3D4F' },
     'Yugabyte':      { letter:'Y', bg:'#3D3D4F' },
     'Spanner':       { img: SI+'googlecloud/4285F4' },
-    'DynamoDB':      { img: SI+'amazondynamodb/4053D6' },
+    'DynamoDB':      { ti:'ti-database', bg:'#4053D6' },
     'Vitess':        { letter:'V', bg:'#F10737' },
     // ── Cache ─────────────────────────────────────────────────
     'Redis':         { img: SI+'redis/DC382D' },
@@ -583,23 +584,61 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
     // ── Testing ───────────────────────────────────────────────
     'k6':            { img: SI+'k6/7D64FF' },
     // ── Feature flags ─────────────────────────────────────────
-    'Unleash':       { img: SI+'unleash/1A4A52' },
+    'Unleash':       { ti:'ti-toggle-left', bg:'#1A4A52' },
     // ── Resilience ────────────────────────────────────────────
     'Resilience4j':  { letter:'R4', bg:'#27ae60' },
     // ── Architecture testing ──────────────────────────────────
     'ArchUnit':      { letter:'A', bg:'#e67e22' },
     // ── Proxy / Service Mesh ──────────────────────────────────
-    'Envoy':         { img: SI+'envoy/AC6199' },
+    'Envoy':         { img: SI+'envoyproxy/AC6199' },
     // ── Version control ───────────────────────────────────────
     'GitHub':        { img: SI+'github/181717' },
     // ── Containers ────────────────────────────────────────────
     'Docker':        { img: SI+'docker/2496ED' },
     'Kubernetes':    { img: SI+'kubernetes/326CE5' },
     // ── Cloud ─────────────────────────────────────────────────
-    'AWS':           { img: SI+'amazonaws/FF9900' },
+    'AWS':           { ti:'ti-cloud', bg:'#FF9900' },
     'GCP':           { img: SI+'googlecloud/4285F4' },
-    // ── Load balancers / WAF ──────────────────────────────────
+    // ── Load balancers / WAF / CDN / DNS ──────────────────────
+    'Cloudflare DNS':{ img: SI+'cloudflare/F38020' },
+    'Cloudflare WAF':{ img: SI+'cloudflare/F38020' },
     'Cloudflare':    { img: SI+'cloudflare/F38020' },
+    'NGINX':         { img: SI+'nginx/009639' },
+    // ── PIX / BACEN — sem brasão oficial, ícone genérico ──────
+    'Pix':           { img: SI+'pix/32BCAD' },
+    'BACEN':         { ti:'ti-building-bank', bg:'#374151' },
+    'SPI':           { ti:'ti-building-bank', bg:'#374151' },
+    'DICT':          { ti:'ti-address-book', bg:'#374151' },
+    'RSFN':          { ti:'ti-antenna-bars-5', bg:'#374151' },
+    // ── Segurança / rede — conceito genérico ──────────────────
+    'mTLS':          { ti:'ti-shield-lock', bg:'#475569' },
+    'TLS':           { ti:'ti-lock', bg:'#475569' },
+    'DNS':           { ti:'ti-world', bg:'#0f766e' },
+    'WAF':           { ti:'ti-shield', bg:'#b45309' },
+    'CDN':           { ti:'ti-cloud', bg:'#0f766e' },
+    // ── Cliente / borda — conceito genérico ───────────────────
+    'app do cliente':{ ti:'ti-device-mobile', bg:'#52525b' },
+    'cliente':       { ti:'ti-device-mobile', bg:'#52525b' },
+    'Gateway / BFF': { ti:'ti-route', bg:'#52525b' },
+    'Gateway':       { ti:'ti-route', bg:'#52525b' },
+    // ── Observabilidade ────────────────────────────────────────
+    'Prometheus':    { img: SI+'prometheus/E6522C' },
+    'Grafana':       { img: SI+'grafana/F46800' },
+    'Sentry':        { img: SI+'sentry/362D59' },
+    'Datadog':       { img: SI+'datadog/632CA6' },
+    // ── CI/CD / IaC ────────────────────────────────────────────
+    'GitHub Actions':{ img: SI+'githubactions/2088FF' },
+    'Terraform':     { img: SI+'terraform/7B42BC' },
+    // ── IA / Agentes ───────────────────────────────────────────
+    'Claude':        { img: SI+'anthropic/191919' },
+    'Anthropic':     { img: SI+'anthropic/191919' },
+    'MCP':           { ti:'ti-plug-connected', bg:'#7c3aed' },
+    // ── Outras bases ───────────────────────────────────────────
+    'MongoDB':       { img: SI+'mongodb/47A248' },
+    'RabbitMQ':      { img: SI+'rabbitmq/FF6600' },
+    // ── Agente / MCP (aula 8) ──────────────────────────────────
+    'Servidor MCP':  { ti:'ti-plug-connected', bg:'#7c3aed' },
+    'Agente':        { ti:'ti-robot', bg:'#534AB7' },
   };
 
   /* Sort by key length desc so longer matches win
@@ -607,6 +646,17 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   var SORTED = Object.keys(ICONS).sort(function(a,b){ return b.length - a.length; });
 
   function makeIcon(data) {
+    if (data.ti) {
+      var ic = document.createElement('i');
+      ic.className = 'ti ' + data.ti;
+      ic.setAttribute('aria-hidden', 'true');
+      ic.style.cssText =
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'width:22px;height:22px;min-width:22px;font-size:14px;' +
+        'background:' + data.bg + ';color:#fff;border-radius:4px;' +
+        'margin-right:7px;vertical-align:middle;flex-shrink:0;';
+      return ic;
+    }
     if (data.img) {
       var img = document.createElement('img');
       img.src = data.img;
