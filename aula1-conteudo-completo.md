@@ -14,6 +14,62 @@ E aqui está a pergunta que eu quero que vocês carreguem durante toda essa aula
 
 Vou escrever isso bem grande no Excalidraw, porque essa pergunta não sai daqui até a gente ter resposta: *Pagou 1×, 3× ou 0×?*
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 820 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ana-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+  </defs>
+  <!-- Phone 1 -->
+  <g>
+    <rect x="30" y="20" width="170" height="220" rx="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+    <rect x="45" y="40" width="140" height="170" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+    <text x="115" y="90" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#333">Pix para Bruno</text>
+    <text x="115" y="115" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1a1a1a">R$ 5.000,00</text>
+    <rect x="65" y="150" width="100" height="30" rx="6" fill="#4338ca"/>
+    <text x="115" y="170" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#fff">PAGAR</text>
+    <circle cx="185" cy="30" r="14" fill="#dc2626"/>
+    <text x="185" y="35" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#fff" font-weight="bold">1</text>
+    <text x="115" y="260" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">02:47:00 · tela gira, nada volta</text>
+  </g>
+  <!-- Arrow 1 -->
+  <line x1="205" y1="130" x2="290" y2="130" stroke="#888" stroke-width="2" marker-end="url(#ana-arrow)"/>
+  <text x="247" y="118" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">~12s sem resposta</text>
+  <!-- Phone 2 -->
+  <g>
+    <rect x="295" y="20" width="170" height="220" rx="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+    <rect x="310" y="40" width="140" height="170" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+    <text x="380" y="90" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#333">Pix para Bruno</text>
+    <text x="380" y="115" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1a1a1a">R$ 5.000,00</text>
+    <rect x="330" y="150" width="100" height="30" rx="6" fill="#4338ca"/>
+    <text x="380" y="170" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#fff">PAGAR</text>
+    <circle cx="450" cy="30" r="14" fill="#dc2626"/>
+    <text x="450" y="35" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#fff" font-weight="bold">2</text>
+    <text x="380" y="260" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">02:47:12 · toca de novo</text>
+  </g>
+  <!-- Arrow 2 -->
+  <line x1="470" y1="130" x2="555" y2="130" stroke="#888" stroke-width="2" marker-end="url(#ana-arrow)"/>
+  <text x="512" y="118" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">~12s sem resposta</text>
+  <!-- Phone 3 -->
+  <g>
+    <rect x="560" y="20" width="170" height="220" rx="20" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+    <rect x="575" y="40" width="140" height="170" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+    <text x="645" y="90" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#333">Pix para Bruno</text>
+    <text x="645" y="115" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#1a1a1a">R$ 5.000,00</text>
+    <rect x="595" y="150" width="100" height="30" rx="6" fill="#4338ca"/>
+    <text x="645" y="170" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#fff">PAGAR</text>
+    <circle cx="715" cy="30" r="14" fill="#dc2626"/>
+    <text x="715" y="35" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#fff" font-weight="bold">3</text>
+    <text x="645" y="260" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">02:47:24 · terceira tentativa</text>
+  </g>
+  <!-- Question box -->
+  <rect x="180" y="270" width="460" height="26" rx="6" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="410" y="288" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#b91c1c">A Ana pagou 1×, 3× ou 0×?</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A Ana toca três vezes no mesmo botão "pagar" — para ela, cada toque é a mesma intenção, não três pagamentos diferentes.</p>
+</div>
+
 A resposta não está em nenhuma linha de código da tela do celular. Ela está na **arquitetura** — nas decisões sobre como o dinheiro se move quando existe incerteza, concorrência e falha. E é exatamente isso que a gente vai construir juntos hoje.
 
 Por que eu abro assim, com uma história e não com uma definição? Porque em System Design todo conceito abstrato precisa de um problema real puxando ele. "Idempotência", "consistência", "liquidação" são palavras vazias até virarem "a Ana não pode ser cobrada três vezes". A dor vem primeiro, o vocabulário vem depois — e cada vez que a gente nomear um conceito novo, eu vou voltar nessa cena.
@@ -84,6 +140,39 @@ Fato 1 (reserva):   DÉBITO carteira_ana 100  |  CRÉDITO pix_a_liquidar 100   (
 Fato 2 (liquidação  DÉBITO pix_a_liquidar 100 |  CRÉDITO reserva_no_BC 100    (após SPI confirmar)
         no SPI):
 ```
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 820 280" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="led-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <text x="20" y="24" font-family="sans-serif" font-size="13" fill="#666">Fato 1 — reserva</text>
+  <rect x="20" y="35" width="200" height="60" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="120" y="58" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#b91c1c">DÉBITO</text>
+  <text x="120" y="78" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">carteira_ana · R$100</text>
+  <line x1="220" y1="65" x2="330" y2="65" stroke="#4338ca" stroke-width="2" marker-end="url(#led-arrow)"/>
+  <rect x="330" y="35" width="220" height="60" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="440" y="58" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#166534">CRÉDITO</text>
+  <text x="440" y="78" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">pix_a_liquidar · R$100</text>
+  <text x="620" y="65" font-family="sans-serif" font-size="13" fill="#166534">Σ = Σ ✓</text>
+
+  <text x="20" y="140" font-family="sans-serif" font-size="13" fill="#666">Fato 2 — liquidação no SPI (após confirmação)</text>
+  <rect x="20" y="151" width="220" height="60" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="130" y="174" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#b91c1c">DÉBITO</text>
+  <text x="130" y="194" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">pix_a_liquidar · R$100</text>
+  <line x1="240" y1="181" x2="350" y2="181" stroke="#4338ca" stroke-width="2" marker-end="url(#led-arrow)"/>
+  <rect x="350" y="151" width="220" height="60" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="460" y="174" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#166534">CRÉDITO</text>
+  <text x="460" y="194" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">reserva_no_BC · R$100</text>
+  <text x="620" y="181" font-family="sans-serif" font-size="13" fill="#166534">Σ = Σ ✓</text>
+
+  <rect x="20" y="230" width="750" height="34" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="395" y="252" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#3730a3">Dois pares balanceados e imutáveis — nunca "saldo −= 100". O estado (reservado → liquidado) é o próprio log.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Cada estado do dinheiro é um fato encadeado, não uma atualização de coluna.</p>
+</div>
 
 O SPI, que é o Sistema de Pagamentos Instantâneos — a infraestrutura do Banco Central que efetivamente liquida o Pix —, eu vou detalhar com calma daqui a pouco. Por enquanto, pensem nele como "o sistema do Banco Central que confirma que o dinheiro chegou".
 
@@ -176,6 +265,41 @@ Segundo, **o registro precisa ter estado**, não só existência: "em andamento"
 Terceiro, **o efeito precisa ser atômico** junto com o registro de idempotência: ou o sistema registra "concluído" **e** grava os lançamentos no mesmo golpe, ou não grava nada. É a mesma transação do ledger que a gente viu na seção anterior.
 
 Deixa eu descrever o fluxo completo: se for um retry tardio, o sistema devolve o resultado que já tinha guardado. Se for um retry concorrente, ele fica esperando o primeiro terminar, e aí devolve o mesmo resultado. E na primeira vez, o sistema realmente executa e persiste. No fim, "tocou três vezes" vira "aconteceu uma vez, respondido três vezes" — que é exatamente a resposta que devemos à Ana.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 820 260" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="idem-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+  </defs>
+  <text x="20" y="24" font-family="sans-serif" font-size="12" fill="#666">chave: mesma intenção, nascida no cliente (= E2E ID)</text>
+  <rect x="20" y="40" width="180" height="44" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="110" y="66" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#333">Toque 1 (original)</text>
+  <rect x="20" y="100" width="180" height="44" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="110" y="126" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#333">Toque 2 (retry)</text>
+  <rect x="20" y="160" width="180" height="44" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="110" y="186" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#333">Toque 3 (retry)</text>
+
+  <line x1="200" y1="62" x2="320" y2="62" stroke="#888" stroke-width="2" marker-end="url(#idem-arrow)"/>
+  <line x1="200" y1="122" x2="320" y2="122" stroke="#888" stroke-width="2" marker-end="url(#idem-arrow)"/>
+  <line x1="200" y1="182" x2="320" y2="182" stroke="#888" stroke-width="2" marker-end="url(#idem-arrow)"/>
+
+  <rect x="320" y="70" width="220" height="110" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="430" y="95" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">Registro de idempotência</text>
+  <text x="430" y="118" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">estado: em andamento → concluído</text>
+  <text x="430" y="138" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">1ª vez: executa e grava</text>
+  <text x="430" y="158" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">2ª/3ª: devolve o mesmo resultado</text>
+
+  <line x1="540" y1="125" x2="620" y2="125" stroke="#166534" stroke-width="2" marker-end="url(#idem-arrow)"/>
+  <rect x="620" y="90" width="180" height="70" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="710" y="118" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">1 débito no ledger</text>
+  <text x="710" y="138" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">3 respostas idênticas</text>
+
+  <text x="410" y="230" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#666">"tocou 3×" → "aconteceu 1×, respondido 3×"</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A chave de idempotência colapsa três tentativas na mesma intenção — só a primeira executa de verdade.</p>
+</div>
 
 ### 3.4 O Banco Central já projetou isso para vocês: o EndToEndId
 
@@ -315,6 +439,65 @@ E se alguma coisa der errado — falha ou fraude —, entra em cena a mensagem `
 
 Reparem: os seis primeiros passos precisam caber dentro do teto de 40 segundos, sendo que o próprio SPI roda com p99 de 4,6 segundos. E reparem também em quantos sistemas **externos** — o DICT, o SPI, o banco do recebedor — estão nesse caminho crítico. Cada um deles é, ao mesmo tempo, um ponto de falha e uma fatia de latência. Por isso eu digo: projetar o Pix é, em grande parte, projetar a resiliência contra dependências externas que vocês não controlam.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 380" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="pix-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <!-- Lanes -->
+  <g font-family="sans-serif" font-size="13" font-weight="bold" fill="#333">
+    <text x="60" y="24" text-anchor="middle">App Ana</text>
+    <text x="240" y="24" text-anchor="middle">TechPix</text>
+    <text x="420" y="24" text-anchor="middle">DICT</text>
+    <text x="600" y="24" text-anchor="middle">SPI</text>
+    <text x="800" y="24" text-anchor="middle">Banco Beta / Bruno</text>
+  </g>
+  <line x1="60" y1="34" x2="60" y2="360" stroke="#ccc" stroke-width="1.5"/>
+  <line x1="240" y1="34" x2="240" y2="360" stroke="#ccc" stroke-width="1.5"/>
+  <line x1="420" y1="34" x2="420" y2="360" stroke="#ccc" stroke-width="1.5"/>
+  <line x1="600" y1="34" x2="600" y2="360" stroke="#ccc" stroke-width="1.5"/>
+  <line x1="800" y1="34" x2="800" y2="360" stroke="#ccc" stroke-width="1.5"/>
+
+  <!-- Step 1 -->
+  <line x1="60" y1="55" x2="240" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#pix-arrow)"/>
+  <text x="150" y="48" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">1. chave + valor</text>
+
+  <!-- Step 2 -->
+  <line x1="240" y1="85" x2="420" y2="85" stroke="#4338ca" stroke-width="2" marker-end="url(#pix-arrow)"/>
+  <text x="330" y="78" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">2. consulta chave (p99 ≤ 1s)</text>
+  <line x1="420" y1="110" x2="240" y2="110" stroke="#4338ca" stroke-width="2" marker-end="url(#pix-arrow)"/>
+  <text x="330" y="103" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">conta + titular</text>
+
+  <!-- Step 3 -->
+  <rect x="190" y="125" width="100" height="34" rx="6" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="240" y="147" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">3. valida local</text>
+
+  <!-- Step 4 -->
+  <rect x="190" y="170" width="100" height="34" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="240" y="192" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">4. reserva no ledger</text>
+
+  <!-- Step 5 -->
+  <line x1="240" y1="220" x2="600" y2="220" stroke="#4338ca" stroke-width="2" marker-end="url(#pix-arrow)"/>
+  <text x="420" y="213" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">5. pacs.008 (E2E ID)</text>
+
+  <!-- Step 6 -->
+  <rect x="550" y="235" width="100" height="34" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="600" y="257" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">6. liquida Conta PI</text>
+
+  <!-- Step 7 -->
+  <line x1="600" y1="285" x2="240" y2="285" stroke="#166534" stroke-width="2" marker-end="url(#pix-arrow)"/>
+  <text x="420" y="278" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">7. pacs.002 (confirmação)</text>
+  <line x1="600" y1="310" x2="800" y2="310" stroke="#166534" stroke-width="2" marker-end="url(#pix-arrow)"/>
+  <text x="700" y="303" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">credita Bruno</text>
+
+  <rect x="20" y="330" width="860" height="34" rx="6" fill="#fef9e7" stroke="#d4a017"/>
+  <text x="450" y="352" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a5c00">Passos 1–6 cabem dentro do teto de 40s (SPI real: p99 4,6s) · 3 sistemas externos no caminho crítico: DICT, SPI, banco do recebedor</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Anatomia de um Pix, ponta a ponta — cada seta é uma fatia do orçamento de latência.</p>
+</div>
+
 ### 5.6 O orçamento decomposto, com os números oficiais
 
 Deixa eu desenhar esse orçamento com os números que o próprio Banco Central publica, para vocês visualizarem onde o tempo vai:
@@ -327,6 +510,34 @@ Teto normativo ≈ 40.000 ms   (canal primário do SPI, t0'→t4 · Res. BCB 195
   ├─ liquidação no SPI     p50 2.800 ms · p99 4.600 ms   (externo)
   └─ folga                 (o teto de 40 s é generoso; a experiência-alvo é de poucos segundos)
 ```
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 160" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="20" y="20" font-family="sans-serif" font-size="12" fill="#666">Teto normativo: 40.000 ms (barra inteira) — experiência-alvo real fica nos primeiros milímetros dela</text>
+  <rect x="20" y="30" width="860" height="40" rx="6" fill="#f3f4f6" stroke="#999"/>
+  <!-- segments, widths scaled roughly to relative weight for legibility, not literal ms-to-px -->
+  <rect x="20" y="30" width="60" height="40" fill="#93c5fd" stroke="#1d4ed8"/>
+  <rect x="80" y="30" width="140" height="40" fill="#fde68a" stroke="#b45309"/>
+  <rect x="220" y="30" width="120" height="40" fill="#c7d2fe" stroke="#4338ca"/>
+  <rect x="340" y="30" width="120" height="40" fill="#bbf7d0" stroke="#166534"/>
+  <rect x="460" y="30" width="420" height="40" fill="#ffffff" stroke="#999" stroke-dasharray="4 3"/>
+  <text x="450" y="90" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">
+    <tspan x="450" dy="0"></tspan>
+  </text>
+  <g font-family="sans-serif" font-size="11" fill="#333">
+    <text x="50" y="86" text-anchor="middle">DICT</text>
+    <text x="50" y="100" text-anchor="middle" fill="#666">p99 ≤ 1s</text>
+    <text x="150" y="86" text-anchor="middle">validações +</text>
+    <text x="150" y="100" text-anchor="middle">antifraude (a maior fatia sua)</text>
+    <text x="280" y="86" text-anchor="middle">reserva no</text>
+    <text x="280" y="100" text-anchor="middle">ledger (ADR-001)</text>
+    <text x="400" y="86" text-anchor="middle">SPI</text>
+    <text x="400" y="100" text-anchor="middle" fill="#666">p50 2,8s · p99 4,6s</text>
+    <text x="670" y="86" text-anchor="middle" fill="#666">folga até o teto de 40s</text>
+  </g>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Larguras aproximadas, para dar noção de proporção — não é escala literal de milissegundos.</p>
+</div>
 
 Deixa eu bater na mesma tecla: o "10 segundos" que todo mundo repete **não é o número normativo**. O teto real, para o pior caso, é de **40 segundos**; a experiência-alvo, no dia a dia, é de poucos segundos — SPI com p99 de 4,6 segundos, DICT com p99 de 1 segundo. Só que sob pico — pensem numa véspera de feriado, ou 20h de um dia de pagamento de salário —, as filas incham, e o que era 300 milissegundos vira alguns segundos. E furar o SLA do DICT, ou a disponibilidade de vocês, tem consequência regulatória, não é só um incômodo técnico. É exatamente por isso que a Aula 2 começa quebrando esse orçamento.
 
@@ -368,6 +579,51 @@ Vou contar para vocês sobre o mecanismo mais tecnicamente interessante que o BA
 O problema que ele resolve é o seguinte: quando alguém é vítima de fraude e o dinheiro é devolvido pelo mecanismo tradicional do MED, isso só funciona se o dinheiro **ainda estiver** na conta de quem recebeu o Pix fraudulento. Só que fraudadores sofisticados não deixam o dinheiro parado — eles pulverizam o valor, transferindo para uma segunda conta, depois uma terceira, numa cadeia de saltos, exatamente para que, quando a vítima perceber e notificar, o dinheiro já tenha "sumido" da conta original.
 
 A resposta do BACEN a isso, a **Recuperação de Valores**, transforma a devolução num problema de **rastreamento de grafo**: a partir da transação original — a "transação raiz" —, o sistema mapeia o caminho que os recursos percorreram, identificando as transações subsequentes para onde o dinheiro foi desviado. Pensem literalmente num grafo dirigido: a transação raiz é o nó inicial, cada transferência subsequente do mesmo dinheiro é uma aresta para um novo nó, e o rastreamento percorre esse grafo salto a salto. E o resultado prático é poderoso: **todas as contas identificadas nesse rastreamento contribuem para a recuperação**, não só a conta do primeiro recebedor — e os usuários recebedores encontrados ao longo desse fluxo de desvio também podem ser marcados como fraudadores no próprio DICT, propagando o sinal de risco pela rede inteira de participantes.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 820 260" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="graf-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <text x="20" y="24" font-family="sans-serif" font-size="12" fill="#666">transação raiz → cada salto é uma nova aresta no grafo de rastreamento</text>
+
+  <circle cx="80" cy="120" r="36" fill="#fef2f2" stroke="#b91c1c" stroke-width="2.5"/>
+  <text x="80" y="116" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">Vítima</text>
+  <text x="80" y="130" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7f1d1d">(raiz)</text>
+
+  <line x1="116" y1="120" x2="200" y2="120" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#graf-arrow)"/>
+  <text x="158" y="110" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7f1d1d">Pix fraude</text>
+
+  <circle cx="240" cy="120" r="36" fill="#fff7ed" stroke="#c2410c" stroke-width="2.5"/>
+  <text x="240" y="124" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7c2d12">Conta A</text>
+
+  <line x1="276" y1="120" x2="360" y2="120" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#graf-arrow)"/>
+  <text x="318" y="110" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7f1d1d">salto 2</text>
+
+  <circle cx="400" cy="120" r="36" fill="#fff7ed" stroke="#c2410c" stroke-width="2.5"/>
+  <text x="400" y="124" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7c2d12">Conta B</text>
+
+  <line x1="428" y1="95" x2="500" y2="55" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#graf-arrow)"/>
+  <circle cx="540" cy="45" r="34" fill="#fff7ed" stroke="#c2410c" stroke-width="2.5"/>
+  <text x="540" y="49" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7c2d12">Conta C</text>
+
+  <line x1="428" y1="145" x2="500" y2="185" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#graf-arrow)"/>
+  <circle cx="540" cy="195" r="34" fill="#fff7ed" stroke="#c2410c" stroke-width="2.5"/>
+  <text x="540" y="199" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7c2d12">Conta D</text>
+
+  <rect x="610" y="90" width="190" height="60" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="705" y="112" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">Todas contribuem</text>
+  <text x="705" y="130" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">p/ recuperação, não só a 1ª</text>
+
+  <line x1="705" y1="90" x2="574" y2="55" stroke="#166534" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <line x1="705" y1="150" x2="574" y2="190" stroke="#166534" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+  <text x="410" y="235" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">Rastreamento federado entre instituições — SLA p99 6h (fraude) · bloqueio cautelar até 72h</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Recuperação de Valores como travessia de grafo dirigido: cada conta no caminho vira nó recuperável.</p>
+</div>
 
 Duas regras de negócio que valem a pena vocês guardarem, porque mostram como esse grafo é modelado com cuidado: cada transação só pode ser a **raiz** de uma única Recuperação de Valores por vez — mesmo que essa recuperação seja cancelada, não se pode abrir outra tendo a mesma transação como raiz —, mas essa mesma transação **pode aparecer no grafo de rastreamento de outras Recuperações de Valores**, como um nó não-raiz. Isso evita duplicidade de "casos" abertos sobre a mesma origem, sem impedir que uma transação legitimamente pertença a mais de uma cadeia de investigação.
 
