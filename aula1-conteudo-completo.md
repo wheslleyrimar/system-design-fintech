@@ -6,6 +6,8 @@ title: "Aula 1 — Fundamentos de Arquitetura em Fintech"
 # Aula 1 — Fundamentos de Arquitetura em Fintech
 *Curso de Arquitetura de Sistemas Financeiros com IA*
 
+> **Navegação:** [Índice](index.md) · **Aula 1 (você está aqui)** · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
+
 Bom, vamos começar. Antes de eu explicar qualquer conceito, deixa eu contar uma coisa que aconteceu — ou que poderia ter acontecido — com qualquer um de vocês.
 
 São 2h47 da manhã de uma Black Friday. A Ana pega o celular, abre o aplicativo do banco, digita a chave Pix de um vendedor e toca em "pagar" — são R$5.000. A tela gira. Nada acontece. Ela espera, não aparece confirmação nenhuma, e toca de novo. Espera mais um pouco, ainda nada, e toca uma terceira vez.
@@ -821,3 +823,7 @@ Isso fecha a aula de hoje. Deixo abaixo alguns glossários de apoio — consulte
 - **Nota de manutenção:** os números de volume/TPS e as versões de manuais citados aqui foram verificados nesta atualização; como o Pix e seus manuais operacionais mudam com frequência, revalide antes de reusar esses números em uma turma futura.
 - Michael Nygard, "Documenting Architecture Decisions" (origem do ADR).
 - Anthropic: documentação do Model Context Protocol; materiais sobre engenharia de contexto e agentes. GitHub Spec Kit (SDD).
+
+---
+
+[Índice](index.md) · [Aula 2 →](aula2-conteudo-completo.md)

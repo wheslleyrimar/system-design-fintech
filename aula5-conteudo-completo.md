@@ -1,0 +1,256 @@
+---
+layout: default
+title: "Aula 5 — Núcleo da Fintech com IA e Agentes"
+---
+
+# Aula 5 — Núcleo da Fintech com IA e Agentes
+*Curso de Arquitetura de Sistemas Financeiros com IA*
+
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · **Aula 5 (você está aqui)** · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
+
+Semana passada eu terminei a aula com uma promessa: a chamada síncrona de Pagamentos para Antifraude, aquela que a gente colocou no caminho crítico com um orçamento de ~100 milissegundos no p99, ia ganhar um inquilino novo. Hoje eu pago essa promessa. Mas antes, como sempre, deixa eu contar o que aconteceu — porque dessa vez o sistema não ficou lento, não caiu, não congelou extrato nenhum. Dessa vez o sistema funcionou perfeitamente. E foi exatamente assim que ele falhou.
+
+Madrugada de 3 de outubro de 2025, 2h31 da manhã. Se esse horário soa familiar, é de propósito: foi mais ou menos nessa hora que a Ana, lá na Aula 1, tocou três vezes em "pagar". Só que dessa vez não é a Ana. São dezenas de contas — abertas semanas antes, com documentos válidos, movimentação inocente — que começam, quase ao mesmo tempo, a receber Pix. Muitos Pix. Centenas de transferências de **R$ 49,90** cada uma, vindas de contas de vítimas espalhadas pelo país, todas abaixo de qualquer limite que dispare alerta.
+
+Reparem no desenho do golpe, porque ele é quase elegante: nenhuma transação individual viola regra nenhuma. R$ 49,90 está abaixo do limite noturno. Está abaixo do limiar de valor suspeito. As contas recebedoras têm KYC válido — o time de Identidade e Onboarding fez o trabalho direito. As regras do Antifraude — limiares de valor, listas de contas marcadas, contagem de tentativas — olham cada Pix isoladamente e dizem: "inocente, inocente, inocente", centenas de vezes seguidas.
+
+O fraudador não quebrou nenhuma regra. **Ele explorou o espaço entre as regras.** O padrão — dezenas de contas novas recebendo rajadas coordenadas de valores pequenos e idênticos, na madrugada, com saque na sequência — grita fraude para qualquer analista humano que olhe o conjunto. Mas nenhuma regra olhava o conjunto. Cada uma olhava a sua fatia.
+
+O prejuízo foi contido: o MED — o trilho de devolução que vocês conhecem desde a Aula 1, com a Recuperação de Valores rastreando o grafo de contas — recuperou boa parte, e o bloqueio cautelar de 72 horas congelou o resto antes do saque completo. Mas o recado ficou na parede da sala do time, escrito pelo Diego, do Antifraude, no dia seguinte: **"regra pega o golpe de ontem; padrão pega o golpe de hoje."**
+
+Essa frase é o tema da aula. Hoje a gente coloca um modelo de machine learning no núcleo do TechPix — dentro do caminho crítico do Pix, dentro daquele orçamento de 100 milissegundos — sem abrir mão de nada do que esse curso construiu até aqui: correção acima de disponibilidade, auditabilidade, falhar fechado. E no fim, eu vou mostrar como a mesma tecnologia entra do outro lado do balcão: não decidindo sobre transações, mas ajudando um humano a decidir melhor.
+
+---
+
+## 1. Por que IA no núcleo — e o que ela nunca pode fazer
+
+### 1.1 O problema que regra nenhuma resolve
+
+Deixa eu formalizar o que o golpe dos R$ 49,90 expôs. Uma regra determinística é uma função simples: recebe uma transação, compara com limiares fixos, devolve sim ou não. Ela tem três virtudes que a gente não vai abrir mão nunca: é **explicável** (qualquer auditor entende "bloqueou porque valor > X"), é **rápida** (microssegundos) e é **determinística** (a mesma entrada dá sempre a mesma saída — auditoria e reprodução de incidente agradecem).
+
+Mas ela tem um limite estrutural: regra enxerga o que o autor da regra previu. O espaço de fraudes possíveis é combinatório — valor, horário, grafo de relacionamento entre contas, idade da conta, padrão de digitação, sequência de eventos — e o fraudador profissional testa esse espaço sistematicamente, como quem procura um vão na cerca. Cada regra nova que o Diego escreve fecha um vão e ilumina, para o fraudador, onde ficam os outros. É uma corrida em que a defesa se move por deploy e o ataque se move por tentativa.
+
+Um modelo de classificação treinado sobre o histórico faz outra coisa: ele aprende a **superfície** que separa comportamento legítimo de fraudulento, em dezenas ou centenas de dimensões ao mesmo tempo. Ele não precisa que alguém tenha previsto "rajadas de R$ 49,90 na madrugada em contas novas" — ele aprende que aquela *combinação* de sinais (conta nova + rajada + valor repetido + horário + saque em sequência) está numa região do espaço onde fraude mora, mesmo que essa combinação exata nunca tenha aparecido no treino.
+
+### 1.2 A regra de ouro: o modelo sugere, a regra decide
+
+Agora, o ponto mais importante da aula inteira, e eu quero que vocês guardem antes de qualquer diagrama: **o modelo não decide nada. Nunca.** O modelo produz um número — um **score de risco**, digamos de 0 a 1000. Quem converte esse número em ação é uma **política de decisão**: uma tabela determinística, versionada, auditável, escrita por humanos e aprovada por humanos.
+
+| Score | Valor da transação | Ação |
+|---|---|---|
+| 0–600 | qualquer | Segue o fluxo normal |
+| 601–850 | até R$ 200 | Segue, marcada para revisão posterior |
+| 601–850 | acima de R$ 200 | Desafio adicional (confirmação no app) |
+| 851–1000 | qualquer | Bloqueia e abre caso para analista |
+| *score indisponível* | até R$ 200 | Segue (fail-open com teto baixo) |
+| *score indisponível* | acima de R$ 200 | Bloqueia (fail-closed) |
+
+Reparem em três coisas nessa tabela. Primeiro, **as duas últimas linhas são as mais importantes** — elas dizem o que acontece quando o modelo *não responde*. Isso é o fallback fail-open/fail-closed que a gente desenhou na aula passada como decisão de negócio, e ele continua valendo com modelo no lugar: valor pequeno, o custo de errar é pequeno, deixa passar; valor grande, na dúvida, a regra do curso desde a Aula 1 — **falhar fechado**. Segundo, a tabela é *determinística*: dado o score e o valor, a ação é uma só. O componente não-determinístico do sistema fica cercado por componentes determinísticos dos dois lados — features determinísticas entram, política determinística sai. Terceiro, a tabela é um artefato versionado, como um ADR: quando o compliance perguntar "por que essa transação foi bloqueada em 3 de outubro?", a resposta é "score 912, política v14, linha 4" — e não "o modelo achou".
+
+E aqui entra o motivo regulatório, que em fintech nunca é rodapé: a LGPD dá ao titular o direito de solicitar revisão de decisões tomadas unicamente com base em tratamento automatizado, e o BACEN espera que a instituição *explique* suas decisões de bloqueio. Reparem na palavra: explicar a **decisão**, não os pesos do modelo. Ninguém precisa explicar por que o neurônio 4.217 ativou. Precisa explicar "a política diz que score acima de 850 bloqueia, e o score veio de um modelo documentado, treinado sobre estes dados, com estas features". A separação modelo/política é o que torna isso possível. **Explicabilidade mora na política, não no modelo** — e é por isso que a política tem que existir como artefato separado.
+
+### 1.3 Regra e modelo: camadas, não rivais
+
+Fica a pergunta: então jogamos as regras fora? Não — e essa é a segunda coisa para guardar. O Antifraude do TechPix depois desta aula tem **três camadas**, na ordem em que uma transação as atravessa:
+
+1. **Regras duras** (microssegundos): lista de bloqueio, conta encerrada, limite regulatório estourado. Coisas que são proibidas por definição, onde não existe "score" — existe não. Rodam primeiro justamente porque são baratas: transação barrada aqui nem chega ao modelo.
+2. **Modelo** (dezenas de milissegundos): o score de risco sobre tudo que passou pelas regras duras.
+3. **Política de decisão** (microssegundos): a tabela que converte score + contexto em ação.
+
+Regra pega o proibido; modelo pega o suspeito; política decide o que fazer com a suspeita. Cada camada faz o que faz melhor, e a auditoria atravessa as três.
+
+---
+
+## 2. A arquitetura da inferência em tempo real
+
+### 2.1 O orçamento: 100 milissegundos, e ninguém rouba fatia
+
+Vamos voltar ao orçamento, porque em fintech tudo começa e termina nele. Desde a Aula 1 a gente sabe: teto normativo de 40 segundos, experiência-alvo de poucos segundos, SPI consumindo p50 de 2,8s e p99 de 4,6s, DICT com p99 de 1s. Na aula passada, quando a gente escreveu o Contrato de Integração, a aresta Pagamentos→Antifraude ficou com **~100 ms de orçamento no p99**, chamada síncrona, porque a decisão de risco tem que acontecer *antes* de reservar fundos — depois que o SPI liquidou, é irrevogável, e aí só resta o MED.
+
+Cem milissegundos. Dentro disso precisa caber: a chamada de rede (ida e volta), a montagem das features, a inferência do modelo, a avaliação da política. Vamos fazer a conta de guardanapo que esse curso adora:
+
+```
+Orçamento p99 da aresta Pagamentos → Antifraude ≈ 100 ms
+  ├─ rede (gRPC interno, ida+volta)        ~5 ms
+  ├─ regras duras                          ~1 ms
+  ├─ busca de features (online store)      ~10–15 ms   ← o vilão silencioso
+  ├─ inferência do modelo                  ~10–20 ms
+  ├─ política de decisão                   ~1 ms
+  └─ folga para p99 (GC, fila, azar)       ~60 ms
+```
+
+Duas observações de quem já carregou pager. Primeira: a folga não é gordura — é o que separa o p50 do p99. Um sistema que gasta 40 ms no caso típico estoura 100 ms no p99 com facilidade assustadora: uma pausa de garbage collector, um pico de fila, um cache frio. Se o seu caso típico já come 80 do orçamento de 100, o seu p99 mora em violação. Segunda: reparem que **a inferência não é a fatia maior**. O modelo de score de fraude do TechPix não é um modelo de linguagem gigante — é um classificador especializado (pensem numa floresta de árvores de decisão turbinada, ou numa rede pequena), treinado em casa, que roda em 10–20 ms numa CPU ou numa GPU modesta. A fatia perigosa é a de cima: **as features**.
+
+### 2.2 Feature store: o rio de eventos vira alimento do modelo
+
+Uma feature é um sinal que o modelo consome: "quantos Pix essa conta recebeu na última hora", "idade da conta em dias", "valor médio recebido nos últimos 30 dias", "quantas contas distintas enviaram para ela hoje". E aqui mora a decisão de arquitetura mais bonita da aula, porque ela amarra tudo que o curso construiu.
+
+Pensem no que a feature "número de Pix recebidos na última hora" exige: ela precisa estar **pronta** — pré-calculada, atualizada, a uma consulta de milissegundos — no momento em que a transação chega. Não dá para varrer o ledger contando lançamentos com a transação esperando: isso é exatamente o tipo de leitura pesada no caminho de escrita que causou o incidente do dia 5 na Aula 2. A resposta tem nome: **feature store**, um armazenamento de duas caras.
+
+- A **loja offline** guarda o histórico profundo — meses de features, com carimbo de tempo — e serve o *treinamento* do modelo. Latência de minutos? Irrelevante. Volume? Enorme.
+- A **loja online** guarda só o valor *atual* de cada feature por conta — num armazenamento chave-valor rápido — e serve a *inferência*. Latência exigida: poucos milissegundos no p99. Volume por consulta: minúsculo.
+
+E quem alimenta as duas? Reparem: **os mesmos eventos do Outbox da Aula 2.** `PixLiquidado` sai do ledger pela outbox, e um consumidor — idempotente, com dedup por EndToEndId, exatamente como a gente especificou na Aula 4 — incrementa os agregados da loja online ("recebidos na última hora +1") e apenda o registro na loja offline. O rio de eventos que o professor anterior desenhou com vocês no event storming da Aula 3 virou, literalmente, o alimento do modelo. Nenhuma peça nova de infraestrutura conceitual: é CQRS de novo — a loja online é mais um *read model*, só que quem lê não é o extrato da Ana, é o modelo do Diego.
+
+Isso traz junto uma consequência honesta que eu não vou esconder: a loja online tem **atraso eventual**, como todo read model — os mesmos 100 a 300 ms de sempre, às vezes mais se o consumer lag crescer (e vocês lembram da aula passada: consumer lag é métrica de primeira classe). O modelo pode decidir sobre uma foto das features com algumas centenas de milissegundos de idade. Para contagem de "última hora", irrelevante. Mas guardem a implicação: **quem ataca em rajada de segundos explora exatamente essa janela** — e é por isso que as regras duras da camada 1, que consultam contadores transacionais simples, continuam existindo na frente do modelo. Camada rápida e burra na frente; camada lenta e esperta atrás. Defesa em profundidade não é só para segurança de rede.
+
+### 2.3 Treino e inferência: dois mundos, um artefato
+
+Uma confusão que eu quero desfazer agora, porque ela custa caro em reunião de planejamento: **treinar** um modelo e **servir** um modelo são workloads tão diferentes quanto relatório mensal e caminho crítico do Pix.
+
+| | Treinamento | Inferência online |
+|---|---|---|
+| Quando | De tempos em tempos (semanal, mensal, sob demanda) | 24/7, a cada transação |
+| Dados | Meses de histórico (loja offline) | Uma transação + features online |
+| Latência | Horas — ninguém espera | ~10–20 ms dentro de orçamento de 100 |
+| Hardware | GPU parruda, elástica, pode ser spot | CPU/GPU dedicada, dimensionada para o pico de 900 TPS |
+| Falha | Refaz amanhã | Fallback fail-closed AGORA |
+
+O que liga os dois mundos é um artefato: o modelo versionado — os pesos, congelados, com um número de versão, guardados num registro de modelos. O treino *produz* versões; a inferência *serve exatamente uma* versão, conhecida, auditável. "Qual modelo decidiu essa transação?" tem que ter resposta tão precisa quanto "qual versão do código estava em produção?" — porque para o auditor é a mesma pergunta.
+
+E um aviso de arquiteto: essa separação é o motivo pelo qual o Antifraude está virando um serviço com **perfil de escala próprio** — GPU, dimensionamento pelo pico de TPS, ciclo de deploy do modelo separado do ciclo do código. O professor da Aula 3 já tinha apontado o Antifraude como candidato a escala diferente. Segurem essa: na aula que vem, ela decide quem sai do monólito primeiro.
+
+---
+
+## 3. Modelos abertos vs. API: onde o peso mora importa
+
+Até aqui, o modelo de score é pequeno, especializado, treinado em casa — essa questão nem se coloca. Mas o TechPix quer mais: resumir o histórico de um caso de fraude em linguagem natural, analisar a narrativa de uma comunicação de PLD-FT, montar dossiês. Isso pede modelo de linguagem — e aí surge a pergunta que hoje toda fintech enfrenta: **usar um modelo por API (pesos na nuvem de terceiro) ou rodar um modelo aberto (pesos na sua infra)?**
+
+"Modelo aberto" — ou de **pesos abertos** — é um modelo cujos pesos você baixa e executa onde quiser: a família Llama e afins. A decisão entre ele e uma API não é ideológica; é uma tabela de trade-offs, e como sempre nesse curso, a resposta depende de *qual pedaço do sistema* está perguntando:
+
+| Critério | Modelo aberto, na sua infra | API de terceiro |
+|---|---|---|
+| **Dado sensível (LGPD)** | Não sai de casa. CPF, chave Pix, grafo de contas — tudo dentro do seu perímetro | Dado trafega para fora; exige contrato, anonimização, base legal — e ainda assim é superfície de risco |
+| **Latência** | Previsível; você controla a fila e o hardware | Boa na média; o p99 depende de rede e da fila *dos outros* |
+| **Custo em escala** | Custo fixo alto (GPU, operação), custo marginal baixo — a 900 TPS de pico, escala a favor | Custo por chamada; em volume de núcleo, a conta explode |
+| **Capacidade bruta** | Menor que os melhores modelos de fronteira | Estado da arte |
+| **Operação** | Sua: deploy, monitoramento, atualização de versão | Deles: você herda as mudanças, inclusive as que não pediu |
+
+A política do TechPix, que eu recomendo como padrão de mercado para fintech: **núcleo com dado sensível → modelo aberto, dentro de casa; borda sem dado sensível → API pode.** O copiloto que resume casos de fraude lê CPF, chave, extrato — roda dentro. Um assistente que reescreve texto de notificação genérica — pode ser API. É a mesma lógica de "forte no núcleo, eventual na borda" da Aula 1, transplantada: a fronteira não é técnica, é de *sensibilidade do dado e criticidade da decisão*.
+
+Dois termos de engenharia para o glossário, porque vocês vão esbarrar neles na primeira conversa de infra: **quantização** — representar os pesos do modelo com menos bits, trocando um pouco de qualidade por muito menos memória e mais velocidade — e **destilação** — treinar um modelo pequeno para imitar um grande, ficando com um especialista barato no lugar de um generalista caro. São os dois botões que fazem um modelo aberto caber no seu orçamento de latência e de GPU. O detalhe de como treinar não é assunto deste curso; *saber que esses botões existem* é, porque eles mudam a conta de capacidade.
+
+---
+
+## 4. Shadow mode: o medo certo, na dose certa
+
+### 4.1 Como se coloca um modelo em produção sem coragem
+
+Agora a pergunta que separa quem já operou sistema financeiro de quem não: o modelo do Diego está treinado, os testes offline mostram métricas bonitas. A gente liga ele na política de decisão amanhã?
+
+Não. E a resposta tem método, não é só medo. O modelo entra em **shadow mode** — modo sombra: ele recebe **tráfego real**, calcula o score **de verdade**, e a decisão dele é... **ignorada**. Registrada, carimbada, guardada — e ignorada. Quem continua decidindo é o sistema anterior (as regras). Durante semanas, cada transação gera dois vereditos: o real (regras) e o hipotético (modelo). E aí a comparação vira o instrumento mais poderoso da aula:
+
+- Onde o modelo **concorda** com as regras: ótimo, confiança acumulando.
+- Onde o modelo bloquearia e a regra deixou passar: cada caso vai para análise humana. Era fraude que escapou? Ponto para o modelo. Era cliente legítimo? **Falso positivo** — e falso positivo em pagamento é cliente com Pix travado às 2h da manhã, ligando furioso; em fintech, falso positivo é incidente de confiança, não é estatística.
+- Onde a regra bloquearia e o modelo deixaria passar: o modelo está cego para algo que a regra enxerga? Ou a regra está ultrapassada?
+
+E aqui a história fecha o círculo com uma ironia que eu fiz questão de trazer: quando o time rodou o modelo em sombra sobre o histórico de setembro, **o golpe dos R$ 49,90 acendeu vermelho retroativamente**. As contas laranja daquela madrugada apareceram com scores altíssimos — a combinação conta-nova + rajada + valor-repetido + madrugada estava exatamente na região do espaço que o modelo aprendeu a temer. O golpe que atravessou todas as regras não teria atravessado o modelo. Isso não prova que o modelo pega o *próximo* golpe — guardem essa honestidade — mas prova que ele enxerga uma classe de padrão que regra nenhuma cobria.
+
+### 4.2 Sombra é o ensaio geral da entrega progressiva
+
+Reparem no desenho geral, porque ele vai reaparecer: rodar a mudança nova **ao lado** da antiga, com tráfego real, comparando resultados, antes de dar a ela o poder de decidir. Semana que vem, quando a gente for extrair serviços do monólito e falar de canary — a mudança nova recebendo primeiro 1% do tráfego, depois 5%, depois mais — vocês vão reconhecer o parentesco na hora. Shadow mode é o canary do componente não-determinístico: como não dá para ler o código do modelo num code review, a única revisão possível é **comportamental** — observar o que ele faz com a realidade, em volume, antes de deixá-lo tocar a realidade. Eu chamo isso de pagar o aluguel da confiança: modelo não entra no caminho crítico por ter métricas bonitas em laboratório; entra por ter semanas de comportamento observado em produção.
+
+A transição final no TechPix foi gradual até o fim: o modelo começou decidindo só a faixa de valores baixos (onde errar é barato), depois foi subindo, com as regras duras sempre na frente e a política sempre no comando. Em nenhum momento existiu um dia "liguem o modelo". Existiu um processo de semanas em que a confiança migrou, medida a medida.
+
+E fica uma pergunta armada para daqui a duas aulas: em sombra, comparando com as regras, a gente sabia se o modelo estava bom. E *depois*, quando ele é quem decide e as semanas passam e o mundo muda — o fraudador se adapta, o perfil de cliente muda, chega o 13º salário — **como saber se o modelo continua bom?** Um modelo não quebra com stack trace. Guardem essa inquietação; ela tem nome, e a Aula 7 vai dar o nome e o instrumento.
+
+---
+
+## 5. O outro lado do balcão: MCP e o suporte à decisão humana
+
+### 5.1 A manhã da Carla
+
+Até aqui, IA decidindo *sob* uma política, em milissegundos, sobre transações. Agora deixa eu apresentar a **Carla**, analista sênior de fraude do TechPix, porque o dia dela mostra o outro lugar — talvez o mais imediatamente valioso — onde essa tecnologia entra numa fintech.
+
+Quando o modelo (ou uma regra, ou o MED) abre um caso, é a Carla quem decide: bloqueia a conta? Devolve o dinheiro? Reporta às autoridades? E para decidir *um* caso, a Carla de setembro abria seis telas: o histórico de transações da conta, o cadastro no Identidade e Onboarding, o grafo de contas relacionadas (quem mandou para quem — o mesmo grafo da Recuperação de Valores da Aula 1), os casos anteriores parecidos, a fila do MED, a tela de marcações do DICT. Vinte minutos juntando contexto, cinco decidindo. A Carla não tem um problema de julgamento — tem um problema de *montagem de contexto*. E montagem de contexto é exatamente o que um modelo de linguagem com acesso a ferramentas faz bem.
+
+### 5.2 O copiloto, e por que o MCP importa aqui
+
+O TechPix montou para a Carla um **copiloto**: um assistente baseado num modelo de linguagem (aberto, rodando dentro de casa — seção 3 aplicada) que, quando um caso abre, consulta os sistemas, monta o dossiê — "conta aberta há 23 dias, recebeu 340 Pix de R$ 49,90 entre 2h31 e 2h58, padrão compatível com os 3 casos do lote de outubro, grafo liga a 2 contas já marcadas no DICT" — e **sugere** uma classificação, com as evidências citadas uma a uma.
+
+Como o copiloto se conecta aos sistemas? Aqui volta uma sigla que o professor da Aula 1 plantou: **MCP, o Model Context Protocol** — o protocolo aberto, criado pela Anthropic, que padroniza como um modelo acessa ferramentas e dados. Em vez de N integrações artesanais entre o copiloto e cada sistema interno, cada contexto expõe um servidor MCP com ferramentas nomeadas: o Contas e Ledger expõe `consultar_historico`, o Antifraude expõe `casos_similares` e `grafo_de_contas`, o Devoluções e Disputas expõe `status_med`. O copiloto enxerga um cardápio de ferramentas tipadas — e o cardápio é a fronteira.
+
+E agora a frase mais importante desta seção, que é a aplicação direta da regra de ouro da Aula 1 — "o agente lê, propõe, mas nunca move dinheiro": **no cardápio do copiloto da Carla, não existe ferramenta de escrita.** Não existe `bloquear_conta`. Não existe `devolver_pix`. Não é que o copiloto foi *instruído* a não bloquear — é que a ferramenta **não existe** no conjunto que os servidores MCP expõem a ele. A fronteira de permissão não é um pedido educado no prompt; é **ausência estrutural de capacidade**. Eu chamo isso de fronteira de permissão por ausência, e quero que vocês levem como princípio de projeto: a maneira mais confiável de garantir que um sistema não-determinístico não faça X é não dar a ele o instrumento de fazer X. Quem clica em "bloquear" é a Carla — no sistema dela, autenticada como ela, auditada como ela.
+
+O resultado operacional: a montagem de contexto caiu de vinte minutos para dois. A decisão continua custando os mesmos cinco — e continua sendo da Carla, o que importa para o regulador, para a LGPD (revisão humana em decisão que afeta o titular) e, francamente, para a qualidade: a Carla pega alucinação do copiloto do mesmo jeito que revisor pega erro em code review. O copiloto errar uma citação de evidência é um constrangimento; a Carla poder verificar cada citação — porque o dossiê linka as fontes — é o que torna o constrangimento inofensivo.
+
+### 5.3 A porta que eu não vou abrir hoje
+
+Antes de fechar, deixa eu marcar explicitamente uma fronteira do curso, porque eu sei que alguns de vocês já estão fazendo a extrapolação: "se o copiloto lê os sistemas e sugere decisões sobre *casos*... por que não um agente que lê as *métricas de produção* e as *specs* e sugere decisões sobre a *arquitetura*?"
+
+Essa extrapolação está certa — e ela é exatamente o destino final deste curso. Um agente participando da evolução da arquitetura, lendo produção e propondo mudanças estruturais sob validação, é a matéria da **Aula 8**, quando o professor das primeiras aulas volta para fechar o círculo que abriu ("da fé à evidência", lembram?). O que eu quero que vocês levem de hoje é que os fundamentos já estão todos na mesa: fronteira de permissão por ausência, leitura sem escrita, humano decidindo o irreversível, comportamento observado antes de confiança concedida. A Aula 8 não vai inventar princípios novos — vai aplicar estes, num alvo mais ambicioso.
+
+---
+
+## 6. O artefato: Model Card + Política de Decisão
+
+Toda aula deste curso termina registrando a decisão num artefato — o professor anterior deixou vocês treinados nisso com os ADRs e com a spec de Pagamentos da Aula 3. Hoje o artefato é o par que governa o componente não-determinístico: o **Model Card**, que documenta o modelo, e a **Política de Decisão**, que documenta o que se faz com a saída dele. Não é um ADR numerado — o próximo ADR numerado, o 003, só nasce quando alguém decidir mexer na escrita do ledger, e hoje não é esse dia. É o irmão não-determinístico da spec da Aula 3:
+
+```
+MODEL CARD — modelo-risco-pix                    versão 3 · out/2025
+Propósito       Score de risco de fraude (0–1000) por transação Pix,
+                consumido exclusivamente pela Política de Decisão v14.
+O que o modelo  Features de comportamento transacional (valor, frequência,
+vê              horários, grafo de contas, idade e histórico da conta) —
+                lista completa e versionada no anexo A.
+O que o modelo  Raça, gênero, e QUALQUER proxy geográfico fino (CEP) —
+NUNCA vê        vetado por política de não-discriminação; auditado a cada
+                versão por checagem automática da lista de features.
+Treinamento     Histórico rotulado da loja offline; janela de 18 meses;
+                retreino mensal ou sob incidente.
+Desempenho      Latência de inferência p99 ≤ 20 ms; avaliação de qualidade
+                comparada em sombra antes de cada promoção de versão.
+Fallback        Score indisponível → Política de Decisão, linhas 5–6
+                (fail-open ≤ R$200; fail-closed acima).
+Auditoria       Toda inferência loga: versão do modelo, versão da política,
+                score, ação, EndToEndId. Retenção conforme BACEN/LGPD.
+Limites         O modelo NÃO decide; NÃO bloqueia; NÃO enxerga transações
+conhecidos      fora do Pix; degrada sob mudança de comportamento do
+                tráfego (monitoramento: Aula 7).
+Donos           Modelo: time Antifraude (Diego) · Política: risco + negócio
+                · Revisão humana de casos: equipe da Carla.
+```
+
+Reparem na linha "O que o modelo NUNCA vê", porque ela é a mais fácil de esquecer e a mais cara de esquecer. Um modelo treinado sobre dados históricos aprende os vieses dos dados históricos — e CEP, no Brasil, é um proxy social afiadíssimo. Vetar a feature na entrada, com checagem automática na lista de features a cada versão (uma fitness function, no vocabulário da Aula 2 — a mesma ideia, apontada para um alvo novo), é mais barato e mais auditável do que tentar provar estatisticamente, depois, que o modelo não discrimina. Não resolve o problema inteiro — proxy de proxy existe, e auditoria de viés é disciplina própria — mas estabelece o princípio: **a lista de features é uma decisão de governança, não um detalhe de engenharia.**
+
+---
+
+## 7. Para fechar: as três âncoras
+
+Recapitulando o que não pode sair da cabeça de vocês:
+
+Primeiro: **o modelo sugere, a regra decide.** O componente não-determinístico produz um número; quem converte número em ação é uma política determinística, versionada, auditável. Explicabilidade mora na política. Fail-closed continua sendo a lei do valor alto — com modelo ou sem.
+
+Segundo: **inferência em tempo real é um problema de orçamento, e a feature store é o coração dele.** O modelo cabe em 100 ms porque as features já estão prontas — alimentadas pelo mesmo rio de eventos que este curso vem construindo desde o Outbox da Aula 2. Treino e inferência são mundos separados ligados por um artefato versionado. E onde o peso do modelo mora — dentro de casa ou numa API — se decide pela sensibilidade do dado, não pela moda.
+
+Terceiro: **confiança em componente não-determinístico se constrói por observação, não por revisão.** Shadow mode antes de decidir; fronteira de permissão por ausência quando um modelo ganha ferramentas; humano no comando do irreversível. A Carla decide; o copiloto monta o palco.
+
+E o gancho, porque este curso não anda sem: o Antifraude agora tem GPU, retreino mensal, perfil de tráfego próprio, um contrato de integração maduro na frente e um time dono. Ele não cabe mais confortavelmente dentro do monólito — os critérios de extração que o professor da Aula 3 listou estão, um a um, ficando verdes. Na próxima aula, a gente tira ele de lá. Ao vivo, com rede embaixo: canary, feature flag, rollback automático. E eu já aviso: a primeira tentativa vai dar errado — e vai dar errado *do jeito certo*.
+
+---
+
+## Apêndice — Termos novos desta aula
+
+| Termo | O que é |
+|---|---|
+| **Score de risco** | Saída numérica do modelo (0–1000) estimando probabilidade de fraude; insumo da política, nunca decisão final. |
+| **Política de decisão** | Tabela determinística, versionada e auditável que converte score + contexto em ação (seguir, desafiar, bloquear). |
+| **Regras duras** | Camada determinística pré-modelo: proibições absolutas (listas, limites regulatórios), em microssegundos. |
+| **Feature** | Sinal de entrada do modelo (ex.: "Pix recebidos na última hora"). A lista de features é decisão de governança. |
+| **Feature store** | Armazenamento de duas caras: loja *offline* (histórico, serve treino) e loja *online* (valor atual, serve inferência em ms). |
+| **Inferência online** | Execução do modelo no caminho crítico, por transação, dentro de orçamento de latência. |
+| **Registro de modelos** | Catálogo de versões de modelo (pesos congelados + metadados); responde "qual modelo decidiu?" |
+| **Modelo aberto / pesos abertos** | Modelo cujos pesos você baixa e executa na própria infra (família Llama e afins); dado sensível não sai de casa. |
+| **Quantização** | Pesos com menos bits: menos memória e mais velocidade, ao custo de um pouco de qualidade. |
+| **Destilação** | Treinar um modelo pequeno para imitar um grande: especialista barato no lugar de generalista caro. |
+| **Shadow mode (modo sombra)** | Modelo roda com tráfego real, score registrado, decisão ignorada — confiança construída por comparação antes da promoção. |
+| **Falso positivo** | Transação legítima tratada como fraude; em fintech, incidente de confiança do cliente, não estatística. |
+| **Copiloto** | Assistente de IA que monta contexto e sugere; o humano decide. |
+| **Fronteira de permissão por ausência** | O sistema não-determinístico não faz X porque a ferramenta de fazer X não existe no conjunto exposto a ele. |
+| **Servidor MCP (aplicado)** | Ponto de acesso padronizado (Model Context Protocol) expondo ferramentas nomeadas e tipadas de um contexto a um modelo. |
+| **Model Card** | Documento de governança do modelo: o que vê, o que nunca vê, desempenho, fallback, donos, limites conhecidos. |
+| **Drift (semente)** | A degradação silenciosa de um modelo quando o mundo muda; nomeado e instrumentado na Aula 7. |
+
+---
+
+[← Aula 4](aula4-conteudo-completo.md) · [Índice](index.md) · [Aula 6 →](aula6-conteudo-completo.md)

@@ -6,6 +6,8 @@ title: "Aula 2 — Fundamentos da Evolução Arquitetural em Fintech"
 # Aula 2 — Fundamentos da Evolução Arquitetural em Fintech
 *Curso de Arquitetura de Sistemas Financeiros com IA*
 
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · **Aula 2 (você está aqui)** · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
+
 Na aula passada, a gente decidiu, na fé, que o ledger do TechPix ia ter consistência forte — síncrono, ACID, linearizável. Eu disse uma coisa lá no final que eu quero que vocês lembrem: guardem o ADR-001, porque um dia a produção vai ter opinião sobre ele. Hoje é o dia em que a produção fala.
 
 Deixa eu contar o que aconteceu.
@@ -272,3 +274,7 @@ E um palpite educado, por melhor que seja, não escala para um time inteiro, nem
 | **Resilience4j** | Biblioteca Java com circuit breaker, bulkhead, rate limiter, retry e timeout componíveis (sucessor do Hystrix). |
 | **Debezium** | Implementação de referência de CDC: lê o WAL do banco e publica mudanças como eventos. |
 | **Unleash / LaunchDarkly** | Plataformas de feature flag — o mecanismo que a Aula 8 usa para canary. |
+
+---
+
+[← Aula 1](aula1-conteudo-completo.md) · [Índice](index.md) · [Aula 3 →](aula3-conteudo-completo.md)

@@ -6,6 +6,8 @@ title: "Aula 3 — Modelagem de Domínio e Decisões Arquiteturais"
 # Aula 3 — Modelagem de Domínio e Decisões Arquiteturais (SDD na prática)
 *Curso de Arquitetura de Sistemas Financeiros com IA*
 
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · **Aula 3 (você está aqui)** · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
+
 Eu terminei a última aula com uma confissão: desenhei as fronteiras do monólito do TechPix meio no olho. "Tem um módulo de Contas, tem um de Pagamentos, tem um de Antifraude" — e apontei essas divisões como se fossem óbvias. Hoje eu quero mostrar por que isso é perigoso, e dar para vocês uma técnica sistemática para nunca mais precisarem confiar só no palpite.
 
 Deixa eu contar uma história — dessa vez, não é um pico de tráfego. É pior, porque é mais silenciosa.
@@ -259,3 +261,7 @@ Eu não vou mais lecionar as próximas aulas com vocês — quem assume daqui é
 | **Versionamento de evento** | Evento publicado é contrato público. Estratégias: só adicionar (retrocompatível), versionar o tipo (`v1`/`v2`), ou registro de schema que rejeita mudança incompatível. |
 | **Schema registry** | Serviço que valida compatibilidade do formato do evento na publicação — a fitness function da Aula 2 aplicada a contrato de evento. |
 | **Bounded context ≠ microsserviço** | Contexto é decisão de modelagem; serviço é decisão de topologia. Um serviço nunca deve ter mais de um contexto; um contexto pode ser só um módulo. |
+
+---
+
+[← Aula 2](aula2-conteudo-completo.md) · [Índice](index.md) · [Aula 4 →](aula4-conteudo-completo.md)

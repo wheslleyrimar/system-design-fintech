@@ -1,0 +1,285 @@
+---
+layout: default
+title: "Aula 6 — Evolução para Microsserviços com Validação"
+---
+
+# Aula 6 — Evolução para Microsserviços com Validação
+*Curso de Arquitetura de Sistemas Financeiros com IA*
+
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · **Aula 6 (você está aqui)** · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
+
+Deixa eu contar sobre o dia 14 de novembro de 2025, uma sexta-feira, 9 horas da manhã. Foi o dia em que o TechPix desligou a rota antiga do Antifraude — o dia da primeira extração de verdade, quando um pedaço do monólito virou um serviço separado, com processo próprio, banco próprio, deploy próprio.
+
+E eu vou contar do jeito que aconteceu, não do jeito que fica bonito em palestra: **a primeira tentativa falhou.** Nove e dezessete da manhã, o canary estava com 5% do tráfego na rota nova, e o p99 da chamada de análise de risco saltou de 80 milissegundos para 2,4 segundos. Às 9h19, o sistema fez rollback sozinho — noventa segundos entre a violação da métrica de guarda e o último pacote voltando pela rota antiga. Nenhum Pix falhou. Nenhum cliente percebeu. Ninguém precisou acordar de madrugada, porque nem era madrugada, e mesmo se fosse, ninguém teria acordado: a máquina desfez o que a máquina tinha feito.
+
+Uma semana depois, dia 21, a gente tentou de novo. Subiu limpo. O Antifraude roda como serviço separado desde então.
+
+Eu já disse na Aula 4 quem eu sou: o professor que chamam quando o sistema já está no ar. Passei anos de plantão, e plantão ensina uma coisa que slide nenhum ensina — a diferença entre a mudança que você *torce* para dar certo e a mudança que você *sabe* que, se der errado, desfaz sozinha. Essa aula inteira é sobre transformar a primeira na segunda. E a frase que eu quero que vocês carreguem até o fim é essa:
+
+**Extrair sem rede de validação é coragem. Com rede, é rotina.**
+
+O rollback das 9h19 não foi um fracasso. Foi a rede funcionando. Guardem isso, porque a gente volta nele com números.
+
+---
+
+## 1. Por que agora — e não na Aula 2
+
+### 1.1 A assimetria que o outro professor deixou plantada
+
+Lá na Aula 2, no meio do incidente do dia 5, o professor que esteve aqui antes de mim segurou a turma quando todo mundo queria gritar "vamos virar microsserviços". Ele citou o "monolith first" do Fowler e deixou uma assimetria registrada: **extrair cedo demais é caro; extrair tarde demais só custa um refactor. A assimetria favorece esperar.**
+
+Pois bem. A gente esperou. E eu quero mostrar por que *agora* a espera acabou — não por ansiedade, mas por critério. Na Aula 3, quando desenharam os bounded contexts, ficou uma lista de quatro critérios operacionais para extrair um contexto para serviço. Deixa eu passar por eles, um a um, com o Antifraude e Limites na mão:
+
+| Critério (Aula 3, Seção 6) | O Antifraude em novembro de 2025 |
+|---|---|
+| **Fronteira estável há meses** | A fronteira não muda desde o event storming de agosto. O contrato — chamada síncrona recebendo transação, devolvendo decisão — sobreviveu à Aula 4 (que o formalizou) e à Aula 5 (que trocou o miolo por um modelo de ML) **sem mudar a assinatura**. Fronteira que sobrevive a uma troca de implementação inteira é fronteira testada. |
+| **Necessidade de escala diferente** | Desde a Aula 5, o Antifraude roda inferência de modelo em GPU. O resto do monólito escala por CPU e I/O. Colocar GPU no nó do monólito inteiro é pagar o hardware mais caro do datacenter para servir código que não usa ele. |
+| **Time dono, com autonomia** | O time do Diego opera o Antifraude de ponta a ponta: regras, modelo, feature store, plantão. Eles já eram donos de fato; faltava a topologia reconhecer. |
+| **Contrato de integração pronto** | O Contrato de Integração da Aula 4 define a aresta Pagamentos↔Antifraude por escrito: síncrona, orçamento de ~100 ms p99, timeout, retry, fallback fail-closed para valor alto e fail-open com limite baixo para valor pequeno. A rede pode entrar no meio dessa aresta porque a aresta já se comporta como se a rede existisse. |
+
+Reparem no padrão: **nenhum critério é "estamos com vontade".** Todos são observáveis. É a diferença entre extrair por moda e extrair por evidência — e é o mesmo espírito do "decidir na fé, depois na evidência" que atravessa esse curso desde a Aula 1. A fronteira do Antifraude passou meses sendo ensaiada *dentro* do monólito, exatamente como o monólito modular da Aula 2 prometia: as fronteiras internas são o ensaio geral das fronteiras de serviço.
+
+### 1.2 A ordem de extração — e o que NÃO sai
+
+A pergunta seguinte é: extrai o quê, em que ordem? A resposta do TechPix:
+
+**Primeiro, Antifraude e Limites.** Pelos quatro critérios acima, e por mais um, tático: a aresta dele já tem fallback definido. Se a extração der errado, o Contrato de Integração diz o que acontece — degrada com regra de negócio, não com estouro de pool. Extrair primeiro o serviço cuja falha já tem resposta escrita é extrair com a rede embaixo.
+
+**Segundo, Pagamentos.** É o orquestrador do fluxo e o dono das camadas anticorrupção para DICT e SPI. Faz sentido ele ser um serviço: é ali que mora a conversa com o mundo externo, os timeouts herdados do teto de 40 segundos, o circuito com o BACEN. Mas ele vai *depois*, porque orquestrador é mais entrelaçado — e porque, extraindo o Antifraude primeiro, a gente aprende no contexto onde errar custa menos.
+
+**E o Ledger fica.** Eu quero ser cirúrgico aqui, porque essa é a decisão mais importante da aula e é uma decisão de *não fazer*: **a escrita do ledger continua no monólito, com a conta única de liquidação `pix_a_liquidar` — e a pendência do ADR-002, aquela linha de revisão que diz "se a contenção persistir, reparticionar a própria escrita do ledger", continua aberta. Eu não vou ser eu a fechá-la.**
+
+Por quê? Três razões. Primeira: o ledger é o agregado com a invariante mais cara do sistema — Σ débitos = Σ créditos, transacional, serializable. Colocar rede no meio de uma invariante transacional é trocar uma transação ACID por um saga com compensação, e ninguém aqui demonstrou que precisa pagar esse preço *hoje*. Segunda: o p99 de escrita do ledger está dentro do SLA. Incomoda? Incomoda. Mas "incomoda" não é evidência, e esse curso inteiro é sobre não decidir no incômodo. Terceira: extração de serviço se faz uma por vez, com aprendizado entre elas — e o ledger, se um dia sair ou reparticionar, tem que ser o último, feito pela equipe mais calejada, com a melhor rede de validação que existir. O próximo ADR numerado, o 003, só nasce quando alguém decidir mexer na escrita do ledger — e hoje não é esse dia.
+
+Guardem a regra geral: **extraia primeiro o que tem fronteira madura e fallback escrito; extraia por último — ou nunca — o que carrega a invariante transacional do dinheiro.**
+
+---
+
+## 2. A parte que ninguém conta: os dados
+
+Todo mundo que palestra sobre microsserviços mostra caixinhas e setas. Quase ninguém mostra a parte que dói, então deixa eu fazer isso agora: **extrair o código é a parte fácil. A parte difícil é extrair os dados.**
+
+### 2.1 Database-per-service: a regra de ouro ganha rede
+
+Na Aula 2, o monólito modular tinha uma regra de ouro: **nenhum módulo lê a tabela de outro.** Módulo conversa por interface, nunca por SELECT no schema alheio. Essa regra agora sobe de nível: **nenhum serviço lê o banco de outro serviço. Nunca. Nem "só essa query". Nem "só até a migração terminar".**
+
+A razão é a mesma da Aula 2, amplificada pela rede: banco compartilhado é acoplamento invisível. Se o serviço de Antifraude lê a tabela do monólito, qualquer mudança de schema no monólito quebra o Antifraude — e quebra em produção, em tempo de execução, sem nenhum compilador ou contrato avisando. É o bug do Diego e da Marina da Aula 3, só que agora com dois deploys independentes e ninguém olhando. O schema registry da Aula 4 protege os contratos de *evento*; não existe schema registry para "eu leio sua tabela escondido". Então a proibição é absoluta, e a gente transformou ela em fitness function: um teste no CI varre as connection strings e as permissões de banco, e **o usuário de banco do serviço de Antifraude simplesmente não tem GRANT em nenhum schema do monólito.** Fronteira de permissão por ausência — a Aula 5 ensinou isso para agentes de IA; vale igual para serviços.
+
+O Antifraude, então, nasce com banco próprio: as tabelas de regras, de decisões, de casos — e a feature store, que já era dele desde a Aula 5. E aí vem a pergunta que separa o slide da produção: *como é que os dados saem de um banco e chegam no outro, sem parar o sistema e sem perder um registro?*
+
+### 2.2 Expand/contract, dual-run, backfill — e a velha reconciliação
+
+A resposta é a coreografia que a Aula 4 apresentou para contratos, aplicada agora a dados. Quatro movimentos:
+
+**Expandir.** O serviço novo sobe com o banco novo, vazio, *ao lado* do monólito — sem receber tráfego de verdade. O código do monólito entra em modo de escrita dupla controlada: cada decisão de antifraude que ele toma é também publicada como evento (pelo Outbox da Aula 2 — reparem como tudo se encaixa: o Outbox que nasceu para o extrato agora alimenta a migração), e o serviço novo consome esses eventos e escreve no banco dele. A partir daqui, o banco novo acumula o presente.
+
+**Backfill.** O presente não basta; falta o passado. Um processo de backfill copia o histórico — no caso do Antifraude, as decisões e os agregados de comportamento dos últimos meses — do banco velho para o novo, em lotes, fora do horário de pico, com throttling para não competir com produção. Backfill é chato, lento e absolutamente sem glamour. Também é onde mora metade dos incidentes de migração, então: lotes pequenos, retomável do ponto onde parou (idempotente — a Aula 1 não sai de moda), e medido.
+
+**Dual-run.** Com o banco novo completo, começa a fase que eu considero a mais importante: os dois caminhos rodam *em paralelo*, o velho decidindo de verdade e o novo decidindo "de mentira" — exatamente o shadow mode da Aula 5, que o time do Diego já conhecia do modelo de ML. A cada transação, a decisão do serviço novo é comparada com a do caminho velho. Divergiu? Loga, conta, investiga. A taxa de divergência é a métrica que diz quando a migração está pronta: a gente definiu o critério *antes* — divergência abaixo de 0,01% por sete dias corridos — e só avançou quando ele foi cumprido.
+
+**Contract.** Só então o tráfego migra (via canary, Seção 4), a escrita dupla é desligada, e — semanas depois, com tudo estável — as tabelas velhas do monólito são arquivadas e removidas. Contração é a última etapa, nunca a primeira. Pressa de apagar tabela velha já causou mais perda de dado que disco quebrado.
+
+E atravessando os quatro movimentos, uma disciplina que o TechPix já tinha no sangue: **reconciliação.** Na Aula 1, o professor mostrou que o ledger interno precisa bater com a Conta PI no Banco Central — bater o livro de vocês contra o livro do outro, continuamente, porque divergência silenciosa vira incidente regulatório. A migração de dados é a mesma disciplina, apontada para dentro: um job compara, todo dia, contagens e somas entre o banco velho e o novo, e qualquer diferença acorda alguém. **Migração sem reconciliação não é migração; é esperança com cronograma.**
+
+### 2.3 O que descobrimos no meio do caminho
+
+Uma nota honesta, porque aconteceu: no terceiro dia de dual-run, a taxa de divergência estava em 0,4% — quarenta vezes o critério. Pânico? Não: *informação*. Investigando as divergências (elas estavam logadas, uma a uma, com o EndToEndId de cada transação), o time achou a causa: o backfill tinha copiado os agregados de comportamento com um corte de fuso horário errado — meia-noite UTC em vez de meia-noite de Brasília. Três horas de janela deslocada, contadores de "Pix recebidos no dia" diferentes, decisões diferentes nas transações perto do limite. Corrigiu o corte, rodou o backfill de novo (idempotente, lembra?), divergência caiu para 0,003%.
+
+A lição que eu quero que fique: **o dual-run existe para falhar cedo e barato.** Se a gente tivesse migrado direto, esse erro de fuso teria decidido errado em produção, com dinheiro real, e aparecido semanas depois como "o antifraude anda estranho". No dual-run, ele apareceu como um número num dashboard, três dias depois de existir, custando zero reais.
+
+---
+
+## 3. GitOps e ArgoCD: o deploy vira ledger
+
+Agora o sistema tem dois deploys — monólito e Antifraude — e daqui a pouco terá três. Multiplicar deploys com o processo artesanal de antes ("roda o script, torce, confere no olho") é multiplicar risco. Então essa seção é sobre a mudança de filosofia que sustenta o resto da aula: **GitOps**.
+
+### 3.1 O estado desejado mora no Git
+
+A ideia central cabe numa frase: **a descrição completa do que deveria estar rodando em produção — quais serviços, quais versões, quantas réplicas, com que configuração — mora num repositório Git, em arquivos declarativos. Produção é o que o Git diz que ela é.**
+
+Reparem no que isso inverte. No modelo antigo, deploy é um *verbo*: alguém executa uma ação contra o cluster, e o estado de produção é o acúmulo histórico de ações que pessoas executaram — algumas documentadas, outras na memória de quem saiu da empresa. No GitOps, deploy é um *substantivo*: um commit que muda a declaração do estado desejado. A ação de aplicar isso ao cluster deixa de ser humana.
+
+### 3.2 O loop de reconciliação — vocês já conhecem esse desenho
+
+Quem aplica é o **ArgoCD**: um operador que roda dentro do cluster comparando, continuamente, o estado *desejado* (o que está no Git) com o estado *observado* (o que está de fato rodando). Divergiu? Ele converge: aplica o que falta, remove o que sobra, e marca a aplicação como sincronizada. Esse ciclo — comparar, convergir, comparar de novo — roda para sempre.
+
+E aqui eu quero que vocês parem e reparem numa coisa, porque é o tipo de rima estrutural que esse curso adora: **é o ledger de novo.** O Git é o log imutável de intenções — o write model, cada commit um fato datado, assinado, que nunca se sobrescreve, só se acrescenta. O cluster é a projeção — o read model, o estado materializado que sempre pode ser reconstruído a partir do log. E o ArgoCD é a reconciliação contínua entre os dois, o job que bate o livro contra a realidade. A Aula 1 ensinou esse desenho para dinheiro; a Aula 2 reusou ele no Outbox; agora ele opera a infraestrutura. **Quando a mesma estrutura resolve três problemas diferentes, ela deixou de ser padrão e virou princípio.**
+
+Desse desenho caem três consequências práticas:
+
+**Drift detection.** Se alguém entra no cluster na mão — "só um kubectl rapidinho para aumentar as réplicas" — o ArgoCD detecta o desvio entre observado e desejado e acusa (ou reverte sozinho, dependendo da configuração). O ajuste heroico de madrugada, que no modelo antigo virava estado permanente e não documentado, agora ou vira commit ou desaparece. Plantão agradece: segunda-feira de manhã, o sistema é o que o Git diz, não o que a madrugada deixou.
+
+**Rollback = git revert.** Desfazer um deploy é reverter um commit. Não existe "script de rollback" separado, que ninguém testa até o dia em que precisa: o mecanismo de ida e o de volta são o mesmo mecanismo, exercitado em todo deploy. O rollback de 90 segundos da abertura foi exatamente isso — um revert automático aplicado pelo mesmo loop que tinha aplicado a ida.
+
+**Trilha de auditoria de graça.** Todo estado que produção já teve corresponde a um commit: quem mudou, quando, o que, aprovado por quem no pull request. Numa fintech, isso não é luxo de engenheiro — o BACEN e o auditor perguntam "o que estava rodando no dia X e quem autorizou", e a resposta vira `git log` em vez de arqueologia de planilha. **Auditabilidade era exigência do domínio desde a tabela de propriedades do dinheiro da Aula 1; o GitOps entrega ela na camada de operação sem esforço adicional.**
+
+### 3.3 Como isso fica no concreto
+
+Para não ficar abstrato, o manifesto (resumido) que declara o serviço de Antifraude no ArgoCD:
+
+```yaml
+# repositório: techpix-deploy · caminho: apps/antifraude/app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: antifraude
+spec:
+  source:
+    repoURL: https://git.techpix.internal/techpix-deploy
+    path: apps/antifraude          # manifests: Deployment, Service, Rollout...
+    targetRevision: main           # produção segue o main deste repo
+  destination:
+    namespace: antifraude
+  syncPolicy:
+    automated:
+      prune: true                  # remove o que sumiu do Git
+      selfHeal: true               # desfaz mudança manual no cluster (anti-drift)
+```
+
+Duas linhas merecem o dedo: `selfHeal: true` é o drift detection com dente — mudança manual no cluster é desfeita pelo loop; e `targetRevision: main` significa que **a definição de "produção" é uma branch** — com toda a proteção de branch, revisão obrigatória e CI que o repositório de código já tem. O repositório de deploy é separado do repositório de código de propósito: mudar *o que o serviço faz* e mudar *o que está rodando* são decisões diferentes, com revisores diferentes, e o Git registra as duas separadamente.
+
+---
+
+## 4. Entrega progressiva: deploy não é release
+
+Com GitOps, o *como* aplicar mudanças está resolvido. Falta o mais importante: como aplicar mudanças **sem apostar o sistema inteiro em cada uma**. E a chave dessa porta é uma distinção de vocabulário que parece pedante e é estrutural:
+
+**Deploy é colocar código novo em produção. Release é colocar tráfego em cima dele.** São eventos diferentes, e a engenharia moderna de entrega existe no espaço entre os dois.
+
+No modelo antigo, deploy e release eram o mesmo instante: o código novo sobe já recebendo 100% do tráfego, e a validação de produção é feita *por* produção, com todos os clientes de cobaia simultânea. Separar os dois instantes cria uma zona de teste com rede: o código está lá, real, no ambiente real — mas decidindo sobre uma fração controlada do mundo.
+
+### 4.1 Feature flags: o interruptor entre deploy e release
+
+O mecanismo mais simples dessa separação o TechPix adotou via **Unleash** (a Aula 2 já tinha apontado a ferramenta, prometendo que ela importaria "na Aula 8, porque é o mecanismo do canary" — pois é, o caminho até lá passa por aqui): a **feature flag**, um interruptor avaliado em tempo de execução que decide qual caminho de código uma requisição percorre, sem novo deploy.
+
+Feature flag tem quatro usos clássicos, e eu vou ser honesto com vocês como esse curso sempre é: **os quatro usos, com o rigor de cada um, são assunto do professor da Aula 8.** Hoje a gente instala os dois operacionais, que a extração exige:
+
+- **Flag de lançamento:** a rota nova (chamar o serviço de Antifraude em vez do módulo interno) nasce *atrás de uma flag desligada*. O deploy acontece com a flag em off — código em produção, zero tráfego. A release é a flag abrindo, gradualmente, para frações do tráfego. Deploy virou não-evento; a release virou um dial.
+- **Kill switch:** a flag inversa — um interruptor que desliga um caminho *na hora*, sem deploy, sem pipeline, sem git revert. Se o serviço de Antifraude entrar em colapso às 3h da manhã, o on-call vira uma chave e o fluxo volta para a rota antiga (enquanto ela existir) ou para o fallback do Contrato de Integração da Aula 4 (fail-closed para valor alto, fail-open com limite baixo para valor pequeno). O kill switch é o freio de emergência: ninguém quer usar, todo mundo dorme melhor sabendo que existe e que foi testado — sim, **testa-se o kill switch em game day**, como a Aula 2 ensinou a testar tudo que só importa no dia ruim.
+
+### 4.2 Canary: a release em fatias, com juiz automático
+
+Com a flag instalada, a release vira uma progressão: **1% → 5% → 25% → 100%** do tráfego na rota nova, cada fatia observada antes de avançar. É o canary — o nome vem do canário na mina de carvão, e o professor da Aula 8 vai contar essa história e fazer a matemática fina dela; o que a gente instala hoje é a mecânica:
+
+- **Métricas de guarda simples e pré-declaradas:** taxa de erro da rota nova acima do baseline de 0,1%, ou p99 da aresta acima do orçamento do Contrato de Integração (~100 ms para Pagamentos↔Antifraude). Os limites são escritos *antes* da release, no plano de canary — decidir o limite depois de ver o número é decidir com o dedo na balança.
+- **Juiz automático:** quem compara métrica com limite não é um humano olhando dashboard — é o próprio controlador de rollout (no TechPix, o Argo Rollouts, irmão do ArgoCD, consultando o Prometheus). Violou a guarda? **Rollback automático, primeiro; notificação ao humano, depois.** Nessa ordem. O humano acorda com o sistema já são, lendo o relatório do que a máquina desfez.
+- **Honestidade sobre o que falta:** quanto tempo em cada fatia? Cinco erros em 2.700 transações são "muitos"? 1% por cinco minutos prova alguma coisa? **Tem matemática séria nessas perguntas — amostra, significância, o perigo de espiar o resultado antes da hora — e é o professor da Aula 8 que vai fazer essa conta com vocês.** Hoje, o TechPix usa regras conservadoras e fixas: cada fatia segura no mínimo uma hora, e qualquer violação de guarda reverte. Grosseiro? É. Mas grosseiro *na direção segura* — e mecânica instalada é pré-requisito do rigor que vem depois.
+
+### 4.3 Anatomia dos 90 segundos — a Lei de Little cobra de novo
+
+Agora eu pago a dívida da abertura: *por que* a primeira tentativa falhou às 9h17 de 14 de novembro?
+
+O time dimensionou o pool de conexões do serviço novo com a ferramenta certa — a Lei de Little, L = λ × W, que vocês carregam desde a Aula 1. Com o canary a 5% do tráfego — que naquela sexta, véspera de dia 15, já rodava perto do pico de 900 TPS desde cedo —, chegava ao serviço algo como λ = 45 transações por segundo. A latência interna da análise, medida no módulo dentro do monólito, era W ≈ 40 ms. L = 45 × 0,04 = **1,8 conexões simultâneas** em média. O pool foi configurado com 10 — folga de mais de cinco vezes. Parecia sobrado.
+
+O erro não foi a lei; foi o **W de outro sistema**. Dentro do monólito, a consulta de features rodava com cache em processo, quente há meses. O serviço extraído estreou com um salto de rede a mais até a feature store — e, pior, com o **cache local nascendo vazio**. Cache frio significa miss atrás de miss; cada miss vira ida ao banco da feature store; com fila, o W real da análise no serviço novo abriu para algo em torno de 250 ms nos primeiros minutos. Refaçam a conta comigo: L = 45 × 0,25 = **11,25**. Pool de 10. Esgotou — e vocês conhecem essa história desde o dia 5 da Aula 2: requisição espera pool, espera aumenta W, W maior aumenta L, L maior espera mais pool. O cotovelo da curva de filas, em miniatura, dentro de um canary de 5%.
+
+O p99 saltou de 80 ms para 2,4 s, a métrica de guarda (p99 acima do orçamento da aresta) violou por três janelas seguidas, e o Argo Rollouts reverteu: 90 segundos entre a primeira violação e 100% do tráfego de volta na rota antiga. **Custo do erro: zero clientes afetados além do p99 momentâneo numa fração de 5%, e uma manhã de análise.** No mundo sem canary, esse mesmo erro a 100% do tráfego, no pico do almoço, seria o dia 5 de novo.
+
+A segunda tentativa, dia 21, mudou três coisas — todas anotadas no runbook da Seção 6: o pool foi redimensionado com o W *medido no serviço real* durante o dual-run (não o W herdado do monólito), com a regra dos 70% de utilização máxima por cima; o serviço passou a **aquecer o cache antes de entrar no balanceador** (readiness que só libera tráfego depois de popular as features das contas mais ativas); e a progressão começou em 1%, não 5%. Subiu limpo, fatia por fatia, e às 16h o Antifraude estava a 100% na rota nova.
+
+Reparem na moral, porque ela é o coração da aula: **o erro da primeira tentativa não foi evitável por mais planejamento — era um desconhecido honesto (quem saberia o W real antes de rodar?). O que era evitável era o erro virar incidente. A rede de validação transformou um erro de dimensionamento em um parágrafo de runbook.**
+
+---
+
+## 5. Fitness functions viram tecido contínuo
+
+A Aula 2 apresentou fitness functions como testes de característica arquitetural — o ArchUnit travando um import proibido no CI, o monitor de p99 em produção. Naquela altura, elas eram verificações pontuais: rodavam quando alguém rodava. A extração muda a natureza delas: com dois (logo três) serviços evoluindo em paralelo, **a validação deixa de ser um evento e vira um tecido — algo que está sempre rodando, em todas as camadas, sem depender de alguém lembrar.**
+
+Olhem o caminho completo de uma mudança no TechPix de hoje, e onde cada verificação mora:
+
+| Etapa | Verificação que roda | De qual aula ela veio |
+|---|---|---|
+| Pull request | Testes de unidade e de invariante: Σ débitos = Σ créditos como teste, saldo nunca negativo, unicidade de EndToEndId | Aula 1 (invariantes), Aula 2 (fitness function) |
+| Pull request | ArchUnit / lint de dependência: módulo não importa módulo, serviço não referencia schema alheio; varredura de GRANTs de banco | Aula 2, endurecida na Seção 2.1 de hoje |
+| Pull request | Contract testing (Pact): o consumidor da aresta valida que o provedor não quebrou o contrato | Aula 4 |
+| Publicação de evento | Schema registry rejeita evento incompatível com a versão registrada | Aula 3 (conceito), Aula 4 (aplicado) |
+| Merge no repo de deploy | ArgoCD sincroniza; drift detection contínuo daí em diante | Hoje, Seção 3 |
+| Pós-deploy, pré-release | Smoke test: bateria mínima contra o código novo ainda sem tráfego real (deploy ≠ release rendendo de novo) | Hoje |
+| Release em fatias | Métricas de guarda do canary julgadas pelo Argo Rollouts | Hoje, Seção 4 |
+| Produção, para sempre | Monitor de p99 por aresta, taxa de divergência de reconciliação de dados, consumer lag, invariante Σ verificada sobre o ledger em job contínuo | Aulas 2, 4 e a próxima |
+
+A frase que resume, e que eu quero que vocês levem para a empresa de vocês: **pipeline não é esteira de empacotamento; é uma sequência de tribunais.** Cada etapa é um juiz com poder de veto, cada veto é barato porque acontece cedo, e a mudança que chega a 100% do tráfego passou por todos. O professor das primeiras aulas plantou a semente com um nome — Harness, o arreio — e disse que vocês colheriam na Aula 8. O que a gente construiu hoje é a parte mecânica dessa colheita: os tribunais existem e funcionam. O que ainda falta — julgar mudanças propostas por não-humanos, e julgar com rigor estatístico — é exatamente o que falta de aula.
+
+---
+
+## 6. O artefato: o Runbook de Extração
+
+Toda aula desse curso fecha com um artefato — ADRs nas Aulas 1 e 2, a spec de contexto na Aula 3, o Contrato de Integração na Aula 4, o Model Card na Aula 5. O de hoje nasceu da diferença entre as duas tentativas de novembro: tudo que a primeira ensinou, a segunda executou por escrito. É o **Runbook de Extração** — o checklist reutilizável que transforma "extrair um serviço" de aventura em procedimento:
+
+```
+RUNBOOK DE EXTRAÇÃO DE SERVIÇO · TechPix · v1.1 (revisado após 21/11/2025)
+
+PRÉ-CONDIÇÕES (nenhum passo adiante sem TODAS)
+  [ ] Fronteira estável: zero mudanças de contrato da aresta nos últimos 3 meses
+  [ ] Contrato de Integração da aresta escrito e em vigor (Aula 4)
+  [ ] Time dono nomeado, com plantão definido
+  [ ] Fallback da aresta definido POR ESCRITO e testado em game day
+  [ ] Justificativa de escala/autonomia registrada (por que extrair este, agora)
+
+PLANO DE DADOS
+  [ ] Banco próprio provisionado; usuário SEM grants em schemas alheios (verificado por CI)
+  [ ] Escrita dupla via eventos do Outbox ativada
+  [ ] Backfill: lotes, throttling, idempotente e retomável; janela fora de pico
+  [ ] Dual-run com critério de saída PRÉ-DECLARADO (TechPix: divergência < 0,01% por 7 dias)
+  [ ] Reconciliação diária velho×novo, com alerta de divergência
+
+PLANO DE RELEASE
+  [ ] Flag de lançamento (off) + kill switch testados
+  [ ] Pool e recursos dimensionados com W MEDIDO NO SERVIÇO REAL (dual-run), regra dos 70%
+  [ ] Warm-up de caches no readiness — serviço só recebe tráfego quente
+  [ ] Canary 1% → 5% → 25% → 100%, mínimo 1h por fatia
+  [ ] Guardas pré-declaradas: erro > baseline 0,1%; p99 > orçamento da aresta
+  [ ] Rollback automático configurado e ENSAIADO antes da release
+
+SAÍDA (contract)
+  [ ] 100% por 14 dias sem violação de guarda
+  [ ] Escrita dupla desligada; rota antiga removida
+  [ ] Tabelas velhas: arquivar → esperar 30 dias → remover
+  [ ] Retrospectiva escrita; runbook atualizado com o que se aprendeu
+```
+
+Reparem no espírito: quase todas as linhas desse runbook são cicatrizes. "W medido no serviço real" é a cicatriz das 9h17. "Fuso horário" não aparece literalmente, mas "reconciliação diária com alerta" é a cicatriz do 0,4%. Runbook bom não é escrito; é *acumulado*.
+
+E a prova de que ele funciona veio rápido: semanas depois, o time da Marina extraiu o **Pagamentos** — o orquestrador, com as ACLs de DICT e SPI, os timeouts herdados do teto de 40 segundos, o circuit breaker que a Aula 2 pediu e a Aula 4 formalizou. Uma extração objetivamente mais delicada que a do Antifraude. Sabem o que eu tenho para contar sobre ela? **Quase nada.** Seguiu o runbook, item por item. O dual-run pegou uma divergência pequena de arredondamento na conversão de valores da ACL (centavos, literalmente), corrigida antes de qualquer cliente existir na história. O canary subiu em um dia, sem uma violação de guarda. A extração mais arriscada do sistema rendeu três parágrafos de retrospectiva, e é assim que se mede maturidade: **drama tendendo a zero enquanto o risco intrínseco continua alto.**
+
+O TechPix de hoje, então: **Antifraude e Limites** como serviço (com GPU e modelo), **Pagamentos** como serviço (com as portas para o mundo), e o monólito remanescente segurando **Contas e Ledger** — a conta `pix_a_liquidar` no lugar onde sempre esteve —, além de Identidade, Devoluções e Cartões, cada um aguardando seus critérios maturarem. Ou não: **monólito remanescente não é fila de espera; é lar legítimo de quem não tem razão para sair.**
+
+---
+
+## 7. Para fechar: três ideias-âncora
+
+Primeiro: **extração é evidência, não estilo.** O Antifraude saiu porque quatro critérios observáveis mandaram — fronteira estável, escala diferente, time dono, contrato pronto. O Ledger ficou porque nenhuma evidência mandou ele sair. A pendência do ADR-002 segue aberta, e abrir mão de fechá-la sem dados foi a decisão mais arquitetural da aula.
+
+Segundo: **os dados são a extração de verdade.** Código se move num deploy; dados se movem com expand/contract, escrita dupla, backfill idempotente, dual-run com critério pré-declarado e reconciliação contínua — a disciplina que o TechPix aprendeu com o BACEN na Aula 1, apontada para dentro.
+
+Terceiro: **deploy não é release, e a rede de validação é o que separa erro de incidente.** GitOps fez o deploy virar um log imutável reconciliado — o ledger operando infraestrutura. Flags e canary fizeram a release virar um dial com juiz automático. E o rollback das 9h19 provou o ponto da aula inteira: num sistema com rede, a primeira tentativa *pode* falhar — por isso mesmo ela pôde ser tentada numa sexta-feira de manhã.
+
+O gancho para a próxima aula, e eu quero que vocês percebam que ele esteve na aula inteira sem eu nomear: o canary decidiu com base em métricas. O dual-run decidiu com base em métricas. A reconciliação alerta com base em métricas. Tudo hoje foi julgado por números que alguém, em algum lugar, teve que coletar direito — com a fração de segundo certa, o percentil certo, o rótulo certo. **Quem gera esses números? Onde eles moram? E como se acha, no meio de 900 transações por segundo, um único Pix anormalmente lento?** Na próxima aula, a gente abre a caixa que faz todo o resto ser possível: observabilidade. Tragam o pager.
+
+---
+
+## Apêndice — Termos novos desta aula
+
+| Termo | O que é |
+|---|---|
+| **GitOps** | Operar infraestrutura com o estado desejado declarado em Git; produção converge para o que o repositório diz. |
+| **ArgoCD** | Operador de GitOps: reconcilia continuamente o estado observado do cluster contra o declarado no Git. |
+| **Reconciliação contínua** | O loop comparar-convergir-comparar; a mesma estrutura ledger/projeção da Aula 1 aplicada a deploy. |
+| **Drift** | Divergência entre o que está rodando e o que o Git declara — detectada e, com selfHeal, desfeita. |
+| **Deploy vs release** | Deploy: código novo em produção. Release: tráfego em cima dele. Separá-los cria a zona de validação. |
+| **Feature flag de lançamento** | Interruptor que libera gradualmente uma rota nova sem novo deploy (Unleash no TechPix). |
+| **Kill switch** | Flag inversa: desliga um caminho instantaneamente; o freio de emergência do on-call, testado em game day. |
+| **Canary (mecânico)** | Release em fatias 1%→5%→25%→100% com métricas de guarda pré-declaradas e juiz automático (Argo Rollouts). A matemática fina fica com a Aula 8. |
+| **Rollback automático** | Violou guarda → reverte primeiro, notifica depois. Os 90 segundos da abertura. |
+| **Database-per-service** | Cada serviço com banco próprio; ler banco alheio é proibido e verificado por fitness function (ausência de GRANT). |
+| **Escrita dupla (controlada)** | Fase da migração em que o caminho velho decide e os eventos alimentam o banco novo em paralelo. |
+| **Backfill** | Cópia do histórico para o banco novo: em lotes, com throttling, idempotente e retomável. |
+| **Dual-run** | Velho decide de verdade, novo decide "de mentira"; divergência medida contra critério pré-declarado. O shadow mode da Aula 5 aplicado a migração. |
+| **Expand/contract (dados)** | Coreografia da Aula 4 aplicada a schemas e bancos: expandir, migrar, só contrair no fim. |
+| **Smoke test** | Bateria mínima pós-deploy, pré-release: valida o código novo antes de existir tráfego real nele. |
+| **Entrega progressiva** | O guarda-chuva: flags + canary + rollback automático — release como processo graduável, não como salto. |
+| **Runbook de Extração** | O artefato da aula: checklist reutilizável que transforma extração de aventura em procedimento. Acumulado, não escrito. |
+
+---
+
+[← Aula 5](aula5-conteudo-completo.md) · [Índice](index.md) · [Aula 7 →](aula7-conteudo-completo.md)

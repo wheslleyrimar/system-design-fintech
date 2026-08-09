@@ -6,6 +6,8 @@ title: "Aula 8 — Arquitetura Evolutiva com IA, Agentes e Feedback Contínuo"
 # Aula 8 — Arquitetura Evolutiva com IA, Agentes e Feedback Contínuo
 *Curso de Arquitetura de Sistemas Financeiros com IA*
 
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · **Aula 8 (você está aqui)**
+
 Faz um tempo que a gente não se via. Deixa eu recapitular rapidinho o que aconteceu com o TechPix nesse meio-tempo, porque isso importa para o que eu vou mostrar hoje.
 
 Na Aula 1, a gente decidiu, na fé, que o ledger seria forte, síncrono, ACID — o ADR-001. Eu deixei uma linha em aberto naquele registro: "a consequência de latência será medida em produção; se o p99 ameaçar o SLA, reavaliar em novo ADR." Na Aula 2, a produção já tinha opinião: um pico de tráfego expôs um ponto quente no ledger e a chamada síncrona ao DICT esgotando o pool de conexões. A gente respondeu com o ADR-002 — outbox, CQRS, leitura desacoplada da escrita — e deixei outra linha em aberto: "se a contenção persistir, o próximo passo é reparticionar a própria escrita do ledger." Na Aula 3, a gente aprendeu a desenhar fronteiras de verdade, por event storming, e formalizou o contexto de Pagamentos com uma spec executável.
@@ -250,3 +252,7 @@ Guardem essa frase, porque é o resumo do curso inteiro: hoje vocês decidiram n
 | 2 | ADR-002 — outbox + CQRS, complementa ADR-001 | Revisão deixada em aberto (contenção de escrita) |
 | 3 | Bounded contexts + spec de Pagamentos (SDD) | Vira a unidade de contexto para o agente |
 | 8 | ADR-003 — reparticionamento, proposto por agente, aprovado por humano | Validado em produção, com evidência |
+
+---
+
+[← Aula 7](aula7-conteudo-completo.md) · [Índice](index.md)
