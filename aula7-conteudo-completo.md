@@ -46,6 +46,43 @@ Os três pilares clássicos — métricas, logs e traces — eu quero que vocês
 
 Nenhum dos três substitui os outros. A métrica disse "o dia está saudável" — e estava certa, no agregado. Vai ser o trace que vai encontrar a Ana. E vai ser o log que vai explicar o que o trace apontar. **Os três pilares não competem; eles se revezam na mesma investigação.** Guardem essa frase, porque a caça aos 9 segundos, daqui a pouco, vai usar os três em sequência.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 820 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a7p-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <!-- Pilar 1: Métrica -->
+  <rect x="30" y="30" width="230" height="80" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="145" y="58" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#3730a3">MÉTRICA</text>
+  <text x="145" y="78" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">"Quanto? Quantos?"</text>
+  <text x="145" y="96" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">agregado · barata · aponta a região</text>
+  <!-- Pilar 2: Trace -->
+  <rect x="295" y="30" width="230" height="80" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="410" y="58" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#7a5c00">TRACE</text>
+  <text x="410" y="78" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">"Por onde passou?"</text>
+  <text x="410" y="96" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">1 requisição · caro · acha a jornada</text>
+  <!-- Pilar 3: Log -->
+  <rect x="560" y="30" width="230" height="80" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="675" y="58" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#166534">LOG</text>
+  <text x="675" y="78" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">"O que aconteceu ali?"</text>
+  <text x="675" y="96" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">evento discreto · explica a causa</text>
+  <!-- Revezamento arrows -->
+  <line x1="260" y1="70" x2="290" y2="70" stroke="#4338ca" stroke-width="2" marker-end="url(#a7p-arrow)"/>
+  <line x1="525" y1="70" x2="555" y2="70" stroke="#4338ca" stroke-width="2" marker-end="url(#a7p-arrow)"/>
+  <!-- Convergence -->
+  <line x1="145" y1="110" x2="360" y2="185" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="410" y1="110" x2="410" y2="182" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="675" y1="110" x2="460" y2="185" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <rect x="240" y="190" width="340" height="60" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="410" y="215" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">A MESMA investigação</text>
+  <text x="410" y="236" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#4338ca">costurada pelo e2e_id (EndToEndId do BACEN)</text>
+  <text x="410" y="280" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">Caça aos 9s: métrica diz "dia saudável" → trace acha a Ana → log explica o cold start</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Três perguntas sobre o mesmo evento — os pilares se revezam, não competem.</p>
+</div>
+
 ---
 
 ## 2. Métricas: o que medir, e o que nunca etiquetar
@@ -63,6 +100,85 @@ Só com RED por serviço, vocês reconstroem a saúde do sistema inteiro de rela
 Para **recursos** — CPU, memória, disco, pool de conexões, a GPU do Antifraude que a gente provisionou na Aula 5 —, o acrônimo irmão é **USE**: **U**tilization (quão ocupado), **S**aturation (quanto trabalho esperando na fila) e **E**rrors. E reparem numa sutileza que vem direto da teoria de filas da Aula 2: **saturação avisa antes da utilização machucar**. A fila do pool de conexões começando a formar — saturação — aparece antes de o p99 estourar. O cotovelo da curva ρ/(1−ρ) que o outro professor desenhou para vocês é exatamente o ponto onde saturação vira dor; a métrica de saturação é o vigia desse cotovelo.
 
 Duas métricas do TechPix que eu faço questão de elevar a cidadãs de primeira classe, porque elas são as duas cicatrizes das aulas anteriores: o **consumer lag** de cada consumidor de eventos — a distância entre o que o Outbox publicou e o que o consumidor processou, que foi o vilão silencioso do extrato congelado na Aula 4 — e a **taxa de contenção de lock na escrita do ledger**, o tempo que as transações passam esperando o lock da conta `pix_a_liquidar`, a cicatriz original do dia 5. Guardem essa segunda métrica. Ela volta no fim da aula, e não vai ser para coisa boa.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 430" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a7t-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a7t-arrow-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <text x="20" y="24" font-family="sans-serif" font-size="12" fill="#666">TechPix pós-Aula 6 — cada serviço com RED; externos tracejados; as duas métricas de 1ª classe em destaque</text>
+
+  <!-- App -->
+  <rect x="20" y="120" width="90" height="50" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="65" y="150" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">App Ana</text>
+
+  <!-- Pagamentos -->
+  <rect x="160" y="105" width="170" height="80" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="245" y="130" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">Pagamentos</text>
+  <text x="245" y="148" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">serviço (Aula 6)</text>
+  <rect x="195" y="158" width="100" height="18" rx="5" fill="#fff" stroke="#4338ca"/>
+  <text x="245" y="171" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">R · E · D</text>
+  <line x1="110" y1="145" x2="155" y2="145" stroke="#4338ca" stroke-width="2" marker-end="url(#a7t-arrow)"/>
+
+  <!-- DICT / SPI externos -->
+  <rect x="420" y="20" width="130" height="50" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2" stroke-dasharray="6 3"/>
+  <text x="485" y="42" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">DICT</text>
+  <text x="485" y="58" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">externo · p99 ≤ 1s</text>
+  <rect x="580" y="20" width="130" height="50" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2" stroke-dasharray="6 3"/>
+  <text x="645" y="42" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">SPI</text>
+  <text x="645" y="58" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">externo · p99 4,6s</text>
+  <line x1="300" y1="105" x2="440" y2="72" stroke="#d4a017" stroke-width="2" marker-end="url(#a7t-arrow)"/>
+  <line x1="330" y1="120" x2="590" y2="72" stroke="#d4a017" stroke-width="2" marker-end="url(#a7t-arrow)"/>
+
+  <!-- Antifraude -->
+  <rect x="160" y="240" width="170" height="90" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="245" y="264" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">Antifraude e Limites</text>
+  <text x="245" y="281" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">serviço · GPU (Aula 5)</text>
+  <rect x="180" y="292" width="60" height="18" rx="5" fill="#fff" stroke="#4338ca"/>
+  <text x="210" y="305" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">R · E · D</text>
+  <rect x="248" y="292" width="70" height="18" rx="5" fill="#fff" stroke="#4338ca"/>
+  <text x="283" y="305" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">score/drift</text>
+  <line x1="245" y1="185" x2="245" y2="235" stroke="#4338ca" stroke-width="2" marker-end="url(#a7t-arrow)"/>
+  <text x="255" y="215" font-family="sans-serif" font-size="10" fill="#666">síncrono ≤100ms</text>
+
+  <!-- Monolito -->
+  <rect x="430" y="120" width="230" height="110" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="545" y="145" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">Monólito: Contas e Ledger</text>
+  <text x="545" y="163" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">escrita forte · conta pix_a_liquidar</text>
+  <rect x="450" y="175" width="60" height="18" rx="5" fill="#fff" stroke="#4338ca"/>
+  <text x="480" y="188" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">R · E · D</text>
+  <rect x="520" y="175" width="122" height="18" rx="5" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="581" y="188" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">⚠ contenção de lock</text>
+  <text x="545" y="218" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">métrica de 1ª classe — volta no fim da aula</text>
+  <line x1="330" y1="150" x2="425" y2="150" stroke="#4338ca" stroke-width="2" marker-end="url(#a7t-arrow)"/>
+
+  <!-- Outbox / consumidores -->
+  <rect x="430" y="280" width="110" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="485" y="302" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Outbox</text>
+  <text x="485" y="318" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">(ADR-002)</text>
+  <line x1="545" y1="230" x2="490" y2="275" stroke="#166534" stroke-width="2" marker-end="url(#a7t-arrow-g)"/>
+  <rect x="590" y="280" width="180" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="680" y="300" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">Consumidores (extrato, feed)</text>
+  <rect x="612" y="306" width="136" height="17" rx="5" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="680" y="318" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">⚠ consumer lag (Aula 4)</text>
+  <line x1="540" y1="305" x2="585" y2="305" stroke="#166534" stroke-width="2" marker-end="url(#a7t-arrow-g)"/>
+
+  <!-- Devolucoes -->
+  <rect x="700" y="120" width="170" height="60" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="785" y="145" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Devoluções e Disputas</text>
+  <rect x="755" y="153" width="60" height="18" rx="5" fill="#fff" stroke="#4338ca"/>
+  <text x="785" y="166" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">R · E · D</text>
+
+  <rect x="20" y="380" width="850" height="34" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="445" y="402" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#3730a3">Saturação avisa antes da utilização machucar: a fila (USE) é o vigia do cotovelo ρ/(1−ρ) da Aula 2.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A topologia observada: RED em cada serviço, USE em cada recurso — e as duas cicatrizes do curso viram métricas de primeira classe.</p>
+</div>
 
 ### 2.2 Percentis de verdade — e a mentira da média de percentis
 
@@ -168,6 +284,65 @@ TRACE e2e_id=E1234...f6 · total: 9.214 ms                    05/12/2025 16:41:0
 
 Leiam esse trace comigo, porque ele é a aula inteira condensada. O DICT: 38 milissegundos, cache da Aula 1 funcionando. O SPI: 2,1 segundos, dentro do p50 de 2,8s que o Banco Central publica. O ledger: 58 milissegundos. E no meio, um elefante: **6,9 segundos dentro do Antifraude — dos quais 6,8 são quatro tentativas contra a feature store e os backoffs entre elas.**
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="20" y="22" font-family="sans-serif" font-size="12" fill="#666">Trace e2e_id=E1234...f6 · total 9.214 ms · 05/12/2025 16:41 — cada barra na escala real do tempo</text>
+  <!-- time axis -->
+  <line x1="190" y1="40" x2="850" y2="40" stroke="#999" stroke-width="1"/>
+  <g font-family="sans-serif" font-size="10" fill="#999">
+    <line x1="190" y1="36" x2="190" y2="44" stroke="#999"/><text x="190" y="56" text-anchor="middle">0s</text>
+    <line x1="333" y1="36" x2="333" y2="44" stroke="#999"/><text x="333" y="56" text-anchor="middle">2s</text>
+    <line x1="476" y1="36" x2="476" y2="44" stroke="#999"/><text x="476" y="56" text-anchor="middle">4s</text>
+    <line x1="620" y1="36" x2="620" y2="44" stroke="#999"/><text x="620" y="56" text-anchor="middle">6s</text>
+    <line x1="763" y1="36" x2="763" y2="44" stroke="#999"/><text x="763" y="56" text-anchor="middle">8s</text>
+    <line x1="850" y1="36" x2="850" y2="44" stroke="#999"/><text x="850" y="56" text-anchor="middle">9,2s</text>
+  </g>
+  <!-- rows -->
+  <g font-family="sans-serif" font-size="11" fill="#333">
+    <text x="180" y="82" text-anchor="end">processar_pix (total)</text>
+    <rect x="190" y="70" width="660" height="16" rx="3" fill="#eef2ff" stroke="#4338ca"/>
+
+    <text x="180" y="112" text-anchor="end">validar + DICT (cache)</text>
+    <rect x="190" y="100" width="4" height="16" rx="1" fill="#4338ca"/>
+    <text x="200" y="112" font-size="10" fill="#666">11 + 38 ms</text>
+
+    <text x="180" y="142" text-anchor="end">antifraude: avaliar_risco</text>
+    <rect x="194" y="130" width="495" height="16" rx="3" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+    <text x="440" y="127" text-anchor="middle" font-size="10" fill="#b91c1c" font-weight="bold">6.917 ms ⚠ — o elefante</text>
+
+    <!-- attempts breakdown -->
+    <text x="180" y="172" text-anchor="end">└ feature store (4 tentativas)</text>
+    <rect x="194" y="160" width="107" height="16" fill="#b91c1c" opacity="0.75"/>
+    <rect x="301" y="160" width="7" height="16" fill="#d4a017" opacity="0.7"/>
+    <rect x="308" y="160" width="107" height="16" fill="#b91c1c" opacity="0.75"/>
+    <rect x="415" y="160" width="14" height="16" fill="#d4a017" opacity="0.7"/>
+    <rect x="429" y="160" width="108" height="16" fill="#b91c1c" opacity="0.75"/>
+    <rect x="537" y="160" width="29" height="16" fill="#d4a017" opacity="0.7"/>
+    <rect x="566" y="160" width="118" height="16" fill="#166534" opacity="0.75"/>
+    <text x="248" y="192" text-anchor="middle" font-size="10" fill="#b91c1c">timeout 1,5s</text>
+    <text x="362" y="192" text-anchor="middle" font-size="10" fill="#b91c1c">timeout 1,5s</text>
+    <text x="483" y="192" text-anchor="middle" font-size="10" fill="#b91c1c">timeout 1,5s</text>
+    <text x="625" y="192" text-anchor="middle" font-size="10" fill="#166534">sucesso 1,6s</text>
+    <text x="700" y="172" font-size="10" fill="#7a5c00">backoffs 100/200/400ms</text>
+
+    <text x="180" y="222" text-anchor="end">└ inferência modelo_v3</text>
+    <rect x="684" y="210" width="4" height="16" fill="#166534"/>
+    <text x="695" y="222" font-size="10" fill="#166534">41 ms — o modelo não é o problema</text>
+
+    <text x="180" y="252" text-anchor="end">ledger: reservar_fundos</text>
+    <rect x="689" y="240" width="5" height="16" fill="#4338ca"/>
+    <text x="702" y="252" font-size="10" fill="#666">58 ms</text>
+
+    <text x="180" y="282" text-anchor="end">SPI: pacs.008 → pacs.002</text>
+    <rect x="694" y="270" width="152" height="16" rx="3" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+    <text x="770" y="282" text-anchor="middle" font-size="10" fill="#166534">2.130 ms — normal</text>
+  </g>
+  <rect x="20" y="300" width="860" height="26" rx="6" fill="#fef2f2" stroke="#b91c1c" stroke-dasharray="4 3"/>
+  <text x="450" y="317" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">O orçamento da aresta era 100 ms — a biblioteca surda ao deadline gastou 69× isso em retries que o fallback nunca enxergou.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O waterfall dos 9 segundos: DICT, ledger e SPI saudáveis — 74% do tempo morreu em retries mal posicionados dentro do Antifraude.</p>
+</div>
+
 A causa-raiz, montada com os logs correlacionados pelo `e2e_id` (os três pilares se revezando, como prometido): a conta da confeitaria era **recém-criada**. As features online dela — "Pix recebidos na última hora", as janelas agregadas que a Aula 5 construiu sobre o rio de eventos — ainda não existiam no cache da feature store. O caminho de *cold start* ia montá-las sob demanda, e isso levava mais do que o normal. Só que o cliente da feature store dentro do Antifraude — uma biblioteca interna antiga, anterior à disciplina da Aula 4 — usava **timeout local próprio de 1,5 segundo e política de retry própria**, por fora do deadline propagation. O deadline global da requisição dizia "você tem 100 milissegundos para o risco"; a biblioteca, surda a isso, tentou 4 vezes de 1,5 segundo com backoff de 100/200/400 milissegundos no meio — os números da Aula 2, aplicados no lugar errado. E do lado de quem chamava, o mesmo pecado: o cliente que Pagamentos usava nessa rota também antecedia o Contrato da Aula 4 e não aplicava o timeout de 150 milissegundos declarado para a aresta — o postmortem lista os dois como o mesmo fator contribuinte, "bibliotecas fora da disciplina de deadline".
 
 E o detalhe mais fino, que eu quero que vocês levem para casa: **o fallback fail-closed da Aula 5 nunca disparou.** Ele estava configurado para "feature store *falhou*" — e a feature store nunca falhou de vez; ela ficou *quase* respondendo, tentativa após tentativa, até responder na quarta. **O retry mal posicionado não só roubou 6,8 segundos do orçamento — ele escondeu a degradação exatamente do mecanismo desenhado para reagir a ela.** Retry esconde falha; deadline revela. Se o deadline de 100ms tivesse sido respeitado, o fallback teria assumido em 100 milissegundos, a política de decisão teria segurado a transação de valor alto ou liberado a de valor baixo — decisão de negócio, como definimos na Aula 4 — e a Ana teria a resposta dela em 2 segundos e pouco.
@@ -175,6 +350,49 @@ E o detalhe mais fino, que eu quero que vocês levem para casa: **o fallback fai
 ### 4.3 Por que nenhuma métrica gritou — e o que liga métrica a trace
 
 Agora respondam vocês: por que os painéis estavam verdes? Porque contas recém-criadas eram ~0,002% do tráfego do dia. A 900 TPS, isso é uma transação a cada minuto, mais ou menos. O p99 precisa de 1% para se mexer; o p99,9, de 0,1%. **Uma população de 0,002% não move percentil nenhum — e cada cliente dentro dela teve uma experiência 4 vezes pior que o p99.** O agregado protege o sistema; não protege cada cliente. Numa fintech, onde cada transação lenta é alguém achando que perdeu dinheiro, essa distinção é o motivo de o tracing existir.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 860 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="20" y="22" font-family="sans-serif" font-size="12" fill="#666">Distribuição de latência do dia 5 — por que os painéis ficaram verdes</text>
+  <!-- axis -->
+  <line x1="60" y1="230" x2="830" y2="230" stroke="#999" stroke-width="1.5"/>
+  <g font-family="sans-serif" font-size="10" fill="#999">
+    <text x="60" y="248" text-anchor="middle">0s</text>
+    <text x="215" y="248" text-anchor="middle">2s</text>
+    <text x="370" y="248" text-anchor="middle">4s</text>
+    <text x="525" y="248" text-anchor="middle">6s</text>
+    <text x="680" y="248" text-anchor="middle">8s</text>
+    <text x="820" y="248" text-anchor="middle">10s</text>
+  </g>
+  <!-- histogram bars (green mass) -->
+  <g fill="#bbf7d0" stroke="#166534">
+    <rect x="75" y="200" width="30" height="30"/>
+    <rect x="110" y="130" width="30" height="100"/>
+    <rect x="145" y="70" width="30" height="160"/>
+    <rect x="180" y="60" width="30" height="170"/>
+    <rect x="215" y="90" width="30" height="140"/>
+    <rect x="250" y="140" width="30" height="90"/>
+    <rect x="285" y="180" width="30" height="50"/>
+    <rect x="320" y="210" width="30" height="20"/>
+    <rect x="355" y="222" width="30" height="8"/>
+  </g>
+  <!-- média line -->
+  <line x1="207" y1="45" x2="207" y2="230" stroke="#4338ca" stroke-width="2" stroke-dasharray="6 3"/>
+  <text x="207" y="38" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#4338ca" font-weight="bold">média 1,9s</text>
+  <!-- p99 line -->
+  <line x1="323" y1="65" x2="323" y2="230" stroke="#7a5c00" stroke-width="2" stroke-dasharray="6 3"/>
+  <text x="323" y="60" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00" font-weight="bold">p99 3,4s ✓</text>
+  <!-- the sliver -->
+  <rect x="750" y="218" width="14" height="12" fill="#b91c1c"/>
+  <circle cx="757" cy="200" r="12" fill="none" stroke="#b91c1c" stroke-width="2"/>
+  <line x1="757" y1="212" x2="757" y2="216" stroke="#b91c1c" stroke-width="2"/>
+  <text x="757" y="178" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#b91c1c">a Ana está aqui</text>
+  <text x="757" y="162" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">0,002% · contas recém-criadas</text>
+  <rect x="60" y="264" width="770" height="28" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="445" y="283" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#3730a3">p99 precisa de 1% para se mexer; p99,9, de 0,1%. Uma cauda de 0,002% é invisível ao agregado — só o trace a encontra.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A média mente, o p99 esconde, o trace confessa: o agregado protege o sistema, não cada cliente.</p>
+</div>
 
 A ponte de volta para as métricas tem nome: **exemplar**. Um exemplar é uma referência de trace anexada a um balde do histograma — "este balde de 5-10 segundos contém, entre outros, o trace tal". No dashboard, o balde alto da cauda vira um link clicável: da métrica agregada para a jornada individual em um clique. Depois do postmortem — já chego lá —, o TechPix também criou a métrica que faltava: `feature_store_cold_start` com etiqueta `conta_tipo="recem_criada"` — cardinalidade 2, dentro da regra da Seção 2.3. A pergunta que era *unknown unknown* no dia 5 virou *known* no dia 6. **É assim que observabilidade funciona: cada investigação transforma uma pergunta nova em um medidor permanente.**
 
@@ -223,6 +441,58 @@ A regra de sanidade: **o SLO interno é sempre mais apertado que o SLA externo.*
 Agora a ideia que eu considero a mais elegante da engenharia de confiabilidade moderna. Um SLO de 99,95% em 30 dias significa que **0,05% de falha é aceitável por definição** — em minutos, cerca de **21,6 minutos de indisponibilidade por mês**. Esse é o **error budget**: o orçamento de erro. E a virada de chave é tratá-lo literalmente como orçamento — **uma moeda que se gasta**.
 
 Gastou pouco este mês? O time tem lastro para ousar: extrair o próximo serviço, ligar o canary da mudança arriscada, testar o modelo desafiante em uma fatia real. Queimou o budget — um incidente comeu 18 dos 21 minutos? **Congela release arriscado até o budget se recuperar**, e a energia do time vai para confiabilidade. Reparem no que isso resolve: a guerra eterna entre "quem quer lançar" e "quem quer estabilidade" deixa de ser disputa de opinião e vira **aritmética combinada de antemão**. O canary da Aula 6 decidia com limiares fixos — taxa de erro sobre o baseline de 0,1%, p99. O error budget dá a esses limiares um contexto de negócio: o quanto de risco *este mês* ainda comporta. É a ponte entre operação e as decisões de release — e, uma aula adiante, entre operação e decisões de arquitetura.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a7b-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a7b-arrow-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+    <marker id="a7b-arrow-r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <!-- chain SLI -> SLO -> budget -->
+  <rect x="20" y="30" width="190" height="60" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="115" y="55" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#1a1a1a">SLI — a medição</text>
+  <text x="115" y="75" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">% Pix confirmado ≤ 3,5s (30d)</text>
+  <line x1="210" y1="60" x2="255" y2="60" stroke="#4338ca" stroke-width="2" marker-end="url(#a7b-arrow)"/>
+  <rect x="260" y="30" width="180" height="60" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="350" y="55" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">SLO — a meta</text>
+  <text x="350" y="75" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">99,95% (&lt; SLA externo)</text>
+  <line x1="440" y1="60" x2="485" y2="60" stroke="#4338ca" stroke-width="2" marker-end="url(#a7b-arrow)"/>
+  <rect x="490" y="30" width="200" height="60" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="590" y="55" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Error budget</text>
+  <text x="590" y="75" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">0,05% = 21,6 min/mês</text>
+  <rect x="710" y="30" width="150" height="60" rx="8" fill="#fff" stroke="#999" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="785" y="55" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">SLA externo</text>
+  <text x="785" y="73" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">BACEN · com multa</text>
+
+  <!-- budget bar -->
+  <text x="20" y="140" font-family="sans-serif" font-size="12" fill="#333">O budget do mês como moeda:</text>
+  <rect x="230" y="125" width="460" height="26" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <rect x="230" y="125" width="290" height="26" rx="6" fill="#fecaca" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="375" y="143" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">queimado: 13,5 min (incidente + canary)</text>
+  <text x="605" y="143" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">restante: 8,1 min</text>
+  <text x="720" y="143" font-family="sans-serif" font-size="10" fill="#666">21,6 min</text>
+
+  <!-- two outcomes -->
+  <line x1="450" y1="160" x2="250" y2="205" stroke="#166534" stroke-width="2" marker-end="url(#a7b-arrow-g)"/>
+  <rect x="40" y="210" width="360" height="52" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="220" y="231" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Sobrando → pode ousar</text>
+  <text x="220" y="250" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">extrair o próximo serviço · canary arriscado · desafiante</text>
+  <line x1="470" y1="160" x2="640" y2="205" stroke="#b91c1c" stroke-width="2" marker-end="url(#a7b-arrow-r)"/>
+  <rect x="480" y="210" width="360" height="52" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="660" y="231" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">Queimado → congela release</text>
+  <text x="660" y="250" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">energia vai para confiabilidade · alerta noturno só por burn rate</text>
+
+  <text x="440" y="288" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">A guerra "lançar × estabilizar" vira aritmética combinada de antemão — não disputa de opinião.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">SLI mede, SLO promete por dentro, SLA promete por fora — e o error budget converte a diferença em moeda de decisão.</p>
+</div>
 
 ### 6.3 Alertar no sintoma, não na causa
 
@@ -290,6 +560,49 @@ E agora eu quero fechar mostrando um dashboard de verdade — o último da aula.
 | dez/2025 | 58 ms | 7,2% | 700 |
 
 Cinco meses, uma direção só. O p99 de escrita subiu 38%. A contenção no lock da conta única de liquidação — a mesma `pix_a_liquidar` da Aula 1, o mesmo ponto quente do dia 5 da Aula 2, que o Outbox do ADR-002 aliviou mas nunca eliminou — mais que dobrou. O volume cresce, e a fila invisível daquela conta cresce junto, exatamente como a teoria de filas da Aula 2 mandava esperar. A linha "Revisão" do ADR-002 dizia: *"se a contenção persistir, o próximo passo é reparticionar a própria escrita do ledger."* Ela está persistindo. Nos meus dashboards, agora, em produção — não mais como hipótese.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 260" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="20" y="22" font-family="sans-serif" font-size="12" fill="#666">Série de 5 meses — escrita do ledger (conta única pix_a_liquidar) · tudo verde, tudo subindo</text>
+
+  <!-- Panel 1: p99 -->
+  <rect x="30" y="40" width="230" height="150" rx="8" fill="#fff" stroke="#ddd"/>
+  <text x="145" y="58" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">p99 de escrita</text>
+  <line x1="45" y1="72" x2="250" y2="72" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="150" y="68" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#b91c1c">SLO ≤ 80 ms</text>
+  <polyline points="50,158 98,151 146,141 194,128 242,118" fill="none" stroke="#4338ca" stroke-width="2.5"/>
+  <circle cx="50" cy="158" r="3" fill="#4338ca"/><circle cx="242" cy="118" r="3" fill="#4338ca"/>
+  <text x="50" y="175" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">42 ms</text>
+  <text x="242" y="112" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#4338ca">58 ms (+38%)</text>
+
+  <!-- Panel 2: contenção -->
+  <rect x="325" y="40" width="230" height="150" rx="8" fill="#fff" stroke="#ddd"/>
+  <text x="440" y="58" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">contenção de lock</text>
+  <polyline points="345,168 393,154 441,136 489,112 537,86" fill="none" stroke="#b91c1c" stroke-width="2.5"/>
+  <circle cx="345" cy="168" r="3" fill="#b91c1c"/><circle cx="537" cy="86" r="3" fill="#b91c1c"/>
+  <text x="345" y="184" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">3,1%</text>
+  <text x="537" y="80" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#b91c1c">7,2% (2,3×)</text>
+
+  <!-- Panel 3: TPS -->
+  <rect x="620" y="40" width="230" height="150" rx="8" fill="#fff" stroke="#ddd"/>
+  <text x="735" y="58" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">TPS médio</text>
+  <polyline points="640,167 688,153 736,133 784,110 832,84" fill="none" stroke="#166534" stroke-width="2.5"/>
+  <circle cx="640" cy="167" r="3" fill="#166534"/><circle cx="832" cy="84" r="3" fill="#166534"/>
+  <text x="640" y="184" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">410</text>
+  <text x="832" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#166534">700 (+71%)</text>
+
+  <!-- month labels -->
+  <g font-family="sans-serif" font-size="9" fill="#999">
+    <text x="50" y="202" text-anchor="middle">ago</text><text x="98" y="202" text-anchor="middle">set</text><text x="146" y="202" text-anchor="middle">out</text><text x="194" y="202" text-anchor="middle">nov</text><text x="242" y="202" text-anchor="middle">dez</text>
+    <text x="345" y="202" text-anchor="middle">ago</text><text x="393" y="202" text-anchor="middle">set</text><text x="441" y="202" text-anchor="middle">out</text><text x="489" y="202" text-anchor="middle">nov</text><text x="537" y="202" text-anchor="middle">dez</text>
+    <text x="640" y="202" text-anchor="middle">ago</text><text x="688" y="202" text-anchor="middle">set</text><text x="736" y="202" text-anchor="middle">out</text><text x="784" y="202" text-anchor="middle">nov</text><text x="832" y="202" text-anchor="middle">dez</text>
+  </g>
+
+  <rect x="30" y="216" width="820" height="32" rx="6" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="440" y="237" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Não é incidente. Não viola SLO. Não acorda ninguém. Mas está subindo há 5 meses — quem lê esse sinal?</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A tendência lenta que nenhum alerta pega: a pendência do ADR-002, agora medida em produção — o gancho da Aula 8.</p>
+</div>
 
 E reparem no incômodo: **isso não é um incidente.** Não viola SLO nenhum. Não queima budget. Não acorda o Rafael. Nenhum mecanismo que a gente construiu nessa aula — burn rate, alerta, severidade — foi desenhado para *isso*: uma tendência lenta, meses de horizonte, que um dia vai cruzar um limiar e virar o incidente que a gente já sabe qual é. O sistema inteiro de operação responde à pergunta "o que está doendo agora?". Essa linha responde a outra pergunta: "o que vai doer em alguns meses?" — e essa pergunta, hoje, **não tem leitor**. Eu vou fazer o que a disciplina manda: deixar anotado, registrado, com a série histórica preservada. O próximo ADR numerado, o 003, só nasce quando alguém decidir mexer na escrita do ledger — **e hoje não é esse dia, nem sou eu que vou tomar essa decisão.**
 

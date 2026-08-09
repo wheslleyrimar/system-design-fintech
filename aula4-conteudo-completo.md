@@ -18,6 +18,66 @@ Nenhum pagamento falhou. Eu repito, porque é importante: **nenhum centavo se mo
 
 Quarenta minutos de extrato congelado. Custo direto: zero reais. Custo real: trezentas ligações de gente achando que uma fintech tinha perdido o dinheiro dela — e numa fintech, **a percepção de que o dinheiro sumiu é quase tão cara quanto o dinheiro sumir**.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 340" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a4inc-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+    <marker id="a4inc-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <!-- Deploy -->
+  <rect x="20" y="30" width="160" height="60" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="100" y="53" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Antifraude e Limites</text>
+  <text x="100" y="72" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">deploy 19h47</text>
+  <line x1="180" y1="60" x2="240" y2="60" stroke="#888" stroke-width="2" marker-end="url(#a4inc-arrow)"/>
+  <!-- Evento novo -->
+  <rect x="240" y="30" width="190" height="60" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="335" y="52" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a5c00">LimitesValidados</text>
+  <text x="335" y="72" text-anchor="middle" font-family="monospace" font-size="11" fill="#7a5c00">{ carteiraId }  ← era contaId</text>
+  <line x1="430" y1="60" x2="490" y2="60" stroke="#888" stroke-width="2" marker-end="url(#a4inc-arrow)"/>
+  <!-- Fila -->
+  <g>
+    <rect x="490" y="38" width="30" height="44" rx="4" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+    <text x="505" y="65" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#b91c1c">☠</text>
+    <rect x="524" y="38" width="26" height="44" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+    <rect x="554" y="38" width="26" height="44" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+    <rect x="584" y="38" width="26" height="44" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+    <text x="565" y="100" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">fila do Outbox · ninguém passa na frente do veneno</text>
+  </g>
+  <line x1="614" y1="60" x2="670" y2="60" stroke="#b91c1c" stroke-width="2" marker-end="url(#a4inc-red)"/>
+  <!-- Projetor -->
+  <rect x="670" y="20" width="190" height="80" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="765" y="44" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">Projetor de leitura</text>
+  <text x="765" y="63" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">procura contaId → exceção</text>
+  <text x="765" y="81" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">↻ retry na mesma mensagem</text>
+  <!-- Extrato -->
+  <rect x="670" y="130" width="190" height="52" rx="8" fill="#fff" stroke="#b91c1c" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="765" y="152" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">Extrato / feed / status</text>
+  <text x="765" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">congelado por 40 min</text>
+  <line x1="765" y1="100" x2="765" y2="130" stroke="#b91c1c" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#a4inc-red)"/>
+  <!-- Caminho do dinheiro intacto -->
+  <rect x="20" y="130" width="560" height="52" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="300" y="152" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Ledger (ADR-001) + SPI: nenhum pagamento falhou · Σ débitos = Σ créditos ✓</text>
+  <text x="300" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">o caminho da escrita nem ficou sabendo — só o caminho de leitura (ADR-002) parou</text>
+  <!-- Timeline -->
+  <line x1="30" y1="240" x2="850" y2="240" stroke="#999" stroke-width="2"/>
+  <g font-family="sans-serif" font-size="11" fill="#333">
+    <circle cx="60" cy="240" r="5" fill="#d4a017"/><text x="60" y="262" text-anchor="middle">19h47</text><text x="60" y="278" text-anchor="middle" fill="#666">deploy</text>
+    <circle cx="200" cy="240" r="5" fill="#b91c1c"/><text x="200" y="262" text-anchor="middle">19h52</text><text x="200" y="278" text-anchor="middle" fill="#666">veneno na fila</text>
+    <circle cx="380" cy="240" r="5" fill="#b91c1c"/><text x="380" y="262" text-anchor="middle">20h12</text><text x="380" y="278" text-anchor="middle" fill="#666">1ª ligação (não alerta!)</text>
+    <circle cx="560" cy="240" r="5" fill="#4338ca"/><text x="560" y="262" text-anchor="middle">20h27</text><text x="560" y="278" text-anchor="middle" fill="#666">causa achada</text>
+    <circle cx="680" cy="240" r="5" fill="#4338ca"/><text x="680" y="262" text-anchor="middle">20h34</text><text x="680" y="278" text-anchor="middle" fill="#666">fix: aceita os 2 campos</text>
+    <circle cx="810" cy="240" r="5" fill="#166534"/><text x="810" y="262" text-anchor="middle">20h51</text><text x="810" y="278" text-anchor="middle" fill="#666">fila drenada</text>
+  </g>
+  <rect x="180" y="300" width="480" height="28" rx="6" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="420" y="319" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#b91c1c">Ninguém errou — o contrato quebrou entre dois componentes, em silêncio</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O incidente da sexta 12/09: um campo renomeado quebra o consumidor sem derrubar nenhum pagamento — o dinheiro andou, a percepção dele congelou.</p>
+</div>
+
 Agora reparem no formato desse incidente, porque ele é o tema da aula inteira. Ninguém errou. O time do Antifraude fez uma correção semanticamente certa. O projetor de leitura fazia exatamente o que sempre fez. O bug do Diego e da Marina morava *entre* dois times, em tempo de projeto; esse aqui morava *entre* dois componentes, em tempo de execução. É o mesmo fantasma, um andar abaixo. E a lição-mãe que eu quero pregar na parede desde já: **contrato é arquitetura**. A fronteira entre dois pedaços do sistema — o formato da mensagem, o nome do campo, a semântica do erro, o tempo máximo de espera — é tão decisão de arquitetura quanto o banco de dados que vocês escolhem. A diferença é que o banco de dados, quando quebra, quebra com estardalhaço; o contrato quebra em silêncio, numa sexta à noite, sem que nenhum teste unitário de nenhum dos dois lados fique vermelho.
 
 Hoje a gente vai transformar o mapa de contexto que vocês desenharam na Aula 3 — aquele diagrama bonito de caixas e setas — em **malha de comunicação de verdade**: cada seta vai ganhar um estilo, um contrato, um orçamento de tempo, uma política de falha e um dono. No fim, a gente escreve juntos o artefato que teria evitado essa sexta-feira.
@@ -42,6 +102,81 @@ Vejam o mapa do TechPix com esse critério aplicado:
 | Antifraude e Limites → recálculo de limites, features | **Assíncrono** | Tolera janela de imprecisão (Aula 3, Seção 4.3) | segundos |
 | Devoluções e Disputas ↔ Pagamentos | **Assíncrono** (eventos + trilho MED) | SLAs em horas, não milissegundos (MED: p99 de 6 h) | horas |
 | Identidade e Onboarding → demais contextos | **Assíncrono** para propagação de status; síncrono só em verificação pontual de onboarding | Status cadastral muda raramente; verificação pontual é caminho crítico do cadastro, não do Pix | segundos / ~100 ms |
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 430" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a4map-sync" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a4map-async" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <!-- Externos BACEN -->
+  <rect x="250" y="20" width="130" height="52" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="315" y="42" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">DICT</text>
+  <text x="315" y="60" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">externo · p99 ≤ 1s</text>
+  <rect x="470" y="20" width="130" height="52" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="535" y="42" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">SPI</text>
+  <text x="535" y="60" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">externo · p99 4,6s</text>
+  <!-- ACL -->
+  <rect x="330" y="105" width="190" height="34" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <text x="425" y="127" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">ACL — traduz pacs.* p/ dialeto interno</text>
+  <line x1="315" y1="72" x2="390" y2="105" stroke="#4338ca" stroke-width="2.5" marker-start="url(#a4map-sync)" marker-end="url(#a4map-sync)"/>
+  <line x1="535" y1="72" x2="465" y2="105" stroke="#4338ca" stroke-width="2.5" marker-start="url(#a4map-sync)" marker-end="url(#a4map-sync)"/>
+  <text x="300" y="95" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#4338ca">timeout 1,2s</text>
+  <text x="555" y="95" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#4338ca">timeout 6s</text>
+  <!-- Pagamentos (centro) -->
+  <rect x="340" y="170" width="170" height="60" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+  <text x="425" y="195" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">Pagamentos</text>
+  <text x="425" y="215" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">orquestra o fluxo do Pix</text>
+  <line x1="425" y1="139" x2="425" y2="170" stroke="#4338ca" stroke-width="2.5" marker-start="url(#a4map-sync)" marker-end="url(#a4map-sync)"/>
+  <!-- Antifraude (direita) -->
+  <rect x="660" y="170" width="200" height="60" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="760" y="195" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Antifraude e Limites</text>
+  <text x="760" y="215" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">decisão no caminho crítico</text>
+  <line x1="510" y1="200" x2="660" y2="200" stroke="#4338ca" stroke-width="2.5" marker-start="url(#a4map-sync)" marker-end="url(#a4map-sync)"/>
+  <text x="585" y="190" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#4338ca">sínc · 100ms p99 · zero retry</text>
+  <!-- features assínc (loop antifraude) -->
+  <rect x="690" y="270" width="140" height="40" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="760" y="288" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">recálculo de limites /</text>
+  <text x="760" y="302" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">features</text>
+  <line x1="760" y1="230" x2="760" y2="270" stroke="#166534" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a4map-async)"/>
+  <text x="805" y="252" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">assínc · s</text>
+  <!-- Ledger (esquerda) -->
+  <rect x="30" y="170" width="180" height="60" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2.5"/>
+  <text x="120" y="195" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Contas e Ledger</text>
+  <text x="120" y="215" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">a verdade do dinheiro · forte</text>
+  <line x1="210" y1="200" x2="340" y2="200" stroke="#4338ca" stroke-width="2.5" marker-start="url(#a4map-sync)" marker-end="url(#a4map-sync)"/>
+  <text x="275" y="190" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#4338ca">sínc transacional · ADR-001</text>
+  <!-- Caminho de leitura -->
+  <rect x="30" y="290" width="180" height="56" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="120" y="312" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Caminho de leitura</text>
+  <text x="120" y="331" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">extrato · feed · saldo exibido</text>
+  <line x1="120" y1="230" x2="120" y2="290" stroke="#166534" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a4map-async)"/>
+  <text x="190" y="262" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#166534">Outbox · 100–300ms (ADR-002)</text>
+  <!-- Devoluções -->
+  <rect x="360" y="290" width="190" height="56" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="455" y="312" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Devoluções e Disputas</text>
+  <text x="455" y="331" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">MED · pacs.004</text>
+  <line x1="440" y1="230" x2="450" y2="290" stroke="#166534" stroke-width="2" stroke-dasharray="6 4" marker-start="url(#a4map-async)" marker-end="url(#a4map-async)"/>
+  <text x="530" y="262" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">assínc · MED p99 6h</text>
+  <!-- Identidade -->
+  <rect x="30" y="60" width="160" height="52" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="110" y="82" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Identidade e Onboarding</text>
+  <text x="110" y="100" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">status cadastral</text>
+  <line x1="140" y1="112" x2="180" y2="170" stroke="#166534" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a4map-async)"/>
+  <text x="115" y="145" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">propagação assínc</text>
+  <!-- Legenda -->
+  <rect x="30" y="380" width="820" height="36" rx="6" fill="#fff" stroke="#ddd"/>
+  <line x1="55" y1="398" x2="115" y2="398" stroke="#4338ca" stroke-width="2.5" marker-start="url(#a4map-sync)" marker-end="url(#a4map-sync)"/>
+  <text x="130" y="402" font-family="sans-serif" font-size="11" fill="#333">síncrono — acopla <tspan font-weight="bold">disponibilidade</tspan></text>
+  <line x1="400" y1="398" x2="460" y2="398" stroke="#166534" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a4map-async)"/>
+  <text x="475" y="402" font-family="sans-serif" font-size="11" fill="#333">assíncrono — acopla <tspan font-weight="bold">entendimento</tspan></text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O context map da Aula 3 virou malha: cada aresta com estilo, orçamento e política — nunca "síncrono ou assíncrono" no atacado.</p>
+</div>
 
 Duas observações sobre essa tabela, porque ela é menos inocente do que parece.
 
@@ -68,6 +203,60 @@ Primeiro, o contrato: gRPC nasce de um arquivo `.proto` — a definição da int
 O professor da Aula 1 ensinou o orçamento de latência: teto normativo de 40 segundos, experiência-alvo de poucos segundos, cada componente gastando uma fatia. O erro clássico de implementação é traduzir esse orçamento em **timeouts locais e independentes**: Pagamentos espera o Antifraude por 2 segundos, o Antifraude espera a feature store por 2 segundos, a feature store espera o cache por 2 segundos... e ninguém percebe que, somados, os timeouts locais estouram o orçamento global — ou, pior, que um componente lá no fundo continua trabalhando duro numa requisição que o cliente lá em cima **já abandonou**. Trabalho zumbi: queima CPU, segura conexão do pool, e o resultado vai para o lixo.
 
 A disciplina certa se chama propagação de deadline: quem inicia a requisição carimba nela o **instante absoluto** em que a resposta deixa de ter valor — "essa requisição expira às 20h31m04.250s" — e cada salto repassa o carimbo, descontando o tempo já gasto. O gRPC faz isso nativamente; em REST dá para fazer com um header, com mais disciplina manual. O efeito prático: quando o orçamento acaba, **a cadeia inteira desiste junta**, do primeiro ao último elo, e nenhum recurso fica preso trabalhando para ninguém. Na Aula 2, quando o pool de 100 conexões esgotou, uma parte relevante daquelas conexões estava exatamente nisso: trabalhando em requisições que o cliente já tinha abandonado e retentado. Deadline propagado é a vacina contra trabalho zumbi.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a4dl-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+    <marker id="a4dl-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <!-- ERRADO: timeouts locais -->
+  <text x="20" y="28" font-family="sans-serif" font-size="13" font-weight="bold" fill="#b91c1c">✗ Timeouts locais e independentes</text>
+  <rect x="20" y="42" width="180" height="48" rx="8" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+  <text x="110" y="62" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Pagamentos</text>
+  <text x="110" y="80" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">espera 2s</text>
+  <line x1="200" y1="66" x2="250" y2="66" stroke="#b91c1c" stroke-width="2" marker-end="url(#a4dl-red)"/>
+  <rect x="250" y="42" width="180" height="48" rx="8" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+  <text x="340" y="62" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Antifraude</text>
+  <text x="340" y="80" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">espera 2s</text>
+  <line x1="430" y1="66" x2="480" y2="66" stroke="#b91c1c" stroke-width="2" marker-end="url(#a4dl-red)"/>
+  <rect x="480" y="42" width="180" height="48" rx="8" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+  <text x="570" y="62" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Feature store</text>
+  <text x="570" y="80" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">espera 2s</text>
+  <rect x="690" y="42" width="170" height="48" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="775" y="62" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">somados: 6s — estoura</text>
+  <text x="775" y="80" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">+ trabalho zumbi 🧟</text>
+  <text x="340" y="115" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">o cliente já desistiu lá em cima — e o fundo da cadeia continua trabalhando para o lixo</text>
+  <!-- CERTO: deadline propagado -->
+  <text x="20" y="158" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">✓ Deadline propagado — o carimbo viaja com a requisição</text>
+  <rect x="20" y="172" width="200" height="62" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="120" y="192" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">Gateway carimba</text>
+  <text x="120" y="209" text-anchor="middle" font-family="monospace" font-size="10" fill="#166534">expira: 20h31m04,250s</text>
+  <text x="120" y="226" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">orçamento: 3.000 ms</text>
+  <line x1="220" y1="203" x2="270" y2="203" stroke="#166534" stroke-width="2" marker-end="url(#a4dl-green)"/>
+  <rect x="270" y="172" width="180" height="62" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="360" y="192" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Pagamentos</text>
+  <text x="360" y="209" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">herda o carimbo</text>
+  <text x="360" y="226" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">restam 2.850 ms</text>
+  <line x1="450" y1="203" x2="500" y2="203" stroke="#166534" stroke-width="2" marker-end="url(#a4dl-green)"/>
+  <rect x="500" y="172" width="180" height="62" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="590" y="192" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Antifraude</text>
+  <text x="590" y="209" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">mesmo carimbo</text>
+  <text x="590" y="226" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">restam 2.700 ms</text>
+  <line x1="680" y1="203" x2="730" y2="203" stroke="#166534" stroke-width="2" marker-end="url(#a4dl-green)"/>
+  <rect x="730" y="172" width="130" height="62" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="795" y="197" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Feature store</text>
+  <text x="795" y="217" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">restam 2.560 ms</text>
+  <rect x="20" y="262" width="840" height="30" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="440" y="282" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#3730a3">Quando o orçamento acaba, a cadeia inteira desiste junta — nenhuma conexão do pool fica presa trabalhando para ninguém</text>
+  <text x="440" y="316" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">gRPC propaga o deadline nativamente; em REST, um header + disciplina · o teto de 40s da Aula 1 é o carimbo original</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Deadline propagation: timeout local é opinião de um elo; deadline propagado é o orçamento inteiro descendo pela pilha.</p>
+</div>
 
 ### 2.3 Timeout é derivado, não chutado
 
@@ -107,6 +296,62 @@ O padrão civilizado: retentar poucas vezes com backoff — os mesmos 100, 200, 
 
 Mas eu preciso ser honesto sobre o custo, porque DLQ tem uma rasteira que quase ninguém conta: **ela quebra a ordem**. Se eu estaciono o `FundosReservados` da Ana e sigo processando, o `PixLiquidado` dela vai ser aplicado antes do antecessor — e a projeção da conta da Ana fica inconsistente. Para fluxo ordenado por chave, o padrão refinado é estacionar a mensagem **e pausar aquela chave**: os eventos da Ana aguardam a resolução do veneno dela; o resto do mundo segue. Mais complexo? É. Mas é a complexidade proporcional a um sistema que mostra dinheiro na tela. No mínimo, saibam qual dos dois modos o seu consumidor implementa — descobrir isso durante o incidente é tarde.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a4dlq-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+    <marker id="a4dlq-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+    <marker id="a4dlq-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <!-- Fila de entrada -->
+  <text x="20" y="28" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Tópico (particionado por conta_id — ordem por chave, nunca global)</text>
+  <g font-family="monospace" font-size="10">
+    <rect x="20" y="42" width="90" height="40" rx="5" fill="#eef2ff" stroke="#c7d2fe"/><text x="65" y="66" text-anchor="middle" fill="#333">E2E-101</text>
+    <rect x="118" y="42" width="90" height="40" rx="5" fill="#eef2ff" stroke="#c7d2fe"/><text x="163" y="66" text-anchor="middle" fill="#333">E2E-102</text>
+    <rect x="216" y="42" width="90" height="40" rx="5" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/><text x="261" y="60" text-anchor="middle" fill="#7a5c00">E2E-102</text><text x="261" y="74" text-anchor="middle" fill="#7a5c00">(duplicada)</text>
+    <rect x="314" y="42" width="90" height="40" rx="5" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/><text x="359" y="60" text-anchor="middle" fill="#7f1d1d">☠ E2E-103</text><text x="359" y="74" text-anchor="middle" fill="#7f1d1d">(veneno)</text>
+    <rect x="412" y="42" width="90" height="40" rx="5" fill="#eef2ff" stroke="#c7d2fe"/><text x="457" y="66" text-anchor="middle" fill="#333">E2E-104</text>
+  </g>
+  <line x1="502" y1="62" x2="560" y2="62" stroke="#888" stroke-width="2" marker-end="url(#a4dlq-arrow)"/>
+  <!-- Consumidor -->
+  <rect x="560" y="30" width="300" height="70" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="710" y="55" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">Consumidor idempotente</text>
+  <text x="710" y="75" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">dedup por E2E ID + tipo · ou projeção upsert</text>
+  <!-- Saída 1: duplicada ignorada -->
+  <line x1="640" y1="100" x2="530" y2="150" stroke="#888" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#a4dlq-arrow)"/>
+  <rect x="380" y="150" width="200" height="44" rx="8" fill="#fff" stroke="#999" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="480" y="169" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">E2E-102 já processado</text>
+  <text x="480" y="186" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">→ ignora (efeito exactly-once)</text>
+  <!-- Saída 2: veneno para DLQ -->
+  <line x1="710" y1="100" x2="710" y2="150" stroke="#b91c1c" stroke-width="2" marker-end="url(#a4dlq-red)"/>
+  <text x="800" y="128" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">4 tentativas · backoff</text>
+  <text x="800" y="142" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">100–800ms · falhou</text>
+  <rect x="620" y="150" width="180" height="60" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="710" y="172" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">DLQ + alerta imediato</text>
+  <text x="710" y="190" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7f1d1d">veneno sai do caminho;</text>
+  <text x="710" y="203" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7f1d1d">a chave (conta) fica pausada</text>
+  <!-- Saída 3: projeção -->
+  <line x1="820" y1="100" x2="850" y2="150" stroke="#166534" stroke-width="2" marker-end="url(#a4dlq-green)"/>
+  <rect x="812" y="150" width="58" height="60" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="841" y="176" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">projeção</text>
+  <text x="841" y="192" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">(upsert)</text>
+  <!-- Lag -->
+  <rect x="20" y="240" width="850" height="70" rx="8" fill="#fff" stroke="#d4a017" stroke-width="2"/>
+  <text x="40" y="264" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Consumer lag — a métrica que faltou na sexta-feira</text>
+  <rect x="40" y="276" width="500" height="14" rx="4" fill="#f3f4f6" stroke="#ccc"/>
+  <rect x="40" y="276" width="120" height="14" rx="4" fill="#d4a017"/>
+  <text x="560" y="288" font-family="sans-serif" font-size="11" fill="#333">lag ≈ 0 sustenta a promessa de 100–300ms;</text>
+  <text x="560" y="303" font-family="sans-serif" font-size="11" fill="#b91c1c">alerta em segundos de lag — não em ligações</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O consumidor civilizado: duplicata ignorada, veneno estacionado na DLQ com a chave pausada, e o lag vigiado como promessa de contrato.</p>
+</div>
+
 ### 3.5 Backpressure: quando o produtor é mais rápido que o mundo
 
 Último modo de falha assíncrono, para completar o mapa: o produtor sustentadamente mais rápido que o consumidor. Não foi o caso da sexta-feira — ali o consumidor estava *parado*, não lento — mas é o caso clássico do pico: 900 TPS de eventos entrando, projetor dando conta de 600. A fila cresce, o atraso cresce com ela, e a promessa dos 300 ms morre por estrangulamento em vez de morrer por veneno. As saídas são três, e vocês já conhecem a lógica de todas pela Aula 2: **escalar o consumidor** (mais instâncias, até o limite do paralelismo por partição), **aliviar o trabalho** (processar em lote, simplificar a projeção), ou **derramar com critério** — o load shedding do lado de quem lê: em sobrecarga, o projetor prioriza eventos que afetam saldo exibido e atrasa os de notificação. Recusar trabalho continua sendo uma forma de proteger trabalho; a Aula 2 ensinou isso para requisições, e vale igual para eventos.
@@ -126,6 +371,51 @@ O padrão fundamental para evoluir qualquer interface viva — evento, API, até
 **Migrar:** cada consumidor, no seu ritmo, passa a ler `carteiraId`. Sem coordenação de big bang, sem "todo mundo faz deploy junto na sexta" — cada time migra quando puder, e o produtor **observa** quem ainda lê o campo velho (métrica de uso por campo, ou na falta dela, uma conversa com os times consumidores).
 
 **Contrair:** quando a telemetria mostra zero leitores do campo antigo — e só então —, o produtor remove `contaId` numa versão nova do evento. A remoção vira um não-evento: ninguém depende, ninguém sente.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 310" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a4ec-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <!-- O jeito errado -->
+  <rect x="20" y="20" width="840" height="46" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="440" y="40" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">✗ 1 passo incompatível: contaId → carteiraId direto = 40 min de incidente, 300 ligações, on-call de sexta</text>
+  <text x="440" y="58" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">(o que aconteceu em 12/09)</text>
+  <!-- Fase 1 -->
+  <rect x="20" y="95" width="260" height="130" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="150" y="120" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">1 · EXPANDIR</text>
+  <rect x="45" y="132" width="210" height="48" rx="6" fill="#fff" stroke="#166534"/>
+  <text x="150" y="152" text-anchor="middle" font-family="monospace" font-size="11" fill="#333">{ contaId: "c-42",</text>
+  <text x="150" y="169" text-anchor="middle" font-family="monospace" font-size="11" fill="#166534">  carteiraId: "c-42" }</text>
+  <text x="150" y="200" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">novo E velho, mesmo valor</text>
+  <text x="150" y="215" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">nenhum consumidor quebra</text>
+  <line x1="280" y1="160" x2="320" y2="160" stroke="#4338ca" stroke-width="2.5" marker-end="url(#a4ec-arrow)"/>
+  <!-- Fase 2 -->
+  <rect x="320" y="95" width="260" height="130" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="450" y="120" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">2 · MIGRAR</text>
+  <text x="450" y="145" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">cada consumidor passa a ler</text>
+  <text x="450" y="162" text-anchor="middle" font-family="monospace" font-size="11" fill="#3730a3">carteiraId</text>
+  <text x="450" y="182" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">no seu ritmo — sem big bang</text>
+  <text x="450" y="205" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">produtor observa a métrica de</text>
+  <text x="450" y="218" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">uso do campo velho caindo</text>
+  <line x1="580" y1="160" x2="620" y2="160" stroke="#4338ca" stroke-width="2.5" marker-end="url(#a4ec-arrow)"/>
+  <!-- Fase 3 -->
+  <rect x="620" y="95" width="240" height="130" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="740" y="120" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">3 · CONTRAIR</text>
+  <rect x="645" y="132" width="190" height="48" rx="6" fill="#fff" stroke="#166534"/>
+  <text x="740" y="152" text-anchor="middle" font-family="monospace" font-size="11" fill="#999" text-decoration="line-through">contaId</text>
+  <text x="740" y="169" text-anchor="middle" font-family="monospace" font-size="11" fill="#166534">{ carteiraId: "c-42" }</text>
+  <text x="740" y="200" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">só com ZERO leitores do velho</text>
+  <text x="740" y="215" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">a remoção vira não-evento</text>
+  <!-- Régua -->
+  <rect x="20" y="252" width="840" height="40" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="440" y="270" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">✓ 3 passos compatíveis: alguns dias de calendário, zero adrenalina</text>
+  <text x="440" y="287" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">o schema registry recusa no CI qualquer mudança que pule essas fases — a fitness function do contrato</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Expand/contract: toda mudança quebra-contrato vira três mudanças compatíveis — e a velocidade se mede pela ausência de vítimas.</p>
+</div>
 
 O custo é evidente: três passos onde antes havia um, e uma janela em que o payload carrega redundância. E eu defendo esse custo sem pestanejar, com a régua de plantonista: o passo único custou quarenta minutos de incidente, trezentas ligações e um on-call de sexta à noite; os três passos custam alguns dias de calendário e zero adrenalina. **Velocidade de mudança não se mede pela pressa do produtor; mede-se pela ausência de vítimas entre os consumidores.**
 
@@ -174,6 +464,63 @@ Três comentários que a tabela sozinha não faz.
 Agora a linha mais interessante da tabela: o que fazer quando o **Antifraude não responde** — timeout estourado, circuito aberto — e há um Pix na mão esperando veredito?
 
 Duas respostas possíveis, ambas defensáveis, ambas caras. **Fail-closed:** na dúvida, recusa. Nenhuma fraude passa; em compensação, durante os minutos de uma degradação do Antifraude, o TechPix recusa 100% dos Pix — clientes legítimos barrados, receita perdida, reputação arranhada, e possivelmente uma menção desagradável no índice de disponibilidade que o BACEN monitora. **Fail-open:** na dúvida, deixa passar. Disponibilidade preservada; em compensação, a janela de degradação vira temporada de caça aberta para exatamente o tipo de adversário que monitora fintechs esperando esses momentos.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 860 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a4fb-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+    <marker id="a4fb-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+    <marker id="a4fb-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+    <marker id="a4fb-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d4a017"/>
+    </marker>
+  </defs>
+  <!-- Pix chega -->
+  <rect x="20" y="90" width="140" height="52" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="90" y="112" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Pix na mão</text>
+  <text x="90" y="130" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">aguardando veredito</text>
+  <line x1="160" y1="116" x2="215" y2="116" stroke="#888" stroke-width="2" marker-end="url(#a4fb-arrow)"/>
+  <!-- Antifraude fora -->
+  <rect x="215" y="82" width="180" height="68" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="305" y="106" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">Antifraude não responde</text>
+  <text x="305" y="124" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7f1d1d">timeout 150ms estourado</text>
+  <text x="305" y="139" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7f1d1d">ou circuito aberto</text>
+  <line x1="395" y1="116" x2="450" y2="116" stroke="#888" stroke-width="2" marker-end="url(#a4fb-arrow)"/>
+  <!-- Decisão -->
+  <polygon points="510,66 590,116 510,166 430,116" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="510" y="112" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">valor?</text>
+  <text x="510" y="130" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">(política escrita)</text>
+  <!-- Ramo baixo -->
+  <line x1="540" y1="80" x2="640" y2="45" stroke="#166534" stroke-width="2.5" marker-end="url(#a4fb-green)"/>
+  <text x="575" y="48" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">≤ R$ 200</text>
+  <rect x="640" y="20" width="200" height="56" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="740" y="42" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">FAIL-OPEN controlado</text>
+  <text x="740" y="60" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">aprova + flag de análise posterior</text>
+  <!-- Ramo intermediário -->
+  <line x1="590" y1="116" x2="640" y2="116" stroke="#d4a017" stroke-width="2.5" marker-end="url(#a4fb-amber)"/>
+  <text x="612" y="106" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">faixa média</text>
+  <rect x="640" y="92" width="200" height="50" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="740" y="112" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#7a5c00">política intermediária</text>
+  <text x="740" y="130" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">limite reduzido · confirmação extra</text>
+  <!-- Ramo alto -->
+  <line x1="540" y1="152" x2="640" y2="185" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#a4fb-red)"/>
+  <text x="575" y="185" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">&gt; R$ 200</text>
+  <rect x="640" y="160" width="200" height="56" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="740" y="182" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">FAIL-CLOSED</text>
+  <text x="740" y="200" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7f1d1d">recusa — prudência acima de otimismo</text>
+  <!-- Rodapé -->
+  <rect x="20" y="240" width="820" height="46" rx="8" fill="#fff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="430" y="259" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">O número "R$ 200" é apetite de risco — decisão de produto, risco e compliance, escrita ANTES do incidente</text>
+  <text x="430" y="277" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">a pior versão é a decidida implicitamente por um catch genérico, descoberta na frente do regulador</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Fail-open ou fail-closed, segmentado por valor: a engenharia executa; quem decide é o negócio.</p>
+</div>
 
 A resposta madura recusa o binário e **segmenta pelo risco**: valor baixo — digamos, até R$ 200 — passa com registro para análise posterior; valor alto falha fechado; faixa intermediária, política intermediária (limite reduzido, confirmação adicional). O ponto pedagógico, e eu quero que isso fique gravado: **essa segmentação não é uma decisão de engenharia — é uma decisão de negócio que a engenharia executa.** O número "R$ 200" é uma aposta sobre apetite de risco: quanto prejuízo de fraude a empresa aceita para não recusar clientes legítimos? Quem responde isso é produto, risco e compliance — juntos, de olhos abertos, **antes** do incidente, com a decisão escrita no contrato da aresta. A pior versão possível dessa decisão é a tomada implicitamente por um `catch` genérico que algum estagiário escreveu, descoberta durante o incidente, na frente do regulador. Eu já vi. Não recomendo.
 

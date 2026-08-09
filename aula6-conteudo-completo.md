@@ -53,6 +53,71 @@ Por quê? Três razões. Primeira: o ledger é o agregado com a invariante mais 
 
 Guardem a regra geral: **extraia primeiro o que tem fronteira madura e fallback escrito; extraia por último — ou nunca — o que carrega a invariante transacional do dinheiro.**
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 400" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a6ext-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <!-- ANTES -->
+  <text x="150" y="24" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333">ANTES (até nov/2025)</text>
+  <rect x="30" y="35" width="250" height="330" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="155" y="56" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Monólito modular</text>
+  <rect x="45" y="70" width="220" height="34" rx="6" fill="#eef2ff" stroke="#4338ca"/>
+  <text x="155" y="91" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">Pagamentos (ACLs DICT/SPI)</text>
+  <rect x="45" y="112" width="220" height="34" rx="6" fill="#eef2ff" stroke="#4338ca"/>
+  <text x="155" y="133" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">Antifraude e Limites (GPU!)</text>
+  <rect x="45" y="154" width="220" height="46" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="155" y="173" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">Contas e Ledger</text>
+  <text x="155" y="190" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">pix_a_liquidar · Σ = Σ</text>
+  <rect x="45" y="208" width="220" height="30" rx="6" fill="#f9f9f7" stroke="#999"/>
+  <text x="155" y="227" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">Identidade e Onboarding</text>
+  <rect x="45" y="246" width="220" height="30" rx="6" fill="#f9f9f7" stroke="#999"/>
+  <text x="155" y="265" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">Devoluções e Disputas</text>
+  <rect x="45" y="284" width="220" height="30" rx="6" fill="#f9f9f7" stroke="#999"/>
+  <text x="155" y="303" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">Cartões</text>
+  <text x="155" y="345" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">1 deploy · 1 banco</text>
+
+  <!-- seta -->
+  <line x1="295" y1="200" x2="360" y2="200" stroke="#4338ca" stroke-width="2.5" marker-end="url(#a6ext-arrow)"/>
+  <text x="327" y="188" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#4338ca">extração</text>
+
+  <!-- DEPOIS -->
+  <text x="640" y="24" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333">DEPOIS (dez/2025)</text>
+  <!-- Antifraude service -->
+  <rect x="380" y="35" width="240" height="80" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="500" y="57" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Serviço: Antifraude e Limites</text>
+  <text x="500" y="76" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">GPU · modelo de ML · feature store</text>
+  <text x="500" y="93" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">banco próprio · deploy próprio</text>
+  <!-- Pagamentos service -->
+  <rect x="640" y="35" width="240" height="80" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="760" y="57" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Serviço: Pagamentos</text>
+  <text x="760" y="76" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">ACLs DICT/SPI · orquestração</text>
+  <text x="760" y="93" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">timeouts do teto de 40s</text>
+  <!-- Monólito remanescente -->
+  <rect x="380" y="140" width="500" height="200" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="630" y="162" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Monólito remanescente — "lar legítimo de quem não tem razão para sair"</text>
+  <rect x="400" y="176" width="220" height="56" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="2.5"/>
+  <text x="510" y="197" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">Contas e Ledger — NÃO SAI</text>
+  <text x="510" y="215" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">pix_a_liquidar · pendência ADR-002 aberta</text>
+  <rect x="640" y="176" width="220" height="26" rx="6" fill="#f9f9f7" stroke="#999"/>
+  <text x="750" y="193" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">Identidade e Onboarding</text>
+  <rect x="640" y="208" width="220" height="26" rx="6" fill="#f9f9f7" stroke="#999"/>
+  <text x="750" y="225" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">Devoluções e Disputas</text>
+  <rect x="640" y="240" width="220" height="26" rx="6" fill="#f9f9f7" stroke="#999"/>
+  <text x="750" y="257" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">Cartões</text>
+  <text x="630" y="300" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">invariante Σ débitos = Σ créditos protegida por transação ACID local</text>
+  <text x="630" y="318" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">"o próximo ADR numerado, o 003, só nasce quando alguém mexer aqui"</text>
+  <!-- setas de chamada -->
+  <line x1="640" y1="75" x2="625" y2="75" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="450" y="385" font-family="sans-serif" font-size="10" fill="#7a5c00"></text>
+  <rect x="30" y="372" width="850" height="24" rx="6" fill="#fef9e7" stroke="#d4a017"/>
+  <text x="455" y="388" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">Ordem: 1º Antifraude (4 critérios verdes + fallback escrito) · 2º Pagamentos (runbook maduro) · Ledger fica — extração por evidência, não por moda</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A quebra do monólito guiada pelos bounded contexts da Aula 3: dois serviços saem, o Ledger fica — decisão de <em>não fazer</em>.</p>
+</div>
+
 ---
 
 ## 2. A parte que ninguém conta: os dados
@@ -80,6 +145,66 @@ A resposta é a coreografia que a Aula 4 apresentou para contratos, aplicada ago
 **Contract.** Só então o tráfego migra (via canary, Seção 4), a escrita dupla é desligada, e — semanas depois, com tudo estável — as tabelas velhas do monólito são arquivadas e removidas. Contração é a última etapa, nunca a primeira. Pressa de apagar tabela velha já causou mais perda de dado que disco quebrado.
 
 E atravessando os quatro movimentos, uma disciplina que o TechPix já tinha no sangue: **reconciliação.** Na Aula 1, o professor mostrou que o ledger interno precisa bater com a Conta PI no Banco Central — bater o livro de vocês contra o livro do outro, continuamente, porque divergência silenciosa vira incidente regulatório. A migração de dados é a mesma disciplina, apontada para dentro: um job compara, todo dia, contagens e somas entre o banco velho e o novo, e qualquer diferença acorda alguém. **Migração sem reconciliação não é migração; é esperança com cronograma.**
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 360" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a6dat-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a6dat-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <!-- 4 fases -->
+  <text x="20" y="24" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">A coreografia expand/contract aplicada a dados</text>
+  <rect x="20" y="38" width="195" height="86" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="117" y="60" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">1 · Expandir</text>
+  <text x="117" y="80" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">banco novo vazio, ao lado</text>
+  <text x="117" y="96" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">escrita dupla via eventos</text>
+  <text x="117" y="112" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">do Outbox (Aula 2)</text>
+  <line x1="215" y1="81" x2="240" y2="81" stroke="#4338ca" stroke-width="2" marker-end="url(#a6dat-arrow)"/>
+  <rect x="245" y="38" width="195" height="86" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="342" y="60" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">2 · Backfill</text>
+  <text x="342" y="80" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">histórico em lotes, fora de pico</text>
+  <text x="342" y="96" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">com throttling, idempotente</text>
+  <text x="342" y="112" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">e retomável (Aula 1)</text>
+  <line x1="440" y1="81" x2="465" y2="81" stroke="#4338ca" stroke-width="2" marker-end="url(#a6dat-arrow)"/>
+  <rect x="470" y="38" width="195" height="86" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="567" y="60" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">3 · Dual-run</text>
+  <text x="567" y="80" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">velho decide de verdade</text>
+  <text x="567" y="96" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">novo decide "de mentira"</text>
+  <text x="567" y="112" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">saída: divergência &lt;0,01% / 7 dias</text>
+  <line x1="665" y1="81" x2="690" y2="81" stroke="#4338ca" stroke-width="2" marker-end="url(#a6dat-arrow)"/>
+  <rect x="695" y="38" width="185" height="86" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="787" y="60" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">4 · Contract</text>
+  <text x="787" y="80" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">tráfego migra via canary</text>
+  <text x="787" y="96" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">desliga escrita dupla</text>
+  <text x="787" y="112" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">arquivar → 30 dias → remover</text>
+
+  <!-- bancos -->
+  <rect x="120" y="170" width="230" height="70" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="235" y="195" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Banco do monólito</text>
+  <text x="235" y="215" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">schema do Antifraude (velho)</text>
+  <rect x="550" y="170" width="230" height="70" rx="8" fill="#fff" stroke="#4338ca" stroke-width="2"/>
+  <text x="665" y="195" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Banco do serviço novo</text>
+  <text x="665" y="215" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">regras · decisões · feature store</text>
+  <line x1="350" y1="195" x2="545" y2="195" stroke="#4338ca" stroke-width="2" marker-end="url(#a6dat-arrow)"/>
+  <text x="447" y="185" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#4338ca">eventos + backfill</text>
+  <!-- reconciliação -->
+  <path d="M 350 225 C 420 260, 480 260, 545 225" stroke="#166534" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#a6dat-arrow)"/>
+  <text x="447" y="262" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">reconciliação diária: contagens e somas velho × novo → alerta</text>
+
+  <!-- proibição -->
+  <line x1="665" y1="240" x2="300" y2="290" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#a6dat-red)"/>
+  <line x1="455" y1="248" x2="505" y2="284" stroke="#b91c1c" stroke-width="3"/>
+  <line x1="505" y1="248" x2="455" y2="284" stroke="#b91c1c" stroke-width="3"/>
+  <rect x="180" y="290" width="600" height="26" rx="6" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="480" y="308" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#b91c1c">PROIBIDO: serviço lendo banco alheio — sem GRANT, verificado por fitness function no CI</text>
+  <text x="450" y="345" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">O erro do fuso horário (divergência 0,4%) apareceu no dual-run como número num dashboard — custo: zero reais.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Extrair código é fácil; a extração de verdade é a dos dados — quatro movimentos, com reconciliação atravessando todos.</p>
+</div>
 
 ### 2.3 O que descobrimos no meio do caminho
 
@@ -112,6 +237,61 @@ Desse desenho caem três consequências práticas:
 **Rollback = git revert.** Desfazer um deploy é reverter um commit. Não existe "script de rollback" separado, que ninguém testa até o dia em que precisa: o mecanismo de ida e o de volta são o mesmo mecanismo, exercitado em todo deploy. O rollback de 90 segundos da abertura foi exatamente isso — um revert automático aplicado pelo mesmo loop que tinha aplicado a ida.
 
 **Trilha de auditoria de graça.** Todo estado que produção já teve corresponde a um commit: quem mudou, quando, o que, aprovado por quem no pull request. Numa fintech, isso não é luxo de engenheiro — o BACEN e o auditor perguntam "o que estava rodando no dia X e quem autorizou", e a resposta vira `git log` em vez de arqueologia de planilha. **Auditabilidade era exigência do domínio desde a tabela de propriedades do dinheiro da Aula 1; o GitOps entrega ela na camada de operação sem esforço adicional.**
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a6git-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a6git-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <!-- pipeline -->
+  <rect x="20" y="30" width="120" height="50" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="80" y="52" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">commit</text>
+  <text x="80" y="68" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">repo de código</text>
+  <line x1="140" y1="55" x2="170" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#a6git-arrow)"/>
+  <rect x="175" y="18" width="180" height="76" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="265" y="38" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">CI — os tribunais</text>
+  <text x="265" y="55" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">invariante Σ = Σ como teste</text>
+  <text x="265" y="70" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">ArchUnit · GRANTs de banco</text>
+  <text x="265" y="85" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">Pact · schema registry</text>
+  <line x1="355" y1="55" x2="385" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#a6git-arrow)"/>
+  <rect x="390" y="30" width="110" height="50" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="445" y="52" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">imagem</text>
+  <text x="445" y="68" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">artefato versionado</text>
+  <line x1="500" y1="55" x2="530" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#a6git-arrow)"/>
+  <rect x="535" y="18" width="170" height="76" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="620" y="40" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">repo de deploy</text>
+  <text x="620" y="58" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">estado desejado, declarativo</text>
+  <text x="620" y="74" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">"produção é uma branch"</text>
+  <line x1="705" y1="55" x2="735" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#a6git-arrow)"/>
+  <rect x="740" y="30" width="140" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="810" y="52" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">ArgoCD</text>
+  <text x="810" y="68" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">sincroniza</text>
+
+  <!-- loop de reconciliação -->
+  <text x="450" y="140" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333">O loop de reconciliação — "é o ledger de novo"</text>
+  <rect x="120" y="160" width="260" height="80" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="250" y="185" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Git = write model</text>
+  <text x="250" y="205" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">log imutável de intenções</text>
+  <text x="250" y="222" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">cada commit: fato datado e assinado</text>
+  <rect x="520" y="160" width="260" height="80" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="650" y="185" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Cluster = projeção</text>
+  <text x="650" y="205" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">estado materializado, sempre</text>
+  <text x="650" y="222" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">reconstruível a partir do log</text>
+  <path d="M 380 180 C 430 160, 470 160, 520 180" stroke="#4338ca" stroke-width="2" fill="none" marker-end="url(#a6git-arrow)"/>
+  <text x="450" y="162" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#4338ca">converge (aplica o que falta)</text>
+  <path d="M 520 225 C 470 248, 430 248, 380 225" stroke="#166534" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#a6git-green)"/>
+  <text x="450" y="258" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">compara (drift detection · selfHeal desfaz o "kubectl rapidinho")</text>
+
+  <rect x="120" y="280" width="660" height="30" rx="6" fill="#fff" stroke="#999" stroke-dasharray="4 3"/>
+  <text x="450" y="300" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">rollback = <tspan font-family="monospace">git revert</tspan> — ida e volta são o mesmo mecanismo · trilha de auditoria = <tspan font-family="monospace">git log</tspan> (BACEN agradece)</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Do commit ao cluster: uma sequência de tribunais, e no fim o mesmo desenho da Aula 1 — log imutável, projeção, reconciliação contínua.</p>
+</div>
 
 ### 3.3 Como isso fica no concreto
 
@@ -148,6 +328,49 @@ Com GitOps, o *como* aplicar mudanças está resolvido. Falta o mais importante:
 
 No modelo antigo, deploy e release eram o mesmo instante: o código novo sobe já recebendo 100% do tráfego, e a validação de produção é feita *por* produção, com todos os clientes de cobaia simultânea. Separar os dois instantes cria uma zona de teste com rede: o código está lá, real, no ambiente real — mas decidindo sobre uma fração controlada do mundo.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 250" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a6dr-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a6dr-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <!-- Deploy -->
+  <rect x="20" y="30" width="330" height="130" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="185" y="55" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#333">DEPLOY</text>
+  <text x="185" y="78" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">código novo em produção</text>
+  <rect x="60" y="92" width="250" height="28" rx="6" fill="#f9f9f7" stroke="#999"/>
+  <text x="185" y="111" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">flag OFF · 0% do tráfego · smoke test roda</text>
+  <text x="185" y="145" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">deploy virou não-evento</text>
+  <!-- seta -->
+  <line x1="350" y1="95" x2="440" y2="95" stroke="#4338ca" stroke-width="2.5" marker-end="url(#a6dr-arrow)"/>
+  <text x="395" y="83" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#4338ca">a release é um dial</text>
+  <!-- Release -->
+  <rect x="445" y="30" width="415" height="130" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="652" y="55" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#3730a3">RELEASE</text>
+  <text x="652" y="76" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">tráfego em cima do código, em fatias</text>
+  <!-- fatias -->
+  <rect x="480" y="92" width="30" height="34" rx="4" fill="#c7d2fe" stroke="#4338ca"/>
+  <text x="495" y="114" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">1%</text>
+  <rect x="525" y="92" width="55" height="34" rx="4" fill="#c7d2fe" stroke="#4338ca"/>
+  <text x="552" y="114" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">5%</text>
+  <rect x="595" y="92" width="95" height="34" rx="4" fill="#a5b4fc" stroke="#4338ca"/>
+  <text x="642" y="114" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#26215c">25%</text>
+  <rect x="705" y="92" width="130" height="34" rx="4" fill="#818cf8" stroke="#4338ca"/>
+  <text x="770" y="114" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#fff">100%</text>
+  <text x="652" y="148" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">mínimo 1h por fatia · guardas pré-declaradas: erro &gt; 0,1% · p99 &gt; ~100 ms</text>
+  <!-- kill switch -->
+  <path d="M 652 160 C 652 195, 400 195, 200 165" stroke="#b91c1c" stroke-width="2.5" stroke-dasharray="6 4" fill="none" marker-end="url(#a6dr-red)"/>
+  <rect x="330" y="196" width="290" height="26" rx="6" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="475" y="214" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#b91c1c">kill switch: desliga o caminho na hora, sem deploy</text>
+  <text x="440" y="242" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">testado em game day — ninguém quer usar; todo mundo dorme melhor sabendo que existe</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Deploy é colocar código em produção; release é colocar tráfego em cima — a engenharia de entrega vive no espaço entre os dois.</p>
+</div>
+
 ### 4.1 Feature flags: o interruptor entre deploy e release
 
 O mecanismo mais simples dessa separação o TechPix adotou via **Unleash** (a Aula 2 já tinha apontado a ferramenta, prometendo que ela importaria "na Aula 8, porque é o mecanismo do canary" — pois é, o caminho até lá passa por aqui): a **feature flag**, um interruptor avaliado em tempo de execução que decide qual caminho de código uma requisição percorre, sem novo deploy.
@@ -173,9 +396,89 @@ O time dimensionou o pool de conexões do serviço novo com a ferramenta certa �
 
 O erro não foi a lei; foi o **W de outro sistema**. Dentro do monólito, a consulta de features rodava com cache em processo, quente há meses. O serviço extraído estreou com um salto de rede a mais até a feature store — e, pior, com o **cache local nascendo vazio**. Cache frio significa miss atrás de miss; cada miss vira ida ao banco da feature store; com fila, o W real da análise no serviço novo abriu para algo em torno de 250 ms nos primeiros minutos. Refaçam a conta comigo: L = 45 × 0,25 = **11,25**. Pool de 10. Esgotou — e vocês conhecem essa história desde o dia 5 da Aula 2: requisição espera pool, espera aumenta W, W maior aumenta L, L maior espera mais pool. O cotovelo da curva de filas, em miniatura, dentro de um canary de 5%.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 860 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="430" y="24" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333">A Lei de Little cobra de novo: L = λ × W — a lei estava certa; o W era de outro sistema</text>
+  <!-- Planejado -->
+  <rect x="30" y="45" width="380" height="220" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="220" y="70" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">PLANEJADO (W herdado do monólito)</text>
+  <text x="220" y="95" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">λ = 45 TPS · W = 40 ms (cache quente, em processo)</text>
+  <text x="220" y="118" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#166534">L = 45 × 0,04 = 1,8 conexões</text>
+  <!-- barra pool -->
+  <rect x="70" y="140" width="300" height="30" rx="4" fill="#fff" stroke="#166534"/>
+  <rect x="70" y="140" width="54" height="30" rx="4" fill="#86efac"/>
+  <text x="97" y="160" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#14532d">1,8</text>
+  <text x="220" y="188" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">pool = 10 → folga de mais de 5× · "parecia sobrado"</text>
+  <text x="220" y="230" text-anchor="middle" font-family="sans-serif" font-size="24" fill="#166534">✓</text>
+  <!-- Real -->
+  <rect x="450" y="45" width="380" height="220" rx="10" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="640" y="70" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">REAL (estreia: cache local vazio)</text>
+  <text x="640" y="95" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">λ = 45 TPS · W ≈ 250 ms (miss atrás de miss + fila)</text>
+  <text x="640" y="118" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#b91c1c">L = 45 × 0,25 = 11,25 conexões</text>
+  <!-- barra pool estourada -->
+  <rect x="490" y="140" width="300" height="30" rx="4" fill="#fff" stroke="#b91c1c"/>
+  <rect x="490" y="140" width="300" height="30" rx="4" fill="#fca5a5"/>
+  <line x1="790" y1="132" x2="790" y2="178" stroke="#b91c1c" stroke-width="2.5"/>
+  <rect x="790" y="140" width="38" height="30" fill="#dc2626"/>
+  <text x="640" y="160" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7f1d1d">pool 10 lotado</text>
+  <text x="809" y="160" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#fff">+1,25</text>
+  <text x="640" y="188" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">esgota → espera pool → W sobe → L sobe → espera mais</text>
+  <text x="640" y="206" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">p99: 80 ms → 2,4 s (o dia 5 da Aula 2, em miniatura)</text>
+  <text x="640" y="240" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#b91c1c">guarda viola → rollback automático em 90 s</text>
+  <text x="430" y="288" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">Correção (21/11): pool dimensionado com o W medido no dual-run + regra dos 70% · warm-up de cache no readiness · começar em 1%</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O erro de dimensionamento das 9h17: a mesma conta, com o W errado e com o W real — e por que a rede transformou o erro num parágrafo de runbook.</p>
+</div>
+
 O p99 saltou de 80 ms para 2,4 s, a métrica de guarda (p99 acima do orçamento da aresta) violou por três janelas seguidas, e o Argo Rollouts reverteu: 90 segundos entre a primeira violação e 100% do tráfego de volta na rota antiga. **Custo do erro: zero clientes afetados além do p99 momentâneo numa fração de 5%, e uma manhã de análise.** No mundo sem canary, esse mesmo erro a 100% do tráfego, no pico do almoço, seria o dia 5 de novo.
 
 A segunda tentativa, dia 21, mudou três coisas — todas anotadas no runbook da Seção 6: o pool foi redimensionado com o W *medido no serviço real* durante o dual-run (não o W herdado do monólito), com a regra dos 70% de utilização máxima por cima; o serviço passou a **aquecer o cache antes de entrar no balanceador** (readiness que só libera tráfego depois de popular as features das contas mais ativas); e a progressão começou em 1%, não 5%. Subiu limpo, fatia por fatia, e às 16h o Antifraude estava a 100% na rota nova.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 320" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a6can-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <!-- Tentativa 1 -->
+  <text x="20" y="26" font-family="sans-serif" font-size="13" font-weight="bold" fill="#b91c1c">14/11 — primeira tentativa: a rede funciona</text>
+  <line x1="40" y1="70" x2="860" y2="70" stroke="#ccc" stroke-width="2"/>
+  <circle cx="120" cy="70" r="7" fill="#4338ca"/>
+  <text x="120" y="50" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">9h17</text>
+  <text x="120" y="95" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">canary a 5%</text>
+  <circle cx="330" cy="70" r="7" fill="#d4a017"/>
+  <text x="330" y="50" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">+ segundos</text>
+  <text x="330" y="95" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">p99: 80 ms → 2,4 s</text>
+  <circle cx="550" cy="70" r="7" fill="#b91c1c"/>
+  <text x="550" y="50" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">3 janelas</text>
+  <text x="550" y="95" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">guarda violada (p99 &gt; orçamento)</text>
+  <circle cx="780" cy="70" r="9" fill="#166534"/>
+  <text x="780" y="50" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#333">9h19</text>
+  <text x="780" y="95" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">rollback automático — 90 s</text>
+  <path d="M 550 62 C 620 30, 700 30, 772 60" stroke="#b91c1c" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#a6can-red)"/>
+  <text x="660" y="32" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">Argo Rollouts reverte; humano é notificado DEPOIS</text>
+  <text x="450" y="122" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">zero clientes afetados além do p99 momentâneo em 5% · custo: uma manhã de análise</text>
+
+  <!-- Tentativa 2 -->
+  <text x="20" y="160" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">21/11 — segunda tentativa: sobe limpo (com o runbook corrigido)</text>
+  <line x1="40" y1="230" x2="860" y2="230" stroke="#ccc" stroke-width="2"/>
+  <!-- degraus -->
+  <rect x="80" y="212" width="90" height="18" fill="#bbf7d0" stroke="#166534"/>
+  <text x="125" y="203" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">1%</text>
+  <rect x="210" y="200" width="110" height="30" fill="#86efac" stroke="#166534"/>
+  <text x="265" y="192" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">5%</text>
+  <rect x="360" y="185" width="140" height="45" fill="#4ade80" stroke="#166534"/>
+  <text x="430" y="177" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">25%</text>
+  <rect x="540" y="168" width="200" height="62" fill="#22c55e" stroke="#166534"/>
+  <text x="640" y="160" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#166534">100% — 16h</text>
+  <text x="450" y="250" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#555">mínimo 1h por fatia, guarda observada em cada degrau — nenhuma violação</text>
+  <rect x="40" y="266" width="820" height="38" rx="6" fill="#fef9e7" stroke="#d4a017"/>
+  <text x="450" y="282" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">Mudanças entre as tentativas (anotadas no runbook): pool com W medido no serviço real + regra dos 70% ·</text>
+  <text x="450" y="297" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">warm-up de cache no readiness (só recebe tráfego quente) · progressão começando em 1%</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">As duas tentativas de novembro: o rollback de 90 segundos não foi fracasso — foi a rede de validação fazendo o trabalho dela.</p>
+</div>
 
 Reparem na moral, porque ela é o coração da aula: **o erro da primeira tentativa não foi evitável por mais planejamento — era um desconhecido honesto (quem saberia o W real antes de rodar?). O que era evitável era o erro virar incidente. A rede de validação transformou um erro de dimensionamento em um parágrafo de runbook.**
 

@@ -16,6 +16,56 @@ Reparem no desenho do golpe, porque ele é quase elegante: nenhuma transação i
 
 O fraudador não quebrou nenhuma regra. **Ele explorou o espaço entre as regras.** O padrão — dezenas de contas novas recebendo rajadas coordenadas de valores pequenos e idênticos, na madrugada, com saque na sequência — grita fraude para qualquer analista humano que olhe o conjunto. Mas nenhuma regra olhava o conjunto. Cada uma olhava a sua fatia.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 340" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a5golpe-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+    <marker id="a5golpe-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <text x="20" y="24" font-family="sans-serif" font-size="12" fill="#666">2h31 · centenas de Pix de R$ 49,90 — cada um, isolado, abaixo de todo limiar</text>
+  <!-- vítimas -->
+  <g font-family="sans-serif" font-size="11" fill="#333">
+    <rect x="20" y="45" width="90" height="28" rx="6" fill="#fff" stroke="#999"/><text x="65" y="63" text-anchor="middle">vítima 1</text>
+    <rect x="20" y="83" width="90" height="28" rx="6" fill="#fff" stroke="#999"/><text x="65" y="101" text-anchor="middle">vítima 2</text>
+    <rect x="20" y="121" width="90" height="28" rx="6" fill="#fff" stroke="#999"/><text x="65" y="139" text-anchor="middle">vítima 3</text>
+    <rect x="20" y="159" width="90" height="28" rx="6" fill="#fff" stroke="#999"/><text x="65" y="177" text-anchor="middle">vítima 4</text>
+    <text x="65" y="205" text-anchor="middle" fill="#888">⋮ centenas</text>
+  </g>
+  <!-- setas R$49,90 -->
+  <line x1="110" y1="59" x2="330" y2="85" stroke="#888" stroke-width="1.5" marker-end="url(#a5golpe-arrow)"/>
+  <line x1="110" y1="97" x2="330" y2="95" stroke="#888" stroke-width="1.5" marker-end="url(#a5golpe-arrow)"/>
+  <line x1="110" y1="135" x2="330" y2="150" stroke="#888" stroke-width="1.5" marker-end="url(#a5golpe-arrow)"/>
+  <line x1="110" y1="173" x2="330" y2="160" stroke="#888" stroke-width="1.5" marker-end="url(#a5golpe-arrow)"/>
+  <text x="220" y="78" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b45309">R$ 49,90 ×N</text>
+  <!-- laranjas -->
+  <circle cx="380" cy="90" r="38" fill="#fff7ed" stroke="#c2410c" stroke-width="2.5"/>
+  <text x="380" y="86" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7c2d12">laranja A</text>
+  <text x="380" y="101" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#7c2d12">conta nova, KYC ok</text>
+  <circle cx="380" cy="175" r="38" fill="#fff7ed" stroke="#c2410c" stroke-width="2.5"/>
+  <text x="380" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7c2d12">laranja B</text>
+  <text x="380" y="186" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#7c2d12">conta nova, KYC ok</text>
+  <!-- saque -->
+  <line x1="418" y1="90" x2="530" y2="120" stroke="#b91c1c" stroke-width="2" marker-end="url(#a5golpe-red)"/>
+  <line x1="418" y1="175" x2="530" y2="145" stroke="#b91c1c" stroke-width="2" marker-end="url(#a5golpe-red)"/>
+  <rect x="535" y="112" width="110" height="40" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="590" y="137" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">saque em sequência</text>
+  <!-- duas lentes -->
+  <rect x="20" y="235" width="400" height="80" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="220" y="258" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">A lente da regra: 1 transação por vez</text>
+  <text x="220" y="278" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">R$ 49,90 &lt; limite noturno · KYC válido · sem lista</text>
+  <text x="220" y="298" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">→ "inocente" ✓ (centenas de vezes)</text>
+  <rect x="450" y="235" width="410" height="80" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="655" y="258" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">A lente do padrão: o conjunto</text>
+  <text x="655" y="278" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">contas novas + rajada coordenada + valor idêntico</text>
+  <text x="655" y="298" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">+ madrugada + saque → fraude ⚠</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O golpe dos R$ 49,90: nenhuma transação viola regra alguma — o sinal só existe no conjunto, que nenhuma regra olhava.</p>
+</div>
+
 O prejuízo foi contido: o MED — o trilho de devolução que vocês conhecem desde a Aula 1, com a Recuperação de Valores rastreando o grafo de contas — recuperou boa parte, e o bloqueio cautelar de 72 horas congelou o resto antes do saque completo. Mas o recado ficou na parede da sala do time, escrito pelo Diego, do Antifraude, no dia seguinte: **"regra pega o golpe de ontem; padrão pega o golpe de hoje."**
 
 Essa frase é o tema da aula. Hoje a gente coloca um modelo de machine learning no núcleo do TechPix — dentro do caminho crítico do Pix, dentro daquele orçamento de 100 milissegundos — sem abrir mão de nada do que esse curso construiu até aqui: correção acima de disponibilidade, auditabilidade, falhar fechado. E no fim, eu vou mostrar como a mesma tecnologia entra do outro lado do balcão: não decidindo sobre transações, mas ajudando um humano a decidir melhor.
@@ -59,6 +109,58 @@ Fica a pergunta: então jogamos as regras fora? Não — e essa é a segunda coi
 
 Regra pega o proibido; modelo pega o suspeito; política decide o que fazer com a suspeita. Cada camada faz o que faz melhor, e a auditoria atravessa as três.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a5cam-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a5cam-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <rect x="15" y="95" width="90" height="44" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="60" y="121" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">transação</text>
+  <line x1="105" y1="117" x2="140" y2="117" stroke="#4338ca" stroke-width="2" marker-end="url(#a5cam-arrow)"/>
+  <!-- camada 1 -->
+  <rect x="145" y="85" width="160" height="66" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="225" y="107" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">1 · Regras duras</text>
+  <text x="225" y="124" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">listas, limites regulatórios</text>
+  <text x="225" y="140" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">determinística · ~1 ms</text>
+  <line x1="225" y1="151" x2="225" y2="185" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="225" y="203" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">proibido → barra aqui,</text>
+  <text x="225" y="217" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">nem chega ao modelo</text>
+  <line x1="305" y1="117" x2="340" y2="117" stroke="#4338ca" stroke-width="2" marker-end="url(#a5cam-arrow)"/>
+  <!-- camada 2 -->
+  <rect x="345" y="85" width="170" height="66" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="430" y="107" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">2 · Modelo</text>
+  <text x="430" y="124" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">não-determinístico</text>
+  <text x="430" y="140" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">score 0–1000 · 10–20 ms</text>
+  <line x1="515" y1="117" x2="550" y2="117" stroke="#4338ca" stroke-width="2" marker-end="url(#a5cam-arrow)"/>
+  <text x="532" y="105" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">score</text>
+  <!-- camada 3 -->
+  <rect x="555" y="85" width="180" height="66" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="645" y="107" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">3 · Política de decisão</text>
+  <text x="645" y="124" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">tabela score × valor → ação</text>
+  <text x="645" y="140" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">determinística, versionada (v14)</text>
+  <!-- ações -->
+  <line x1="735" y1="100" x2="775" y2="60" stroke="#166534" stroke-width="2" marker-end="url(#a5cam-g)"/>
+  <rect x="780" y="42" width="105" height="32" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="832" y="62" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">segue ✓</text>
+  <line x1="735" y1="117" x2="775" y2="117" stroke="#d4a017" stroke-width="2" marker-end="url(#a5cam-arrow)"/>
+  <rect x="780" y="101" width="105" height="32" rx="6" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="832" y="121" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">desafio no app</text>
+  <line x1="735" y1="135" x2="775" y2="175" stroke="#b91c1c" stroke-width="2" marker-end="url(#a5cam-g)"/>
+  <rect x="780" y="160" width="105" height="32" rx="6" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="832" y="180" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">bloqueia + caso</text>
+  <!-- trilha de auditoria -->
+  <rect x="145" y="240" width="590" height="40" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="440" y="258" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">Trilha de auditoria atravessa as três camadas: versão do modelo + versão da política + score + ação + EndToEndId</text>
+  <text x="440" y="274" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">"Por que bloqueou?" → "score 912, política v14, linha 4" — nunca "o modelo achou"</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O modelo sugere, a regra decide: o componente não-determinístico fica cercado por camadas determinísticas dos dois lados.</p>
+</div>
+
 ---
 
 ## 2. A arquitetura da inferência em tempo real
@@ -94,6 +196,82 @@ E quem alimenta as duas? Reparem: **os mesmos eventos do Outbox da Aula 2.** `Pi
 
 Isso traz junto uma consequência honesta que eu não vou esconder: a loja online tem **atraso eventual**, como todo read model — os mesmos 100 a 300 ms de sempre, às vezes mais se o consumer lag crescer (e vocês lembram da aula passada: consumer lag é métrica de primeira classe). O modelo pode decidir sobre uma foto das features com algumas centenas de milissegundos de idade. Para contagem de "última hora", irrelevante. Mas guardem a implicação: **quem ataca em rajada de segundos explora exatamente essa janela** — e é por isso que as regras duras da camada 1, que consultam contadores transacionais simples, continuam existindo na frente do modelo. Camada rápida e burra na frente; camada lenta e esperta atrás. Defesa em profundidade não é só para segurança de rede.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 430" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a5inf-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a5inf-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+  </defs>
+  <!-- caminho crítico -->
+  <text x="20" y="24" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Caminho crítico (síncrono) — orçamento da aresta: 100 ms p99</text>
+  <rect x="20" y="40" width="130" height="50" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="85" y="70" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Pagamentos</text>
+  <line x1="150" y1="65" x2="205" y2="65" stroke="#4338ca" stroke-width="2" marker-end="url(#a5inf-arrow)"/>
+  <text x="177" y="55" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">gRPC ~5ms</text>
+  <!-- antifraude -->
+  <rect x="210" y="35" width="560" height="115" rx="10" fill="#fff" stroke="#4338ca" stroke-width="2"/>
+  <text x="490" y="55" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Antifraude e Limites</text>
+  <rect x="225" y="70" width="110" height="60" rx="6" fill="#f3f4f6" stroke="#999"/>
+  <text x="280" y="96" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">regras duras</text>
+  <text x="280" y="112" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">~1 ms</text>
+  <line x1="335" y1="100" x2="360" y2="100" stroke="#4338ca" stroke-width="1.5" marker-end="url(#a5inf-arrow)"/>
+  <rect x="365" y="70" width="130" height="60" rx="6" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="430" y="90" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">busca de features</text>
+  <text x="430" y="106" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">loja online · 10–15 ms</text>
+  <text x="430" y="122" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#b45309">← o vilão silencioso</text>
+  <line x1="495" y1="100" x2="520" y2="100" stroke="#4338ca" stroke-width="1.5" marker-end="url(#a5inf-arrow)"/>
+  <rect x="525" y="70" width="120" height="60" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="585" y="90" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">inferência (GPU)</text>
+  <text x="585" y="106" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">modelo v3 · 10–20 ms</text>
+  <line x1="645" y1="100" x2="670" y2="100" stroke="#4338ca" stroke-width="1.5" marker-end="url(#a5inf-arrow)"/>
+  <rect x="675" y="70" width="80" height="60" rx="6" fill="#f3f4f6" stroke="#999"/>
+  <text x="715" y="96" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">política</text>
+  <text x="715" y="112" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">~1 ms</text>
+  <text x="815" y="100" font-family="sans-serif" font-size="11" fill="#666">+ ~60 ms de</text>
+  <text x="815" y="115" font-family="sans-serif" font-size="11" fill="#666">folga p/ p99</text>
+  <!-- rio de eventos -->
+  <text x="20" y="195" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Quem alimenta as features: o rio de eventos (assíncrono)</text>
+  <rect x="20" y="210" width="150" height="54" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="95" y="232" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Ledger + Outbox</text>
+  <text x="95" y="250" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">PixLiquidado (Aula 2)</text>
+  <line x1="170" y1="237" x2="230" y2="237" stroke="#888" stroke-width="2" marker-end="url(#a5inf-gray)"/>
+  <rect x="235" y="210" width="170" height="54" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="320" y="232" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">consumidor idempotente</text>
+  <text x="320" y="250" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">dedup por E2E ID (Aula 4)</text>
+  <line x1="405" y1="225" x2="465" y2="225" stroke="#888" stroke-width="2" marker-end="url(#a5inf-gray)"/>
+  <line x1="405" y1="252" x2="465" y2="290" stroke="#888" stroke-width="2" marker-end="url(#a5inf-gray)"/>
+  <!-- loja online -->
+  <rect x="470" y="200" width="180" height="54" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="560" y="222" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a5c00">loja ONLINE (chave-valor)</text>
+  <text x="560" y="240" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">valor atual · leitura em ms</text>
+  <line x1="560" y1="200" x2="450" y2="135" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a5inf-gray)"/>
+  <text x="530" y="168" font-family="sans-serif" font-size="10" fill="#b45309">serve a inferência</text>
+  <!-- loja offline -->
+  <rect x="470" y="272" width="180" height="54" rx="8" fill="#f3f4f6" stroke="#999" stroke-width="2"/>
+  <text x="560" y="294" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">loja OFFLINE (histórico)</text>
+  <text x="560" y="312" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">meses de features · serve o treino</text>
+  <line x1="650" y1="299" x2="700" y2="299" stroke="#888" stroke-width="2" marker-end="url(#a5inf-gray)"/>
+  <rect x="705" y="272" width="175" height="54" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="792" y="294" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">treino (GPU elástica)</text>
+  <text x="792" y="312" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">semanal/mensal · horas</text>
+  <line x1="792" y1="272" x2="792" y2="245" stroke="#888" stroke-width="1.5" marker-end="url(#a5inf-gray)"/>
+  <rect x="705" y="200" width="175" height="44" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="792" y="218" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">registro de modelos</text>
+  <text x="792" y="234" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">pesos congelados, versionados</text>
+  <line x1="705" y1="215" x2="620" y2="140" stroke="#4338ca" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a5inf-arrow)"/>
+  <text x="690" y="170" font-family="sans-serif" font-size="10" fill="#4338ca">promove v3 →</text>
+  <!-- nota -->
+  <rect x="20" y="370" width="860" height="40" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="450" y="388" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">CQRS de novo: a loja online é mais um read model (atraso eventual de 100–300 ms) — quem lê não é o extrato da Ana, é o modelo do Diego.</text>
+  <text x="450" y="404" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">Treino e inferência: mundos separados, ligados por um artefato versionado.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Inferência em tempo real: o caminho crítico de 100 ms em cima, alimentado pelo rio de eventos assíncrono embaixo.</p>
+</div>
+
 ### 2.3 Treino e inferência: dois mundos, um artefato
 
 Uma confusão que eu quero desfazer agora, porque ela custa caro em reunião de planejamento: **treinar** um modelo e **servir** um modelo são workloads tão diferentes quanto relatório mensal e caminho crítico do Pix.
@@ -128,6 +306,56 @@ Até aqui, o modelo de score é pequeno, especializado, treinado em casa — ess
 
 A política do TechPix, que eu recomendo como padrão de mercado para fintech: **núcleo com dado sensível → modelo aberto, dentro de casa; borda sem dado sensível → API pode.** O copiloto que resume casos de fraude lê CPF, chave, extrato — roda dentro. Um assistente que reescreve texto de notificação genérica — pode ser API. É a mesma lógica de "forte no núcleo, eventual na borda" da Aula 1, transplantada: a fronteira não é técnica, é de *sensibilidade do dado e criticidade da decisão*.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a5peso-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+    <marker id="a5peso-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <!-- dentro de casa -->
+  <rect x="20" y="30" width="400" height="230" rx="12" fill="#f0fdf4" stroke="#166534" stroke-width="2.5"/>
+  <text x="220" y="55" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">Modelo aberto — dentro do perímetro</text>
+  <rect x="45" y="75" width="160" height="70" rx="8" fill="#fff" stroke="#166534" stroke-width="1.5"/>
+  <text x="125" y="97" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">dado sensível</text>
+  <text x="125" y="113" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">CPF · chave Pix · grafo</text>
+  <text x="125" y="129" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">não sai de casa ✓ (LGPD)</text>
+  <line x1="205" y1="110" x2="245" y2="110" stroke="#166534" stroke-width="2" marker-end="url(#a5peso-g)"/>
+  <rect x="250" y="75" width="145" height="70" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="322" y="100" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">pesos abertos</text>
+  <text x="322" y="116" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">(Llama e afins) na sua GPU</text>
+  <text x="322" y="132" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">quantizado/destilado</text>
+  <g font-family="sans-serif" font-size="11" fill="#166534">
+    <text x="45" y="180">✓ latência previsível (a fila é sua)</text>
+    <text x="45" y="202">✓ custo fixo alto, marginal baixo — a 900 TPS, escala a favor</text>
+    <text x="45" y="224">− capacidade menor que a fronteira · operação é sua</text>
+  </g>
+  <!-- fora -->
+  <rect x="460" y="30" width="400" height="230" rx="12" fill="#fff" stroke="#999" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="660" y="55" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333">API de terceiro — fora do perímetro</text>
+  <rect x="485" y="75" width="150" height="70" rx="8" fill="#fff" stroke="#999" stroke-width="1.5"/>
+  <text x="560" y="102" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">dado da requisição</text>
+  <text x="560" y="120" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">trafega para fora</text>
+  <line x1="635" y1="110" x2="690" y2="110" stroke="#b91c1c" stroke-width="2" marker-end="url(#a5peso-red)"/>
+  <text x="662" y="98" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">⚠</text>
+  <rect x="695" y="75" width="140" height="70" rx="8" fill="#f3f4f6" stroke="#999" stroke-width="1.5"/>
+  <text x="765" y="102" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">nuvem do fornecedor</text>
+  <text x="765" y="120" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">estado da arte</text>
+  <g font-family="sans-serif" font-size="11" fill="#555">
+    <text x="485" y="180">− p99 depende da rede e da fila dos outros</text>
+    <text x="485" y="202">− custo por chamada: em volume de núcleo, a conta explode</text>
+    <text x="485" y="224">− contrato, anonimização, base legal — superfície de risco</text>
+  </g>
+  <!-- regra -->
+  <rect x="20" y="280" width="840" height="34" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="440" y="302" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#3730a3">A política do TechPix: núcleo com dado sensível → modelo aberto, dentro de casa · borda sem dado sensível → API pode. "Forte no núcleo, eventual na borda", transplantado.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Onde o peso mora importa: a fronteira se decide pela sensibilidade do dado e pela criticidade da decisão, não pela moda.</p>
+</div>
+
 Dois termos de engenharia para o glossário, porque vocês vão esbarrar neles na primeira conversa de infra: **quantização** — representar os pesos do modelo com menos bits, trocando um pouco de qualidade por muito menos memória e mais velocidade — e **destilação** — treinar um modelo pequeno para imitar um grande, ficando com um especialista barato no lugar de um generalista caro. São os dois botões que fazem um modelo aberto caber no seu orçamento de latência e de GPU. O detalhe de como treinar não é assunto deste curso; *saber que esses botões existem* é, porque eles mudam a conta de capacidade.
 
 ---
@@ -145,6 +373,57 @@ Não. E a resposta tem método, não é só medo. O modelo entra em **shadow mod
 - Onde a regra bloquearia e o modelo deixaria passar: o modelo está cego para algo que a regra enxerga? Ou a regra está ultrapassada?
 
 E aqui a história fecha o círculo com uma ironia que eu fiz questão de trazer: quando o time rodou o modelo em sombra sobre o histórico de setembro, **o golpe dos R$ 49,90 acendeu vermelho retroativamente**. As contas laranja daquela madrugada apareceram com scores altíssimos — a combinação conta-nova + rajada + valor-repetido + madrugada estava exatamente na região do espaço que o modelo aprendeu a temer. O golpe que atravessou todas as regras não teria atravessado o modelo. Isso não prova que o modelo pega o *próximo* golpe — guardem essa honestidade — mas prova que ele enxerga uma classe de padrão que regra nenhuma cobria.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 320" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a5sh-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a5sh-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+  </defs>
+  <rect x="20" y="105" width="130" height="50" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="85" y="135" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">tráfego real</text>
+  <!-- split -->
+  <line x1="150" y1="120" x2="230" y2="70" stroke="#4338ca" stroke-width="2" marker-end="url(#a5sh-arrow)"/>
+  <line x1="150" y1="140" x2="230" y2="205" stroke="#888" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a5sh-gray)"/>
+  <text x="185" y="180" font-family="sans-serif" font-size="10" fill="#888">cópia</text>
+  <!-- caminho real -->
+  <rect x="235" y="40" width="170" height="60" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="320" y="63" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Regras (ativo)</text>
+  <text x="320" y="82" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">decide DE VERDADE</text>
+  <line x1="405" y1="70" x2="480" y2="70" stroke="#166534" stroke-width="2" marker-end="url(#a5sh-arrow)"/>
+  <rect x="485" y="45" width="120" height="50" rx="8" fill="#fff" stroke="#166534" stroke-width="1.5"/>
+  <text x="545" y="75" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">ação executada</text>
+  <!-- caminho sombra -->
+  <rect x="235" y="175" width="170" height="60" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="320" y="198" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Modelo (sombra)</text>
+  <text x="320" y="217" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">decide "de mentira"</text>
+  <line x1="405" y1="205" x2="480" y2="205" stroke="#888" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a5sh-gray)"/>
+  <rect x="485" y="180" width="120" height="50" rx="8" fill="#fff" stroke="#999" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="545" y="200" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">score logado,</text>
+  <text x="545" y="217" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">decisão IGNORADA</text>
+  <!-- comparação -->
+  <line x1="605" y1="70" x2="660" y2="130" stroke="#166534" stroke-width="1.5" marker-end="url(#a5sh-arrow)"/>
+  <line x1="605" y1="205" x2="660" y2="150" stroke="#888" stroke-width="1.5" marker-end="url(#a5sh-gray)"/>
+  <rect x="655" y="105" width="205" height="120" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="757" y="128" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Comparação (semanas)</text>
+  <g font-family="sans-serif" font-size="10" fill="#7a5c00">
+    <text x="668" y="150">concordam → confiança ✓</text>
+    <text x="668" y="170">só o modelo bloquearia →</text>
+    <text x="678" y="185">fraude nova ou falso positivo?</text>
+    <text x="668" y="205">só a regra bloquearia →</text>
+    <text x="678" y="220">modelo cego ou regra velha?</text>
+  </g>
+  <line x1="757" y1="225" x2="757" y2="255" stroke="#d4a017" stroke-width="1.5" marker-end="url(#a5sh-gray)"/>
+  <rect x="672" y="258" width="170" height="34" rx="8" fill="#fff" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="757" y="280" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">análise humana caso a caso</text>
+  <text x="230" y="290" font-family="sans-serif" font-size="11" fill="#666">Promoção gradual: primeiro só valores baixos, depois subindo — regras duras sempre na frente, política sempre no comando.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Shadow mode: o modelo paga o aluguel da confiança — tráfego real, decisão registrada e ignorada, comparação antes da promoção.</p>
+</div>
 
 ### 4.2 Sombra é o ensaio geral da entrega progressiva
 
@@ -171,6 +450,67 @@ O TechPix montou para a Carla um **copiloto**: um assistente baseado num modelo 
 Como o copiloto se conecta aos sistemas? Aqui volta uma sigla que o professor da Aula 1 plantou: **MCP, o Model Context Protocol** — o protocolo aberto, criado pela Anthropic, que padroniza como um modelo acessa ferramentas e dados. Em vez de N integrações artesanais entre o copiloto e cada sistema interno, cada contexto expõe um servidor MCP com ferramentas nomeadas: o Contas e Ledger expõe `consultar_historico`, o Antifraude expõe `casos_similares` e `grafo_de_contas`, o Devoluções e Disputas expõe `status_med`. O copiloto enxerga um cardápio de ferramentas tipadas — e o cardápio é a fronteira.
 
 E agora a frase mais importante desta seção, que é a aplicação direta da regra de ouro da Aula 1 — "o agente lê, propõe, mas nunca move dinheiro": **no cardápio do copiloto da Carla, não existe ferramenta de escrita.** Não existe `bloquear_conta`. Não existe `devolver_pix`. Não é que o copiloto foi *instruído* a não bloquear — é que a ferramenta **não existe** no conjunto que os servidores MCP expõem a ele. A fronteira de permissão não é um pedido educado no prompt; é **ausência estrutural de capacidade**. Eu chamo isso de fronteira de permissão por ausência, e quero que vocês levem como princípio de projeto: a maneira mais confiável de garantir que um sistema não-determinístico não faça X é não dar a ele o instrumento de fazer X. Quem clica em "bloquear" é a Carla — no sistema dela, autenticada como ela, auditada como ela.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 360" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a5mcp-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a5mcp-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <text x="20" y="24" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Servidores MCP — só ferramentas de LEITURA</text>
+  <g font-family="sans-serif">
+    <rect x="20" y="40" width="200" height="52" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="120" y="61" text-anchor="middle" font-size="11" fill="#333">Contas e Ledger</text>
+    <text x="120" y="79" text-anchor="middle" font-size="10" fill="#4338ca">consultar_historico()</text>
+    <rect x="20" y="104" width="200" height="66" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="120" y="125" text-anchor="middle" font-size="11" fill="#333">Antifraude</text>
+    <text x="120" y="143" text-anchor="middle" font-size="10" fill="#4338ca">casos_similares()</text>
+    <text x="120" y="159" text-anchor="middle" font-size="10" fill="#4338ca">grafo_de_contas()</text>
+    <rect x="20" y="182" width="200" height="52" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="120" y="203" text-anchor="middle" font-size="11" fill="#333">Devoluções e Disputas</text>
+    <text x="120" y="221" text-anchor="middle" font-size="10" fill="#4338ca">status_med()</text>
+  </g>
+  <line x1="220" y1="66" x2="330" y2="120" stroke="#4338ca" stroke-width="2" marker-end="url(#a5mcp-arrow)"/>
+  <line x1="220" y1="137" x2="330" y2="137" stroke="#4338ca" stroke-width="2" marker-end="url(#a5mcp-arrow)"/>
+  <line x1="220" y1="208" x2="330" y2="155" stroke="#4338ca" stroke-width="2" marker-end="url(#a5mcp-arrow)"/>
+  <text x="275" y="115" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">leitura</text>
+  <!-- copiloto -->
+  <rect x="335" y="95" width="200" height="90" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="435" y="120" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Copiloto</text>
+  <text x="435" y="139" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">modelo aberto, roda dentro</text>
+  <text x="435" y="155" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">monta o dossiê do caso</text>
+  <text x="435" y="171" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">com evidências linkadas</text>
+  <!-- ferramenta inexistente -->
+  <rect x="345" y="215" width="180" height="44" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="435" y="234" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">bloquear_conta()</text>
+  <text x="435" y="250" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">NÃO EXISTE no cardápio</text>
+  <line x1="360" y1="222" x2="510" y2="252" stroke="#b91c1c" stroke-width="2"/>
+  <line x1="360" y1="252" x2="510" y2="222" stroke="#b91c1c" stroke-width="2"/>
+  <!-- sugestão → Carla -->
+  <line x1="535" y1="140" x2="620" y2="140" stroke="#4338ca" stroke-width="2" marker-end="url(#a5mcp-arrow)"/>
+  <text x="577" y="128" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">sugere + evidências</text>
+  <rect x="625" y="100" width="150" height="80" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2.5"/>
+  <text x="700" y="130" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">Carla</text>
+  <text x="700" y="150" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">analista sênior</text>
+  <text x="700" y="166" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">DECIDE</text>
+  <line x1="775" y1="140" x2="835" y2="140" stroke="#166534" stroke-width="2" marker-end="url(#a5mcp-g)"/>
+  <rect x="790" y="180" width="105" height="0" fill="none"/>
+  <rect x="800" y="105" width="0" height="0" fill="none"/>
+  <rect x="838" y="112" width="55" height="56" rx="8" fill="#fff" stroke="#166534" stroke-width="1.5"/>
+  <text x="865" y="135" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">bloqueia</text>
+  <text x="865" y="150" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">no sistema</text>
+  <text x="865" y="162" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">DELA</text>
+  <!-- nota -->
+  <rect x="20" y="290" width="860" height="52" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="450" y="311" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">Fronteira de permissão por ausência: o copiloto não foi "instruído" a não bloquear — a ferramenta de escrita não existe no conjunto exposto a ele.</text>
+  <text x="450" y="330" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">Montagem de contexto: 20 min → 2 min. A decisão continua da Carla — LGPD, regulador e qualidade agradecem. (Agente sobre a arquitetura: Aula 8.)</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O copiloto da Carla via MCP: lê tudo, sugere com evidências, não executa nada — quem clica em "bloquear" é a humana, auditada como ela.</p>
+</div>
 
 O resultado operacional: a montagem de contexto caiu de vinte minutos para dois. A decisão continua custando os mesmos cinco — e continua sendo da Carla, o que importa para o regulador, para a LGPD (revisão humana em decisão que afeta o titular) e, francamente, para a qualidade: a Carla pega alucinação do copiloto do mesmo jeito que revisor pega erro em code review. O copiloto errar uma citação de evidência é um constrangimento; a Carla poder verificar cada citação — porque o dossiê linka as fontes — é o que torna o constrangimento inofensivo.
 

@@ -26,6 +26,61 @@ Deixa eu mostrar como era o TechPix: um único artefato de deploy — um monóli
 
 E por que eu insisto tanto nisso? Porque as fronteiras de um monólito modular bem-feito não são decoração. Elas são, literalmente, um **ensaio** para as fronteiras de serviço que talvez, um dia, vocês precisem extrair. Se o módulo de Cartões nunca vazou uma consulta direta na tabela do Ledger, então no dia que vocês decidirem tirar Cartões do monólito e colocar num serviço separado, a cirurgia é limpa — porque a fronteira já existia, só que dentro do mesmo processo. Se, ao contrário, o módulo de Cartões faz um `JOIN` direto na tabela de lançamentos do Ledger porque "era mais rápido assim", vocês não têm um monólito modular — vocês têm uma bola de lama com um nome bonito.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 860 320" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <!-- Monólito modular -->
+  <text x="255" y="30" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">Monólito modular do TechPix — um único deploy</text>
+  <rect x="20" y="42" width="470" height="215" rx="12" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <g font-family="sans-serif" font-size="12" fill="#333">
+    <rect x="38" y="60" width="138" height="48" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+    <text x="107" y="88" text-anchor="middle">Identidade e KYC</text>
+    <rect x="188" y="60" width="138" height="48" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+    <text x="257" y="88" text-anchor="middle">Contas</text>
+    <rect x="338" y="60" width="138" height="48" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="407" y="82" text-anchor="middle" font-weight="bold" fill="#166534">Ledger</text>
+    <text x="407" y="98" text-anchor="middle" font-size="10" fill="#166534">Σ débitos = Σ créditos</text>
+    <rect x="38" y="126" width="138" height="48" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+    <text x="107" y="154" text-anchor="middle">Pagamentos</text>
+    <rect x="188" y="126" width="138" height="48" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+    <text x="257" y="154" text-anchor="middle">Cartões</text>
+    <rect x="338" y="126" width="138" height="48" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+    <text x="407" y="154" text-anchor="middle">Antifraude</text>
+  </g>
+  <rect x="38" y="192" width="438" height="48" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="257" y="212" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Regra de ouro: nenhum módulo lê a tabela de outro</text>
+  <text x="257" y="229" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">toda comunicação passa por interface explícita</text>
+  <text x="255" y="290" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">✓ fronteiras internas = ensaio para futuros serviços</text>
+
+  <!-- Big Ball of Mud -->
+  <text x="700" y="30" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#b91c1c">Big Ball of Mud</text>
+  <rect x="560" y="42" width="280" height="215" rx="12" fill="#fef2f2" stroke="#b91c1c" stroke-width="2" stroke-dasharray="6 4"/>
+  <g font-family="sans-serif" font-size="11" fill="#7f1d1d">
+    <rect x="580" y="62" width="90" height="36" rx="6" fill="#fff" stroke="#c2410c"/>
+    <text x="625" y="84" text-anchor="middle">Cartões</text>
+    <rect x="722" y="62" width="90" height="36" rx="6" fill="#fff" stroke="#c2410c"/>
+    <text x="767" y="84" text-anchor="middle">Ledger</text>
+    <rect x="580" y="196" width="90" height="36" rx="6" fill="#fff" stroke="#c2410c"/>
+    <text x="625" y="218" text-anchor="middle">Pagamentos</text>
+    <rect x="722" y="196" width="90" height="36" rx="6" fill="#fff" stroke="#c2410c"/>
+    <text x="767" y="218" text-anchor="middle">Antifraude</text>
+    <rect x="652" y="128" width="90" height="36" rx="6" fill="#fff" stroke="#c2410c"/>
+    <text x="697" y="150" text-anchor="middle">Contas</text>
+  </g>
+  <g stroke="#b91c1c" stroke-width="1.5" opacity="0.7">
+    <line x1="625" y1="98" x2="767" y2="196"/>
+    <line x1="767" y1="98" x2="625" y2="196"/>
+    <line x1="625" y1="98" x2="697" y2="128"/>
+    <line x1="767" y1="98" x2="697" y2="128"/>
+    <line x1="625" y1="196" x2="697" y2="164"/>
+    <line x1="767" y1="196" x2="697" y2="164"/>
+    <line x1="625" y1="98" x2="625" y2="196"/>
+    <line x1="767" y1="98" x2="767" y2="196"/>
+  </g>
+  <text x="700" y="290" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">✗ JOIN direto na tabela alheia — extração impossível</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Monólito não é o vilão: com fronteiras internas reais, ele é o ensaio das fronteiras de serviço. O vilão é a bola de lama.</p>
+</div>
+
 Minha recomendação, e isso vem de gente que já bateu a cabeça nisso — Martin Fowler chama essa estratégia de "monolith first" —: comecem com o monólito modular. Não é fase intermediária vergonhosa; é a decisão mais defensável no dia 1, porque vocês ainda não sabem exatamente onde as fronteiras de verdade do domínio de vocês vão cair. Extrair serviço cedo demais, antes de entender o domínio, é pagar o preço de operar sistemas distribuídos sem ter comprado ainda o benefício de escalar de forma independente. E tem uma regra prática que eu gosto de usar: só extraiam um módulo para um serviço separado depois que a fronteira dele ficar **estável por meses** — depois que vocês tiverem certeza de que aquela linha não vai se mover. Extrair cedo demais é caro; extrair tarde demais só custa um refactor. A assimetria favorece esperar.
 
 ---
@@ -73,6 +128,48 @@ Reparem no que acontece entre 80% e 95%: a utilização subiu 15 pontos, e a esp
 
 E aqui está o conselho operacional que cai direto dessa tabela, e que eu quero que vocês levem para a vida: **nunca dimensionem um sistema financeiro para operar acima de 70% de utilização no pico.** Aquela folga que parece desperdício de dinheiro é literalmente o que separa "lento" de "fora do ar". Quando alguém na sua empresa disser "esses servidores estão a 40%, dá para cortar metade", vocês agora têm a tabela para responder.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 860 340" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <!-- zonas -->
+  <rect x="70" y="30" width="511" height="250" fill="#f0fdf4"/>
+  <rect x="581" y="30" width="73" height="250" fill="#fef9e7"/>
+  <rect x="654" y="30" width="146" height="250" fill="#fef2f2"/>
+  <!-- eixos -->
+  <line x1="70" y1="280" x2="800" y2="280" stroke="#666" stroke-width="1.5"/>
+  <line x1="70" y1="280" x2="70" y2="30" stroke="#666" stroke-width="1.5"/>
+  <text x="435" y="315" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#333">utilização ρ</text>
+  <text x="30" y="150" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#333" transform="rotate(-90 30 150)">fator de espera ρ/(1−ρ)</text>
+  <!-- marcas do eixo x -->
+  <g font-family="sans-serif" font-size="11" fill="#666" text-anchor="middle">
+    <text x="70" y="296">0%</text>
+    <text x="435" y="296">50%</text>
+    <text x="581" y="296">70%</text>
+    <text x="654" y="296">80%</text>
+    <text x="727" y="296">90%</text>
+    <text x="764" y="296">95%</text>
+  </g>
+  <!-- curva -->
+  <polyline points="70,280 143,278.7 216,277 289,274.9 362,272 435,268 508,262 581,252 617,244 654,232 690,212 712,192 727,172 742,142 756,92 764,52" fill="none" stroke="#4338ca" stroke-width="3" stroke-linecap="round"/>
+  <!-- linha dos 70% -->
+  <line x1="581" y1="280" x2="581" y2="40" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="581" y="52" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#7a5c00">regra dos 70%</text>
+  <!-- pontos -->
+  <g font-family="sans-serif" font-size="11" fill="#333">
+    <circle cx="435" cy="268" r="4" fill="#4338ca"/><text x="435" y="256">1,0</text>
+    <circle cx="581" cy="252" r="4" fill="#4338ca"/><text x="565" y="240">2,3</text>
+    <circle cx="654" cy="232" r="4" fill="#4338ca"/><text x="640" y="222">4,0</text>
+    <circle cx="727" cy="172" r="4" fill="#4338ca"/><text x="710" y="166">9,0</text>
+    <circle cx="764" cy="52" r="4" fill="#b91c1c"/><text x="745" y="48" fill="#b91c1c" font-weight="bold">19,0</text>
+  </g>
+  <text x="700" y="130" font-family="sans-serif" font-size="12" font-style="italic" fill="#b91c1c">o cotovelo</text>
+  <!-- anotação do dia 5 -->
+  <rect x="90" y="45" width="330" height="44" rx="8" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="255" y="63" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">Dia 5: tráfego 3× → ρ de 30% para 90%</text>
+  <text x="255" y="80" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">a espera piora 9×, não 3×</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A curva de filas M/M/1: quase plana até 70%, vertical depois de 80%. A intuição linear falha exatamente onde dói.</p>
+</div>
+
 ### 3.2 O efeito composto com a Lei de Little
 
 Agora juntem isso com a Lei de Little da Aula 1, porque o combo é o que explica o colapso completo. Lembram: `L = λ × W`. A concorrência necessária é a taxa de chegada vezes o tempo no sistema.
@@ -86,6 +183,50 @@ Sigam o encadeamento comigo, porque ele é vicioso:
 5. E agora vem a parte que fecha o círculo perverso: **quando o pool esgota, as requisições começam a dar timeout. Timeout faz o cliente tentar de novo. Retry aumenta o λ.** Volta para o passo 1, pior.
 
 Esse último passo tem nome — **retry storm**, ou tempestade de retentativas — e é o mecanismo pelo qual um sistema que estava só lento vira um sistema completamente fora do ar. O tráfego que ele está recebendo agora não é mais a demanda real dos usuários; é a demanda real **mais** todas as retentativas que ele próprio causou. O sistema está se atacando.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 860 360" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2r-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <!-- ciclo em losango -->
+  <rect x="310" y="20" width="240" height="52" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="430" y="42" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">1. λ sobe: demanda real</text>
+  <text x="430" y="60" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">(+ retries, nas voltas seguintes)</text>
+
+  <rect x="600" y="120" width="240" height="52" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="720" y="142" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a5c00">2. ρ passa do cotovelo (~90%)</text>
+  <text x="720" y="160" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a5c00">W explode: fator 0,4 → 9</text>
+
+  <rect x="310" y="230" width="240" height="52" rx="10" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="430" y="252" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7f1d1d">3. L = λ×W: 45 → 450 conexões</text>
+  <text x="430" y="270" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7f1d1d">pool de 100 esgota</text>
+
+  <rect x="20" y="120" width="240" height="52" rx="10" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="140" y="142" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7f1d1d">4. timeout → cliente tenta</text>
+  <text x="140" y="160" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7f1d1d">de novo (retry) → λ sobe</text>
+
+  <!-- setas do ciclo (horário) -->
+  <path d="M 552 62 Q 690 75 718 118" fill="none" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#a2r-arrow)"/>
+  <path d="M 715 174 Q 660 245 553 256" fill="none" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#a2r-arrow)"/>
+  <path d="M 308 256 Q 175 245 142 174" fill="none" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#a2r-arrow)"/>
+  <path d="M 145 118 Q 190 70 308 48" fill="none" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#a2r-arrow)"/>
+
+  <text x="430" y="150" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#b91c1c">RETRY STORM</text>
+  <text x="430" y="170" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">o sistema se ataca</text>
+
+  <!-- defesas -->
+  <rect x="60" y="310" width="220" height="34" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="170" y="332" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">backoff exponencial + jitter</text>
+  <rect x="320" y="310" width="220" height="34" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="430" y="332" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">retry budget (~10% do tráfego)</text>
+  <rect x="580" y="310" width="220" height="34" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="690" y="332" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">load shedding (recusar p/ proteger)</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O círculo vicioso do retry storm — e as três defesas que quebram o ciclo (Seção 3.3).</p>
+</div>
 
 E reparem na ironia cruel, porque ela é uma ótima pergunta para a turma: **a idempotência que a gente construiu na Aula 1 protegeu a correção — o cliente não foi cobrado três vezes — mas ela não protegeu a disponibilidade.** As três tentativas do cliente produziram um débito só, corretamente. Mas as três tentativas **consumiram recurso três vezes**. Idempotência resolve duplicação de efeito; ela não resolve amplificação de carga. São dois problemas diferentes, e o segundo precisa de defesa própria.
 
@@ -123,6 +264,86 @@ A defesa clássica contra esse tipo de fratura tem nome, e vem da literatura de 
 
 Reparem que essas três táticas — bulkhead, circuit breaker, timeout calibrado — não mudam a decisão de que o DICT é uma consulta síncrona necessária. Elas mudam como o sistema se **comporta** quando essa dependência atrasa, para que o atraso fique contido, em vez de se espalhar.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 360" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2f-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+    <marker id="a2f-arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+  </defs>
+  <!-- Fratura 1: ponto quente -->
+  <text x="215" y="26" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">Fratura 1 — ponto quente do ledger</text>
+  <g font-family="sans-serif" font-size="11" fill="#333">
+    <text x="45" y="66">Pix 1</text>
+    <text x="45" y="96">Pix 2</text>
+    <text x="45" y="126">Pix 3</text>
+    <text x="45" y="156">Pix 4</text>
+  </g>
+  <line x1="75" y1="62" x2="180" y2="100" stroke="#b91c1c" stroke-width="2" marker-end="url(#a2f-arrow)"/>
+  <line x1="75" y1="92" x2="180" y2="106" stroke="#b91c1c" stroke-width="2" marker-end="url(#a2f-arrow)"/>
+  <line x1="75" y1="122" x2="180" y2="112" stroke="#b91c1c" stroke-width="2" marker-end="url(#a2f-arrow)"/>
+  <line x1="75" y1="152" x2="180" y2="118" stroke="#b91c1c" stroke-width="2" marker-end="url(#a2f-arrow)"/>
+  <!-- fila -->
+  <g fill="#d4a017">
+    <circle cx="200" cy="108" r="5"/>
+    <circle cx="216" cy="108" r="5"/>
+    <circle cx="232" cy="108" r="5"/>
+  </g>
+  <text x="216" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">fila do lock</text>
+  <rect x="250" y="82" width="160" height="52" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2.5"/>
+  <text x="330" y="104" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">pix_a_liquidar</text>
+  <text x="330" y="122" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">lock único — uma por vez</text>
+  <rect x="250" y="160" width="160" height="40" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="330" y="178" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">outras contas</text>
+  <text x="330" y="192" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">tranquilas, sem fila</text>
+  <text x="215" y="235" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">a decisão (forte) está certa;</text>
+  <text x="215" y="250" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">a implementação concentrou contenção</text>
+
+  <!-- divisor -->
+  <line x1="445" y1="20" x2="445" y2="340" stroke="#ddd" stroke-width="1.5"/>
+
+  <!-- Fratura 2: DICT síncrono -->
+  <text x="665" y="26" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">Fratura 2 — DICT síncrono esgota o pool</text>
+  <rect x="480" y="45" width="230" height="110" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="595" y="64" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">pool de threads (100)</text>
+  <g>
+    <rect x="495" y="75" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+    <rect x="530" y="75" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+    <rect x="565" y="75" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+    <rect x="600" y="75" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+    <rect x="635" y="75" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+    <rect x="670" y="75" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+    <rect x="495" y="100" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+    <rect x="530" y="100" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+    <rect x="565" y="100" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+    <rect x="600" y="100" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+    <rect x="635" y="100" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+    <rect x="670" y="100" width="30" height="20" rx="3" fill="#fecaca" stroke="#b91c1c"/>
+  </g>
+  <text x="595" y="140" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">todas presas esperando o DICT</text>
+  <rect x="740" y="70" width="120" height="60" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="800" y="96" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">DICT</text>
+  <text x="800" y="114" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">externo · lento hoje</text>
+  <line x1="710" y1="100" x2="738" y2="100" stroke="#888" stroke-width="2" marker-end="url(#a2f-arrow2)"/>
+  <rect x="480" y="175" width="230" height="40" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="595" y="192" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">consulta de saldo, extrato, tudo:</text>
+  <text x="595" y="207" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">bloqueado sem ter culpa (falha em cascata)</text>
+  <!-- defesas -->
+  <rect x="480" y="235" width="118" height="32" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="539" y="255" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">bulkhead</text>
+  <rect x="608" y="235" width="130" height="32" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="673" y="255" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">circuit breaker</text>
+  <rect x="748" y="235" width="112" height="32" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="804" y="255" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">timeout ~1s</text>
+  <text x="665" y="295" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">pools isolados por dependência; falhar rápido;</text>
+  <text x="665" y="310" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">não esperar 10s por quem responde em 1s</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Os dois pontos de fratura do dia 5 — contenção interna no ledger e dependência externa sequestrando o pool.</p>
+</div>
+
 ---
 
 ## 5. Desacoplamento incremental: cortando sem parar de operar
@@ -134,6 +355,44 @@ Agora que a gente sabe onde dói, vamos falar de como tratar — sem, no process
 A primeira estratégia tem um nome bonito e uma imagem melhor ainda: **Strangler Fig**, a figueira estranguladora — uma planta que cresce em volta de uma árvore hospedeira, aos poucos, até que a árvore original desaparece e só resta a nova estrutura. Martin Fowler emprestou essa imagem para descrever como migrar um sistema sem um corte único e arriscado: vocês colocam uma fachada, um roteador, na frente do monólito, e começam a desviar uma fatia do tráfego — digamos, uma rota específica, ou um conjunto específico de clientes — para uma nova implementação, enquanto o resto continua batendo no monólito antigo. Aos poucos, mais tráfego migra, até que o monólito, naquele pedaço específico, para de receber chamada nenhuma — e pode ser desligado sem drama.
 
 No TechPix, a estratégia seria: colocar uma fachada na frente do módulo de Pagamentos, e migrar gradualmente a lógica de resolução de chave — que hoje mora dentro do monólito e sofre com o esgotamento de pool que eu descrevi — para um componente isolado, com seu próprio pool de conexões, suas próprias réplicas, dedicado só a essa responsabilidade. Se esse componente ficar sobrecarregado, ele fica sobrecarregado sozinho — não arrasta o resto do sistema junto.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 860 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2s-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a2s-arrow-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+    <marker id="a2s-arrow-c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#999"/>
+    </marker>
+  </defs>
+  <rect x="30" y="100" width="130" height="50" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="95" y="130" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#333">Clientes</text>
+  <line x1="160" y1="125" x2="280" y2="125" stroke="#4338ca" stroke-width="2.5" marker-end="url(#a2s-arrow)"/>
+  <text x="220" y="113" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">100%</text>
+  <rect x="282" y="95" width="170" height="60" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+  <text x="367" y="120" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">Fachada / roteador</text>
+  <text x="367" y="140" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">decide rota por chamada</text>
+  <!-- rota antiga -->
+  <line x1="452" y1="110" x2="590" y2="60" stroke="#999" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#a2s-arrow-c)"/>
+  <text x="520" y="70" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#999">80% → 50% → 0%</text>
+  <rect x="592" y="30" width="240" height="60" rx="10" fill="#f5f5f4" stroke="#999" stroke-width="2"/>
+  <text x="712" y="55" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">Monólito — resolução de chave</text>
+  <text x="712" y="74" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#999">(rota antiga, morrendo aos poucos)</text>
+  <!-- rota nova -->
+  <line x1="452" y1="140" x2="590" y2="195" stroke="#166534" stroke-width="3" marker-end="url(#a2s-arrow-g)"/>
+  <text x="516" y="185" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">20% → 50% → 100%</text>
+  <rect x="592" y="170" width="240" height="70" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2.5"/>
+  <text x="712" y="192" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Componente novo</text>
+  <text x="712" y="210" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">resolução de chave isolada</text>
+  <text x="712" y="227" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">pool próprio · réplicas próprias</text>
+  <text x="430" y="278" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">no fim, a rota antiga não recebe chamada nenhuma — e é desligada sem drama</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Strangler Fig: a fachada desvia o tráfego aos poucos, até a árvore original desaparecer.</p>
+</div>
 
 ### 5.2 Branch by Abstraction
 
@@ -150,6 +409,54 @@ E aqui eu quero que vocês enxerguem uma coisa linda: a tabela de outbox é, est
 ### 5.4 CQRS, agora de verdade
 
 Isso fecha o círculo que eu abri na Aula 1, quando falei que write model e read model são coisas diferentes. Agora, com o Outbox publicando eventos de forma confiável, dá para materializar isso de verdade: o **caminho de escrita** continua sendo o ledger, forte, síncrono, protegido pelo ADR-001. O **caminho de leitura** — extrato, saldo exibido, feed — passa a ser alimentado, de forma assíncrona, pelos eventos que saem do Outbox, numa base de dados otimizada só para consulta, que pode escalar de forma completamente independente da escrita. Essa separação, que vocês já intuíam desde a Aula 1, agora tem um mecanismo concreto de sustentação: o Outbox é a ponte confiável entre os dois mundos.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2o-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a2o-arrow-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <text x="70" y="120" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">escrita</text>
+  <text x="70" y="136" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">do Pix</text>
+  <line x1="105" y1="128" x2="160" y2="128" stroke="#4338ca" stroke-width="2.5" marker-end="url(#a2o-arrow)"/>
+  <!-- transação ACID -->
+  <rect x="165" y="40" width="240" height="180" rx="12" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5" stroke-dasharray="8 5"/>
+  <text x="285" y="65" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">MESMA transação ACID</text>
+  <rect x="185" y="80" width="200" height="52" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="285" y="102" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">ledger: lançamentos</text>
+  <text x="285" y="120" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">débito / crédito (Σ = Σ)</text>
+  <rect x="185" y="146" width="200" height="52" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="285" y="168" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">outbox: evento</text>
+  <text x="285" y="186" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">"PixLiquidado" (append-only)</text>
+  <text x="285" y="242" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">ou as duas escritas acontecem, ou nenhuma</text>
+  <text x="285" y="258" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">(sem dual write problem)</text>
+  <!-- relay -->
+  <line x1="405" y1="172" x2="470" y2="172" stroke="#166534" stroke-width="2.5" marker-end="url(#a2o-arrow-g)"/>
+  <rect x="472" y="146" width="110" height="52" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="527" y="168" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Relay</text>
+  <text x="527" y="186" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">poller ou CDC</text>
+  <line x1="582" y1="172" x2="648" y2="172" stroke="#166534" stroke-width="2.5" marker-end="url(#a2o-arrow-g)"/>
+  <text x="615" y="160" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">assíncrono</text>
+  <!-- read models -->
+  <rect x="650" y="60" width="230" height="44" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="765" y="87" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">Extrato (read model)</text>
+  <rect x="650" y="150" width="230" height="44" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="765" y="177" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">Saldo exibido (read model)</text>
+  <rect x="650" y="240" width="230" height="44" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="765" y="267" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">Feed / notificações</text>
+  <line x1="648" y1="172" x2="650" y2="82" stroke="#166534" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="648" y1="172" x2="650" y2="262" stroke="#166534" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="765" y="120" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">atraso eventual: 100–300 ms</text>
+  <!-- rodapé -->
+  <rect x="165" y="290" width="715" height="30" rx="6" fill="#fef9e7" stroke="#d4a017"/>
+  <text x="522" y="310" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a5c00">escrita: forte e síncrona (ADR-001) · leitura: eventual e escalando sozinha (ADR-002)</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Outbox + CQRS: o log imutável da Aula 1, reaplicado como ponte confiável entre escrita e leitura.</p>
+</div>
 
 ---
 
