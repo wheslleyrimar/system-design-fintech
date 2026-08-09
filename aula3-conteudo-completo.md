@@ -442,7 +442,118 @@ SLA herdado   Teto de 40s (BACEN); orçamento interno definido no ADR-001
 
 Reparem que essa spec não é decoração — ela é o mesmo tipo de artefato que o ADR-001 e o ADR-002, só que com um escopo diferente: em vez de registrar uma decisão pontual, ela registra a **fronteira e o contrato** de um contexto inteiro. E, exatamente como uma invariante do ledger virou uma fitness function na Aula 2, a linha "Invariantes" dessa spec vira, diretamente, testes automáticos que protegem o contexto de Pagamentos contra violação — inclusive contra a violação sutil do tipo Diego-e-Marina, porque a linha "Linguagem" agora torna **explícito e testável** que "Pagamento" e "Transferência" não são a mesma coisa.
 
-### 5.1 Context Engineering, agora concreto
+### 5.1 O Spec Kit: o fluxo do SDD com ferramenta de verdade
+
+Na Aula 1 eu citei o **GitHub Spec Kit** de passagem, como uma das ferramentas que materializam o SDD. Hoje eu quero abrir ele de verdade, porque a spec que a gente acabou de escrever no quadro não vai viver num slide — ela vai viver num repositório, num formato que um agente de IA consegue ler, verificar e implementar. O Spec Kit é um kit de código aberto, do próprio GitHub, que estrutura exatamente o fluxo que eu descrevi lá atrás — especificação, plano, tarefas, implementação — como comandos que vocês rodam **dentro do próprio agente de código**: Claude Code, GitHub Copilot, Gemini CLI, Cursor — a lista passa de trinta integrações.
+
+A instalação é uma linha — a ferramenta `specify` (via `uv tool install specify-cli`), e depois `specify init techpix --integration claude` para preparar o repositório. O que ela cria é mais interessante do que o que ela instala:
+
+```
+techpix/
+├── .specify/
+│   └── memory/
+│       └── constitution.md      ← o núcleo duro: o que NENHUMA feature pode violar
+├── specs/
+│   └── 001-iniciacao-pagamento/ ← um diretório por feature
+│       ├── spec.md              ← o QUÊ (requisitos, histórias, critérios de aceite)
+│       ├── plan.md              ← o COMO (stack, arquitetura, decisões técnicas)
+│       ├── data-model.md        ← entidades e esquema
+│       ├── contracts/           ← contratos de API e de evento
+│       └── tasks.md             ← a quebra em tarefas executáveis
+└── (o código, derivado de tudo isso)
+```
+
+E o fluxo é uma sequência de comandos de barra, cada um produzindo um artefato que alimenta o próximo. Deixa eu passar por eles mapeando no nosso TechPix, porque é aqui que a aula inteira se encaixa na ferramenta:
+
+**`/speckit.constitution`** — estabelece os princípios inegociáveis do projeto, em `.specify/memory/constitution.md`. E reparem no encaixe: a constituição do TechPix já está escrita, a gente só não sabia o nome. São as invariantes que atravessam o curso desde a Aula 1 — Σ débitos = Σ créditos, todo pagamento tem EndToEndId único, saldo nunca fica negativo, consistência forte no núcleo e eventual na borda, na dúvida falhar fechado, respeitar o rate limit do DICT e o teto de 40 segundos. O ADR registra a decisão e o porquê dela; a constituição **destila o que ficou decidido** em regra que o agente consulta a cada feature nova. São artefatos irmãos: o ADR é a jurisprudência, a constituição é a lei consolidada.
+
+**`/speckit.specify`** — transforma a intenção em `spec.md`, dentro de `specs/001-iniciacao-pagamento/`: o **quê**, sem tecnologia. É exatamente aqui que mora a spec do contexto Pagamentos que a gente escreveu — a linguagem ("Pagamento" ≠ "Transferência"), as invariantes, os eventos emitidos e consumidos, as dependências declaradas. Reparem no detalhe de organização: a spec é **por feature**, dentro do bounded context; a constituição é **global**. A fronteira da Aula 3 diz onde cada uma mora.
+
+**`/speckit.clarify`** — o comando que eu mais gosto de mostrar, porque ele é o interrogatório estruturado que acha ambiguidade **antes** do código existir. O agente varre a spec procurando o que está subespecificado e pergunta. E eu quero que vocês façam o exercício mental: rodem esse comando, em pensamento, sobre a spec do limite diário do Diego. A primeira pergunta que sai é — *"quando você escreve 'conta', você quer dizer a identidade do cliente ou a sub-carteira do ledger?"* O bug que abriu essa aula não sobrevive a um `/speckit.clarify` bem respondido. Ambiguidade de linguagem é exatamente o que esse passo existe para matar.
+
+**`/speckit.plan`** — só agora entra o **como**: `plan.md`, `data-model.md`, `contracts/`. É aqui que as decisões técnicas aparecem — Postgres com serializable para o agregado do ledger, Outbox para publicar os eventos, a ACL traduzindo `pacs.008` para `PixIniciado` — sempre referenciando os ADRs que as justificam. Reparem na disciplina que a ferramenta impõe pela ordem dos comandos: quem tenta escolher banco de dados antes de ter spec clara está usando o fluxo ao contrário — e agora isso fica visível, porque o artefato do "como" simplesmente não existe ainda.
+
+**`/speckit.tasks`** — quebra o plano em `tasks.md`: tarefas pequenas, ordenadas, com dependências explícitas — o formato que tanto um humano quanto um agente conseguem executar e verificar uma a uma.
+
+**`/speckit.analyze`** — a verificação cruzada: a spec, o plano e as tarefas estão consistentes entre si? Alguma tarefa viola a constituição? Algum requisito ficou sem tarefa que o implemente? Vocês já conhecem esse padrão de outro lugar: é a **fitness function da Aula 2, aplicada aos artefatos de especificação** em vez de ao código. O mesmo espírito, um degrau acima.
+
+**`/speckit.implement`** — por fim, o agente executa as tarefas, uma a uma, com a spec e a constituição na janela de contexto. E existem apoios ao redor: `/speckit.checklist` gera listas de verificação de qualidade sob medida, e `/speckit.taskstoissues` converte as tarefas em issues do GitHub para o fluxo do time.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 320" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a3sk-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <!-- Constitution: foundation bar -->
+  <rect x="30" y="20" width="820" height="52" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="440" y="42" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">/speckit.constitution → .specify/memory/constitution.md</text>
+  <text x="440" y="61" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">Σ débitos = Σ créditos · E2E ID único · saldo nunca negativo · falhar fechado · teto 40s — o que NENHUMA feature pode violar</text>
+
+  <!-- Pipeline -->
+  <g font-family="sans-serif">
+    <rect x="30" y="105" width="150" height="70" rx="9" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+    <text x="105" y="130" text-anchor="middle" font-size="12" font-weight="bold" fill="#26215C">/speckit.specify</text>
+    <text x="105" y="148" text-anchor="middle" font-size="10" fill="#5a55a0">spec.md — o QUÊ</text>
+    <text x="105" y="163" text-anchor="middle" font-size="10" fill="#5a55a0">linguagem, invariantes</text>
+
+    <line x1="180" y1="140" x2="205" y2="140" stroke="#4338ca" stroke-width="2" marker-end="url(#a3sk-arrow)"/>
+
+    <rect x="207" y="105" width="150" height="70" rx="9" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+    <text x="282" y="130" text-anchor="middle" font-size="12" font-weight="bold" fill="#7f1d1d">/speckit.clarify</text>
+    <text x="282" y="148" text-anchor="middle" font-size="10" fill="#991b1b">"'conta' = identidade</text>
+    <text x="282" y="163" text-anchor="middle" font-size="10" fill="#991b1b">ou sub-carteira?"</text>
+
+    <line x1="357" y1="140" x2="382" y2="140" stroke="#4338ca" stroke-width="2" marker-end="url(#a3sk-arrow)"/>
+
+    <rect x="384" y="105" width="150" height="70" rx="9" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+    <text x="459" y="130" text-anchor="middle" font-size="12" font-weight="bold" fill="#26215C">/speckit.plan</text>
+    <text x="459" y="148" text-anchor="middle" font-size="10" fill="#5a55a0">plan.md, data-model.md,</text>
+    <text x="459" y="163" text-anchor="middle" font-size="10" fill="#5a55a0">contracts/ — o COMO</text>
+
+    <line x1="534" y1="140" x2="559" y2="140" stroke="#4338ca" stroke-width="2" marker-end="url(#a3sk-arrow)"/>
+
+    <rect x="561" y="105" width="140" height="70" rx="9" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+    <text x="631" y="130" text-anchor="middle" font-size="12" font-weight="bold" fill="#26215C">/speckit.tasks</text>
+    <text x="631" y="148" text-anchor="middle" font-size="10" fill="#5a55a0">tasks.md — quebra</text>
+    <text x="631" y="163" text-anchor="middle" font-size="10" fill="#5a55a0">executável, ordenada</text>
+
+    <line x1="701" y1="140" x2="726" y2="140" stroke="#4338ca" stroke-width="2" marker-end="url(#a3sk-arrow)"/>
+
+    <rect x="728" y="105" width="122" height="70" rx="9" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="789" y="130" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">/speckit.implement</text>
+    <text x="789" y="148" text-anchor="middle" font-size="10" fill="#166534">agente executa,</text>
+    <text x="789" y="163" text-anchor="middle" font-size="10" fill="#166534">tarefa a tarefa</text>
+  </g>
+
+  <!-- Analyze: cross-check -->
+  <rect x="207" y="215" width="494" height="52" rx="9" fill="#fff" stroke="#4338ca" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="454" y="237" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#26215C">/speckit.analyze — consistência spec × plan × tasks × constituição</text>
+  <text x="454" y="255" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#5a55a0">a fitness function da Aula 2, aplicada aos artefatos de especificação</text>
+  <line x1="282" y1="215" x2="282" y2="178" stroke="#8a89a0" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <line x1="459" y1="215" x2="459" y2="178" stroke="#8a89a0" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <line x1="631" y1="215" x2="631" y2="178" stroke="#8a89a0" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+  <text x="440" y="300" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">A constituição paira sobre todos os passos: cada artefato é verificado contra ela — e o clarify mata o bug Diego-e-Marina antes do código nascer</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O fluxo do Spec Kit aplicado ao TechPix: constituição global, spec por feature, verificação cruzada antes da implementação.</p>
+</div>
+
+Para fechar, a tabela que amarra o vocabulário do curso ao artefato da ferramenta:
+
+| Conceito do curso | Artefato no Spec Kit |
+|---|---|
+| Invariantes de domínio + "falhar fechado" (Aula 1) | `constitution.md` — a lei consolidada, global |
+| ADR-001, ADR-002 | Jurisprudência referenciada pela constituição e pelo `plan.md` |
+| Spec do bounded context (esta aula) | `spec.md` da feature, dentro de `specs/NNN-…/` |
+| Linguagem ubíqua / glossário do contexto | Seção de linguagem do `spec.md` — e alvo do `/speckit.clarify` |
+| Contratos de evento (Seção 4.4) | `contracts/` — versionados junto da spec |
+| Fitness function (Aula 2) | `/speckit.analyze` — aplicada aos artefatos, antes do código |
+
+E uma nota de honestidade, porque ferramenta é moda e disciplina é fundamento: o Spec Kit é jovem, e os nomes dos comandos podem mudar de versão para versão. O que eu quero que vocês levem não é a sintaxe — é a **ordem imposta**: princípios antes da spec, spec antes do plano, plano antes das tarefas, verificação cruzada antes da implementação. Se amanhã a ferramenta se chamar outra coisa, essa ordem continua sendo o SDD. A ferramenta passa; o fluxo fica.
+
+### 5.2 Context Engineering, agora concreto
 
 E aqui eu quero fechar um círculo que abri na Aula 1, quando falei de Context Engineering de um jeito ainda abstrato. Hoje dá para ser preciso: **se um agente de inteligência artificial for implementar ou modificar alguma coisa dentro do contexto de Pagamentos, o contexto que ele recebe — no sentido de "context window" — deveria ser, literalmente, o bounded context que a gente acabou de desenhar.** A spec de Pagamentos, o glossário da linguagem ubíqua daquele contexto especificamente, os ADRs relevantes — ADR-001 e ADR-002 —, e os eventos que ele emite e consome. E, tão importante quanto o que entra: o que fica de fora. O agente **não** deveria receber os detalhes internos do contexto de Antifraude, ou do contexto de Identidade — só o contrato de evento que os conecta. Isso não é só higiene de prompt; é a mesma disciplina de fronteira que vocês aplicariam a um engenheiro novo entrando no time de Pagamentos: ele aprende a linguagem daquele contexto, e conversa com os outros contextos só pelos contratos publicados, nunca abrindo o capô alheio.
 
@@ -549,6 +660,11 @@ Eu não vou mais lecionar as próximas aulas com vocês — quem assume daqui é
 | **Versionamento de evento** | Evento publicado é contrato público. Estratégias: só adicionar (retrocompatível), versionar o tipo (`v1`/`v2`), ou registro de schema que rejeita mudança incompatível. |
 | **Schema registry** | Serviço que valida compatibilidade do formato do evento na publicação — a fitness function da Aula 2 aplicada a contrato de evento. |
 | **Bounded context ≠ microsserviço** | Contexto é decisão de modelagem; serviço é decisão de topologia. Um serviço nunca deve ter mais de um contexto; um contexto pode ser só um módulo. |
+| **Spec Kit** | Kit de código aberto do GitHub que estrutura o SDD como comandos dentro do agente de código (Claude Code, Copilot, Gemini CLI, Cursor…): `/speckit.constitution` → `specify` → `clarify` → `plan` → `tasks` → `analyze` → `implement`. |
+| **constitution.md** | O núcleo duro do projeto no Spec Kit (`.specify/memory/`): princípios que nenhuma feature pode violar. ADR é a jurisprudência; a constituição é a lei consolidada. |
+| **spec.md / plan.md / tasks.md** | Os artefatos por feature (`specs/NNN-…/`): o quê (requisitos, linguagem, invariantes), o como (stack, decisões, `data-model.md`, `contracts/`) e a quebra executável. |
+| **/speckit.clarify** | Interrogatório estruturado que caça ambiguidade na spec antes do código — o comando que teria matado o bug Diego-e-Marina ("'conta' = identidade ou sub-carteira?"). |
+| **/speckit.analyze** | Verificação cruzada spec × plan × tasks × constituição — a fitness function aplicada aos artefatos de especificação. |
 
 ---
 

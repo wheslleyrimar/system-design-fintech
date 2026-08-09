@@ -119,13 +119,16 @@ title: "Aula 3 — Roteiro (fonte)"
 
 ---
 
-## Bloco 8 · [94–106] · SDD: a spec + Context Engineering
+## Bloco 8 · [94–106] · SDD: a spec + Spec Kit + Context Engineering
 
 - **Escreva a spec do contexto Pagamentos ao vivo:** linguagem, invariantes, eventos, dependências, SLA herdado.
 - **Pergunte:** "Qual linha dessa spec, virando teste automático, teria pegado o bug do Diego e da Marina?" (a linha "Linguagem", que distingue explicitamente 'Pagamento' de 'Transferência').
+- **Mostre o Spec Kit (GitHub):** desenhe o pipeline `/speckit.constitution → specify → clarify → plan → tasks → analyze → implement` e a árvore `.specify/memory/constitution.md` + `specs/001-…/spec.md·plan.md·tasks.md`. Roda dentro do agente de código (Claude Code, Copilot, Gemini CLI).
+- **Fala-chave:** "A constituição do TechPix já estava escrita — a gente só não sabia o nome: Σ=Σ, E2E ID único, falhar fechado. O ADR é a jurisprudência; a constituição é a lei consolidada."
+- **Pergunte:** "Que pergunta o `/speckit.clarify` faria sobre a spec do limite diário do Diego?" ("quando você escreve 'conta', quer dizer identidade ou sub-carteira?" — o bug da abertura não sobrevive ao clarify).
 - **Desenhe o Diagrama 9 (Context Engineering):** o que entra na janela do agente (spec, glossário do contexto, ADRs, eventos) vs. o que fica **de fora** (internals de Antifraude e Identidade).
 - **Fala-chave de fecho:** "O bounded context de vocês é, literalmente, a unidade de contexto que um agente deveria receber."
-- **Armadilha:** não deixe virar aula de sintaxe de spec. O ponto é a analogia bounded-context ↔ context-window.
+- **Armadilha:** não deixe virar aula de sintaxe de ferramenta. O ponto é a ordem imposta (princípios → spec → plano → tarefas → verificação) e a analogia bounded-context ↔ context-window. "A ferramenta passa; o fluxo fica."
 
 ---
 
