@@ -636,6 +636,65 @@ Quarto: **a camada anticorrupção protege a linguagem de vocês do mundo extern
 
 E quinto — o fio que amarra tudo com o eixo de inteligência artificial: **a spec de um bounded context é executável, e é, ao mesmo tempo, a unidade certa de contexto para um agente trabalhar com segurança.**
 
+E antes de eu passar o bastão, deixa eu fazer o que eu sempre peço a vocês: parar e olhar o que já está de pé. Reparem numa coisa curiosa no retrato de hoje — nenhuma caixa nova é infraestrutura. O que esta aula acrescentou foi **nome, fronteira e contrato** em cima do que as Aulas 1 e 2 construíram. Modelagem não sobe servidor; ela decide onde os próximos servidores vão poder nascer.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 268" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 3</text>
+
+  <text x="20" y="44" font-family="sans-serif" font-size="10" font-weight="bold" fill="#a8a29e">JÁ EXISTIA — AULAS 1 E 2</text>
+  <g font-family="sans-serif">
+    <rect x="20" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="122" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Monólito TechPix</text>
+    <text x="122" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">Postgres · ledger partida dobrada · [A1]</text>
+    <rect x="232" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="334" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Idempotência</text>
+    <text x="334" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">chave E2E ID · [A1]</text>
+    <rect x="444" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="546" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">DICT · SPI (BACEN)</text>
+    <text x="546" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">cache disciplinado · rate limit · [A1]</text>
+    <rect x="656" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="758" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Outbox → relay → Kafka</text>
+    <text x="758" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">eventos do domínio · [A2]</text>
+
+    <rect x="20" y="104" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="122" y="123" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Read models CQRS</text>
+    <text x="122" y="139" text-anchor="middle" font-size="9.5" fill="#78716c">Redis (saldo) · réplica (extrato) · [A2]</text>
+    <rect x="232" y="104" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="334" y="123" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Defesas de resiliência</text>
+    <text x="334" y="139" text-anchor="middle" font-size="9.5" fill="#78716c">circuit breaker · bulkhead · backoff · [A2]</text>
+    <rect x="444" y="104" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="546" y="123" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Partições hash(conta_id)</text>
+    <text x="546" y="139" text-anchor="middle" font-size="9.5" fill="#78716c">8 partições · ~20 baldes · [A2]</text>
+    <rect x="656" y="104" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="758" y="123" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">ADR-001 · ADR-002</text>
+    <text x="758" y="139" text-anchor="middle" font-size="9.5" fill="#78716c">decisões registradas · [A1·A2]</text>
+  </g>
+
+  <text x="20" y="172" font-family="sans-serif" font-size="10" font-weight="bold" fill="#166534">CONSTRUÍDO NESTA AULA</text>
+  <g font-family="sans-serif">
+    <rect x="20" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="101" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">5 bounded contexts</text>
+    <text x="101" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">fronteiras nomeadas</text>
+    <rect x="192" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="273" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Context map</text>
+    <text x="273" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">upstream · downstream</text>
+    <rect x="364" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="445" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">ACL BACEN</text>
+    <text x="445" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">pacs.008 → PixIniciado</text>
+    <rect x="536" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="617" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Spec de Pagamentos</text>
+    <text x="617" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">specs/001-…/spec.md</text>
+    <rect x="708" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="789" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Constituição</text>
+    <text x="789" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">.specify/memory (Spec Kit)</text>
+  </g>
+
+  <text x="440" y="256" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução do TechPix: a Aula 3 não sobe infraestrutura — ela dá nome, fronteira e contrato ao que as Aulas 1 e 2 construíram.</p>
+</div>
+
 Eu não vou mais lecionar as próximas aulas com vocês — quem assume daqui é outro professor, que vai construir comunicação entre esses contextos, extrair alguns deles para microsserviços de verdade, e colocar tudo isso para rodar com observabilidade e deploy contínuo. Mas eu volto na Aula 8, no fim do curso, para fechar o círculo que a gente abriu junto: nessa altura, o sistema já vai estar em produção, com dados reais — e um agente, olhando exatamente para os contextos e as specs que a gente desenhou hoje, vai propor a próxima evolução da arquitetura. Da fé, na Aula 1, para a evidência, na Aula 8 — e a linguagem que vocês vão desenhar hoje é o que vai tornar essa evolução segura de fazer, com humano ou com agente.
 
 ---

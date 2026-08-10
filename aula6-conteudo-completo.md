@@ -388,6 +388,74 @@ Com a flag instalada, a release vira uma progressão: **1% → 5% → 25% → 10
 - **Juiz automático:** quem compara métrica com limite não é um humano olhando dashboard — é o próprio controlador de rollout (no TechPix, o Argo Rollouts, irmão do ArgoCD, consultando o Prometheus). Violou a guarda? **Rollback automático, primeiro; notificação ao humano, depois.** Nessa ordem. O humano acorda com o sistema já são, lendo o relatório do que a máquina desfez.
 - **Honestidade sobre o que falta:** quanto tempo em cada fatia? Cinco erros em 2.700 transações são "muitos"? 1% por cinco minutos prova alguma coisa? **Tem matemática séria nessas perguntas — amostra, significância, o perigo de espiar o resultado antes da hora — e é o professor da Aula 8 que vai fazer essa conta com vocês.** Hoje, o TechPix usa regras conservadoras e fixas: cada fatia segura no mínimo uma hora, e qualquer violação de guarda reverte. Grosseiro? É. Mas grosseiro *na direção segura* — e mecânica instalada é pré-requisito do rigor que vem depois.
 
+E uma pergunta de plantão que sempre aparece aqui, e que merece resposta de engenheiro: **quem, fisicamente, manda 5% do tráfego para um lado e 95% para o outro?** A resposta é uma questão de *camada* — camada 4 contra camada 7 do modelo OSI, aquela mesma distinção que apareceu na Aula 4. Um balanceador de camada 4 (o kube-proxy do Kubernetes, um NLB) enxerga TCP: IP, porta, conexão. Ele é rápido e barato, mas é **cego a HTTP** — não vê rota, não vê header, não sabe o que é "1% das requisições". O split do canary só existe na camada 7, onde vivem o NGINX, o ALB e — no coração da malha do TechPix — o **Envoy**, um sidecar ao lado de cada serviço, com o **Istio** como plano de controle. E reparem no reencontro: a fachada do Strangler Fig da Aula 2 **era** um balanceador L7. O Envoy é a mesma ideia, industrializada.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 440" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a6t-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a6t-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+    <marker id="a6t-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#a8a29e"/>
+    </marker>
+  </defs>
+  <text x="450" y="24" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333">Quem divide o tráfego? Camada 4 × Camada 7 (modelo OSI)</text>
+
+  <!-- L4 panel -->
+  <rect x="30" y="40" width="410" height="140" rx="10" fill="#f5f5f4" stroke="#a8a29e" stroke-width="2"/>
+  <text x="235" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#57534e">L4 — transporte (TCP/IP)</text>
+  <text x="235" y="84" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#57534e">exemplos: kube-proxy · NLB</text>
+  <text x="235" y="106" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#57534e">vê: IP, porta, conexão — e só</text>
+  <text x="235" y="130" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">+ rápido, barato, milhões de conexões</text>
+  <text x="235" y="150" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">− cego a HTTP: não vê rota, header nem "%"</text>
+  <text x="235" y="170" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#b91c1c">não consegue fazer canary por porcentagem</text>
+
+  <!-- L7 panel -->
+  <rect x="460" y="40" width="410" height="140" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="665" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#26215C">L7 — aplicação (HTTP/2, gRPC)</text>
+  <text x="665" y="84" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#5a55a0">exemplos: NGINX (borda) · ALB · Envoy (malha)</text>
+  <text x="665" y="106" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#5a55a0">vê: rota, header, método — e peso por requisição</text>
+  <text x="665" y="130" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">+ roteia por conteúdo: 95%/5%, por rota, por header</text>
+  <text x="665" y="150" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">− um salto a mais: custo de CPU e ~ms de latência</text>
+  <text x="665" y="170" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">é aqui que o canary acontece</text>
+
+  <!-- Mesh: canary split -->
+  <text x="450" y="212" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">A malha do TechPix durante o canary de 14/11</text>
+  <rect x="40" y="230" width="150" height="56" rx="9" fill="#fff" stroke="#4338ca" stroke-width="2"/>
+  <text x="115" y="253" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#26215C">Pagamentos</text>
+  <text x="115" y="271" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">chama análise de risco</text>
+  <line x1="190" y1="258" x2="255" y2="258" stroke="#4338ca" stroke-width="2" marker-end="url(#a6t-arrow)"/>
+  <rect x="257" y="230" width="160" height="56" rx="9" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+  <text x="337" y="253" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#26215C">Envoy (sidecar L7)</text>
+  <text x="337" y="271" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">pesos: 95 / 5</text>
+  <line x1="417" y1="245" x2="530" y2="245" stroke="#a8a29e" stroke-width="2" marker-end="url(#a6t-gray)"/>
+  <text x="473" y="237" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#78716c">95%</text>
+  <rect x="532" y="222" width="200" height="46" rx="9" fill="#f5f5f4" stroke="#a8a29e" stroke-width="2"/>
+  <text x="632" y="242" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#57534e">rota antiga — módulo no monólito</text>
+  <text x="632" y="259" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#78716c">ainda decide para 95%</text>
+  <line x1="417" y1="272" x2="530" y2="290" stroke="#166534" stroke-width="2" marker-end="url(#a6t-green)"/>
+  <text x="473" y="294" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">5%</text>
+  <rect x="532" y="278" width="200" height="46" rx="9" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="632" y="298" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">serviço novo de Antifraude</text>
+  <text x="632" y="315" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">K8s · GPU · banco próprio</text>
+
+  <!-- Argo Rollouts control -->
+  <rect x="120" y="330" width="220" height="50" rx="9" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="230" y="351" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#7a5c00">Argo Rollouts (juiz)</text>
+  <text x="230" y="369" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">consulta Prometheus · ajusta os pesos</text>
+  <line x1="300" y1="330" x2="330" y2="292" stroke="#d4a017" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a6t-arrow)"/>
+  <text x="352" y="322" font-family="sans-serif" font-size="10" fill="#7a5c00">1% → 5% → 25% → 100% (ou rollback)</text>
+
+  <rect x="40" y="396" width="820" height="30" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="450" y="416" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">A fachada do Strangler Fig da Aula 2 ERA um balanceador L7 — o Envoy é a mesma ideia, agora ao lado de cada serviço, com o Istio como plano de controle.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O canary de 1% é, fisicamente, um peso num balanceador de camada 7 — a camada 4 não enxerga porcentagem de requisição.</p>
+</div>
+
 ### 4.3 Anatomia dos 90 segundos — a Lei de Little cobra de novo
 
 Agora eu pago a dívida da abertura: *por que* a primeira tentativa falhou às 9h17 de 14 de novembro?
@@ -547,6 +615,71 @@ E a prova de que ele funciona veio rápido: semanas depois, o time da Marina ext
 
 O TechPix de hoje, então: **Antifraude e Limites** como serviço (com GPU e modelo), **Pagamentos** como serviço (com as portas para o mundo), e o monólito remanescente segurando **Contas e Ledger** — a conta `pix_a_liquidar` no lugar onde sempre esteve —, além de Identidade, Devoluções e Cartões, cada um aguardando seus critérios maturarem. Ou não: **monólito remanescente não é fila de espera; é lar legítimo de quem não tem razão para sair.**
 
+E antes de fechar, deixa eu fazer uma coisa que eu gosto de fazer no fim de toda migração: olhar para trás com o catálogo na mão. Todos esses padrões que a gente vem aplicando têm nome de prateleira — estão catalogados no **microservices.io**, do Chris Richardson, que é a referência que eu quero que vocês levem para a segunda-feira. E reparem no que o mapa revela: o TechPix não "adotou microsserviços" hoje. Ele vem acumulando os padrões do catálogo desde a Aula 1, **um por dor, nunca por moda** — hoje só entraram os dois últimos.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="440" y="24" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">Os padrões de microservices.io aplicados ao TechPix — aula a aula</text>
+
+  <g font-family="sans-serif">
+    <rect x="20" y="48" width="204" height="72" rx="8" fill="#fff" stroke="#4338ca" stroke-width="1.5"/>
+    <text x="122" y="70" text-anchor="middle" font-size="12" font-weight="bold" fill="#26215C">Event Sourcing</text>
+    <rect x="86" y="80" width="72" height="18" rx="9" fill="#f5f5f4" stroke="#a8a29e"/>
+    <text x="122" y="93" text-anchor="middle" font-size="10" font-weight="bold" fill="#57534e">Aula 1</text>
+    <text x="122" y="113" text-anchor="middle" font-size="9.5" fill="#666">o log é a verdade; saldo é projeção</text>
+
+    <rect x="232" y="48" width="204" height="72" rx="8" fill="#fff" stroke="#4338ca" stroke-width="1.5"/>
+    <text x="334" y="70" text-anchor="middle" font-size="12" font-weight="bold" fill="#26215C">Strangler Fig</text>
+    <rect x="298" y="80" width="72" height="18" rx="9" fill="#f5f5f4" stroke="#a8a29e"/>
+    <text x="334" y="93" text-anchor="middle" font-size="10" font-weight="bold" fill="#57534e">Aula 2</text>
+    <text x="334" y="113" text-anchor="middle" font-size="9.5" fill="#666">fachada L7 migrando tráfego aos poucos</text>
+
+    <rect x="444" y="48" width="204" height="72" rx="8" fill="#fff" stroke="#4338ca" stroke-width="1.5"/>
+    <text x="546" y="70" text-anchor="middle" font-size="12" font-weight="bold" fill="#26215C">Transactional Outbox</text>
+    <rect x="510" y="80" width="72" height="18" rx="9" fill="#f5f5f4" stroke="#a8a29e"/>
+    <text x="546" y="93" text-anchor="middle" font-size="10" font-weight="bold" fill="#57534e">Aula 2</text>
+    <text x="546" y="113" text-anchor="middle" font-size="9.5" fill="#666">evento gravado na mesma transação ACID</text>
+
+    <rect x="656" y="48" width="204" height="72" rx="8" fill="#fff" stroke="#4338ca" stroke-width="1.5"/>
+    <text x="758" y="70" text-anchor="middle" font-size="12" font-weight="bold" fill="#26215C">CQRS</text>
+    <rect x="722" y="80" width="72" height="18" rx="9" fill="#f5f5f4" stroke="#a8a29e"/>
+    <text x="758" y="93" text-anchor="middle" font-size="10" font-weight="bold" fill="#57534e">Aula 2</text>
+    <text x="758" y="113" text-anchor="middle" font-size="9.5" fill="#666">escrita forte; leitura via Redis/réplica</text>
+
+    <rect x="20" y="132" width="204" height="72" rx="8" fill="#fff" stroke="#4338ca" stroke-width="1.5"/>
+    <text x="122" y="154" text-anchor="middle" font-size="12" font-weight="bold" fill="#26215C">Circuit Breaker</text>
+    <rect x="80" y="164" width="84" height="18" rx="9" fill="#f5f5f4" stroke="#a8a29e"/>
+    <text x="122" y="177" text-anchor="middle" font-size="10" font-weight="bold" fill="#57534e">Aulas 2 · 4</text>
+    <text x="122" y="197" text-anchor="middle" font-size="9.5" fill="#666">DICT sob timeout; política por aresta</text>
+
+    <rect x="232" y="132" width="204" height="72" rx="8" fill="#fff" stroke="#4338ca" stroke-width="1.5"/>
+    <text x="334" y="154" text-anchor="middle" font-size="12" font-weight="bold" fill="#26215C">Saga</text>
+    <rect x="298" y="164" width="72" height="18" rx="9" fill="#f5f5f4" stroke="#a8a29e"/>
+    <text x="334" y="177" text-anchor="middle" font-size="10" font-weight="bold" fill="#57534e">Aula 4</text>
+    <text x="334" y="197" text-anchor="middle" font-size="9.5" fill="#666">devolução com compensação, sem 2PC</text>
+
+    <rect x="444" y="132" width="204" height="72" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="546" y="154" text-anchor="middle" font-size="12" font-weight="bold" fill="#166534">Database per Service</text>
+    <rect x="504" y="164" width="84" height="18" rx="9" fill="#dcfce7" stroke="#166534"/>
+    <text x="546" y="177" text-anchor="middle" font-size="10" font-weight="bold" fill="#166534">Aula 6 · hoje</text>
+    <text x="546" y="197" text-anchor="middle" font-size="9.5" fill="#15803d">banco próprio; GRANT alheio proibido no CI</text>
+
+    <rect x="656" y="132" width="204" height="72" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="758" y="154" text-anchor="middle" font-size="12" font-weight="bold" fill="#166534">Canary + Service Mesh</text>
+    <rect x="716" y="164" width="84" height="18" rx="9" fill="#dcfce7" stroke="#166534"/>
+    <text x="758" y="177" text-anchor="middle" font-size="10" font-weight="bold" fill="#166534">Aula 6 · hoje</text>
+    <text x="758" y="197" text-anchor="middle" font-size="9.5" fill="#15803d">fatias via Envoy/Istio, juiz automático</text>
+  </g>
+
+  <rect x="20" y="226" width="840" height="52" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="440" y="248" text-anchor="middle" font-family="sans-serif" font-size="11.5" font-weight="bold" fill="#7a5c00">Cada padrão entrou quando uma dor concreta o exigiu — nunca antes: Event Sourcing pela conservação do dinheiro, Outbox pela escrita dupla,</text>
+  <text x="440" y="266" text-anchor="middle" font-family="sans-serif" font-size="11.5" font-weight="bold" fill="#7a5c00">Saga pela devolução entre instituições, Database per Service porque agora a rede separa os donos dos dados.</text>
+
+  <text x="440" y="308" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">catálogo completo: microservices.io/patterns (Chris Richardson) — padrão sem dor que o justifique é moda, não arquitetura</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O mapa integrador: oito padrões do catálogo microservices.io, cada um marcado com a aula — e a dor — em que entrou no TechPix.</p>
+</div>
+
 ---
 
 ## 7. Para fechar: três ideias-âncora
@@ -558,6 +691,63 @@ Segundo: **os dados são a extração de verdade.** Código se move num deploy; 
 Terceiro: **deploy não é release, e a rede de validação é o que separa erro de incidente.** GitOps fez o deploy virar um log imutável reconciliado — o ledger operando infraestrutura. Flags e canary fizeram a release virar um dial com juiz automático. E o rollback das 9h19 provou o ponto da aula inteira: num sistema com rede, a primeira tentativa *pode* falhar — por isso mesmo ela pôde ser tentada numa sexta-feira de manhã.
 
 O gancho para a próxima aula, e eu quero que vocês percebam que ele esteve na aula inteira sem eu nomear: o canary decidiu com base em métricas. O dual-run decidiu com base em métricas. A reconciliação alerta com base em métricas. Tudo hoje foi julgado por números que alguém, em algum lugar, teve que coletar direito — com a fração de segundo certa, o percentil certo, o rótulo certo. **Quem gera esses números? Onde eles moram? E como se acha, no meio de 900 transações por segundo, um único Pix anormalmente lento?** Na próxima aula, a gente abre a caixa que faz todo o resto ser possível: observabilidade. Tragam o pager.
+
+E o retrato de fim de aula, na régua de sempre — olhem o quanto a fintech cresceu hoje, e olhem também para a caixa âmbar, porque o que a gente **decidiu não mexer** é tão arquitetural quanto o que subiu:
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 342" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 6</text>
+
+  <text x="20" y="44" font-family="sans-serif" font-size="10" font-weight="bold" fill="#a8a29e">JÁ EXISTIA — AULAS 1 A 5</text>
+  <g font-family="sans-serif">
+    <rect x="20" y="52" width="278" height="46" rx="8" fill="#f5f5f4" stroke="#d4a017" stroke-width="2"/>
+    <text x="159" y="70" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Monólito: Contas e Ledger</text>
+    <text x="159" y="87" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#7a5c00">Postgres · pix_a_liquidar · FICA — pendência ADR-002 aberta</text>
+    <rect x="307" y="52" width="278" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="446" y="70" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Outbox → Kafka + read models</text>
+    <text x="446" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">Redis (saldo) · réplica (extrato) · [A2]</text>
+    <rect x="594" y="52" width="266" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="727" y="70" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Bounded contexts + specs</text>
+    <text x="727" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">context map · constituição Spec Kit · [A3]</text>
+
+    <rect x="20" y="104" width="278" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="159" y="122" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Contratos por aresta</text>
+    <text x="159" y="139" text-anchor="middle" font-size="9.5" fill="#78716c">gRPC/.proto · schema registry · DLQ · [A4]</text>
+    <rect x="307" y="104" width="278" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="446" y="122" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Modelo ML + feature store</text>
+    <text x="446" y="139" text-anchor="middle" font-size="9.5" fill="#78716c">GPU · Redis online · shadow mode · [A5]</text>
+    <rect x="594" y="104" width="266" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="727" y="122" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Defesas de resiliência</text>
+    <text x="727" y="139" text-anchor="middle" font-size="9.5" fill="#78716c">circuit breaker · bulkhead · retry budget · [A2·A4]</text>
+  </g>
+
+  <text x="20" y="176" font-family="sans-serif" font-size="10" font-weight="bold" fill="#166534">CONSTRUÍDO NESTA AULA</text>
+  <g font-family="sans-serif">
+    <rect x="20" y="184" width="278" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="159" y="204" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Antifraude como serviço</text>
+    <text x="159" y="221" text-anchor="middle" font-size="9.5" fill="#15803d">Kubernetes · GPU · banco próprio</text>
+    <rect x="307" y="184" width="278" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="446" y="204" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Pagamentos como serviço</text>
+    <text x="446" y="221" text-anchor="middle" font-size="9.5" fill="#15803d">ACLs DICT/SPI · database-per-service</text>
+    <rect x="594" y="184" width="266" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="727" y="204" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">ArgoCD · GitOps</text>
+    <text x="727" y="221" text-anchor="middle" font-size="9.5" fill="#15803d">Git = estado desejado · rollback = revert</text>
+
+    <rect x="20" y="240" width="278" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="159" y="260" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Canary via Envoy/Istio + Unleash</text>
+    <text x="159" y="277" text-anchor="middle" font-size="9.5" fill="#15803d">1%→5%→25%→100% · rollback automático</text>
+    <rect x="307" y="240" width="278" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="446" y="260" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Fitness functions contínuas</text>
+    <text x="446" y="277" text-anchor="middle" font-size="9.5" fill="#15803d">Σ · ArchUnit · Pact · GRANTs — no CI, sempre</text>
+    <rect x="594" y="240" width="266" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="727" y="260" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Runbook de Extração</text>
+    <text x="727" y="277" text-anchor="middle" font-size="9.5" fill="#15803d">extração como procedimento, não aventura</text>
+  </g>
+
+  <text x="440" y="322" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula · âmbar = decisão explícita de NÃO mexer</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução do TechPix: a Aula 6 tirou dois contextos do monólito com rede de validação — e deixou o Ledger onde a evidência mandou deixar.</p>
+</div>
 
 ---
 
@@ -582,6 +772,9 @@ O gancho para a próxima aula, e eu quero que vocês percebam que ele esteve na 
 | **Smoke test** | Bateria mínima pós-deploy, pré-release: valida o código novo antes de existir tráfego real nele. |
 | **Entrega progressiva** | O guarda-chuva: flags + canary + rollback automático — release como processo graduável, não como salto. |
 | **Runbook de Extração** | O artefato da aula: checklist reutilizável que transforma extração de aventura em procedimento. Acumulado, não escrito. |
+| **Balanceador L4 vs L7** | L4 (kube-proxy, NLB) enxerga conexões TCP — rápido e cego a HTTP; L7 (NGINX, Envoy, ALB) enxerga rota, header e método — é quem consegue fazer o traffic-split percentual do canary. |
+| **Service mesh (Envoy/Istio)** | Malha de sidecars L7 entre serviços: o Envoy acompanha cada pod e o Istio orquestra — timeout, retry, mTLS e o split do canary saem do código e viram configuração da malha. |
+| **microservices.io** | Catálogo de padrões de microsserviços de Chris Richardson — a prateleira de onde o TechPix vem tirando um padrão por dor desde a Aula 1: Event Sourcing, Strangler Fig, Transactional Outbox, CQRS, Circuit Breaker, Saga, Database per Service. |
 
 ---
 

@@ -458,6 +458,60 @@ Isso fecha o círculo que eu abri na Aula 1, quando falei que write model e read
 <p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Outbox + CQRS: o log imutável da Aula 1, reaplicado como ponte confiável entre escrita e leitura.</p>
 </div>
 
+E antes de eu fazer a conta do particionamento, deixa eu nomear uma distinção que está implícita em tudo isso — porque ela explica **por que** o caminho de leitura sai barato e o de escrita sai caro. Existem dois eixos para escalar qualquer sistema: **vertical** (scale-up: máquina maior) e **horizontal** (scale-out: mais máquinas). E a consequência que o ADR-001 já registrava — "a escrita não escala na horizontal como a leitura" — é exatamente isso em uma linha: para a leitura, o eixo horizontal é quase de graça (réplicas); para a escrita fortemente consistente, o eixo horizontal cobra o preço da coordenação, e é essa conta que a Seção 6 vai fazer.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 350" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2t-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <!-- Vertical -->
+  <text x="220" y="28" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">Escala VERTICAL (scale-up)</text>
+  <rect x="150" y="120" width="70" height="60" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="185" y="155" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">Postgres</text>
+  <line x1="228" y1="150" x2="268" y2="150" stroke="#4338ca" stroke-width="2" marker-end="url(#a2t-arrow)"/>
+  <rect x="275" y="90" width="110" height="120" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+  <text x="330" y="130" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Postgres</text>
+  <text x="330" y="150" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">+ CPU · + RAM</text>
+  <text x="330" y="166" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">+ NVMe</text>
+  <g font-family="sans-serif" font-size="11">
+    <text x="70" y="245" fill="#166534">✓ simples: nenhuma mudança de código</text>
+    <text x="70" y="265" fill="#166534">✓ preserva a transação ACID local</text>
+    <text x="70" y="290" fill="#b91c1c">✗ teto físico — a maior máquina acaba</text>
+    <text x="70" y="310" fill="#b91c1c">✗ custo cresce não-linear</text>
+    <text x="70" y="330" fill="#b91c1c">✗ continua um único ponto de falha</text>
+  </g>
+  <line x1="440" y1="40" x2="440" y2="335" stroke="#ccc" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <!-- Horizontal -->
+  <text x="660" y="28" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">Escala HORIZONTAL (scale-out)</text>
+  <text x="560" y="60" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Leitura: réplicas</text>
+  <rect x="480" y="72" width="70" height="44" rx="7" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="515" y="98" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">réplica 1</text>
+  <rect x="558" y="72" width="70" height="44" rx="7" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="593" y="98" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">réplica 2</text>
+  <rect x="636" y="72" width="70" height="44" rx="7" fill="#f0fdf4" stroke="#166534" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="671" y="98" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">réplica N…</text>
+  <text x="597" y="136" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">quase de graça: adicionar nó = mais capacidade de leitura</text>
+  <text x="590" y="172" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Escrita: particionar</text>
+  <rect x="480" y="184" width="70" height="44" rx="7" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="515" y="210" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#7a5c00">partição 1</text>
+  <rect x="558" y="184" width="70" height="44" rx="7" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="593" y="210" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#7a5c00">partição 2</text>
+  <rect x="636" y="184" width="70" height="44" rx="7" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="671" y="204" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#7f1d1d">partição 3</text>
+  <text x="671" y="218" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#b91c1c">(a quente)</text>
+  <g font-family="sans-serif" font-size="11">
+    <text x="470" y="260" fill="#166534">✓ sem teto: cresce nó a nó</text>
+    <text x="470" y="280" fill="#b91c1c">✗ invariante Σ=Σ atravessa partições → coordenação</text>
+    <text x="470" y="300" fill="#b91c1c">✗ transação cross-partição: 2PC ou saga (Aula 1, §2.6)</text>
+    <text x="470" y="320" fill="#b91c1c">✗ chave quente limita o ganho (Lei de Amdahl, Seção 6)</text>
+  </g>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Os dois eixos de escala: a leitura escala na horizontal quase de graça (réplicas); a escrita fortemente consistente paga coordenação — a consequência registrada no ADR-001.</p>
+</div>
+
 ---
 
 ## 6. Quanto o particionamento realmente compra? (a conta que ninguém faz)
@@ -497,6 +551,152 @@ Tudo que a gente discutiu tem implementação de indústria. Vale vocês saírem
 **CDC para o Outbox.** O **Debezium** é a implementação de referência: ele lê o log de replicação do banco — o WAL, no Postgres — e publica cada mudança commitada como evento, sem consultar tabela nenhuma. A alternativa mais simples é o poller, que a gente já discutiu. Recomendação honesta: comecem com poller, migrem para CDC quando a latência de propagação ou a carga de consulta virarem problema **medido**.
 
 **Broker.** O **Kafka** é o log distribuído dominante, com a propriedade de retenção e reprocessamento que combina com a natureza append-only de um ledger. Alternativas gerenciadas com semântica parecida existem em todas as nuvens. Para filas tradicionais, **RabbitMQ** e **SQS**. A escolha real, como vimos na topologia, é log vs fila — retenção e reprocessamento vs simplicidade operacional.
+
+E agora que os nomes estão na mesa, deixa eu juntar as peças num desenho só — o CQRS da Seção 5.4, mas com a stack de verdade, caixa por caixa, do jeito que ele roda em produção. Reparem que cada caixa desse desenho é um dos padrões do catálogo do microservices.io, do Chris Richardson — Transactional Outbox e CQRS têm página própria lá, e vale a visita:
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 920 400" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2u-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a2u-arrow-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <!-- Write model -->
+  <rect x="20" y="40" width="240" height="180" rx="12" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+  <text x="140" y="66" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">PostgreSQL — write model</text>
+  <text x="140" y="84" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">serializable (SSI) · ADR-001</text>
+  <rect x="40" y="98" width="200" height="42" rx="7" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="140" y="116" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">ledger (Σ = Σ)</text>
+  <text x="140" y="132" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">particionado por tempo + hash</text>
+  <rect x="40" y="150" width="200" height="42" rx="7" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="140" y="168" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">tabela outbox</text>
+  <text x="140" y="184" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">mesma transação ACID</text>
+  <text x="140" y="212" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">Transactional Outbox (microservices.io)</text>
+
+  <!-- Relay -->
+  <line x1="260" y1="130" x2="320" y2="130" stroke="#166534" stroke-width="2.5" marker-end="url(#a2u-arrow-g)"/>
+  <rect x="322" y="95" width="140" height="70" rx="9" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="392" y="118" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Relay</text>
+  <text x="392" y="136" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">dia 1: poller</text>
+  <text x="392" y="152" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">maduro: Debezium (CDC/WAL)</text>
+
+  <!-- Kafka -->
+  <line x1="462" y1="130" x2="522" y2="130" stroke="#166534" stroke-width="2.5" marker-end="url(#a2u-arrow-g)"/>
+  <rect x="524" y="85" width="150" height="90" rx="9" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="599" y="110" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">Kafka</text>
+  <text x="599" y="128" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">tópico "PixLiquidado"</text>
+  <text x="599" y="144" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">+ retenção, reprocesso</text>
+  <text x="599" y="160" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">− mais uma peça p/ operar</text>
+
+  <!-- Read models -->
+  <line x1="674" y1="112" x2="730" y2="80" stroke="#166534" stroke-width="2" marker-end="url(#a2u-arrow-g)"/>
+  <line x1="674" y1="148" x2="730" y2="185" stroke="#166534" stroke-width="2" marker-end="url(#a2u-arrow-g)"/>
+  <rect x="732" y="45" width="170" height="70" rx="9" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="817" y="68" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">Redis</text>
+  <text x="817" y="86" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#991b1b">saldo exibido (chave-valor)</text>
+  <text x="817" y="102" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">+ leitura em µs · reconstruível</text>
+  <rect x="732" y="150" width="170" height="70" rx="9" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="817" y="173" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Réplica Postgres</text>
+  <text x="817" y="191" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">extrato (SQL, paginação)</text>
+  <text x="817" y="207" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">+ consulta rica · − lag de réplica</text>
+
+  <!-- Latency + reads -->
+  <text x="597" y="205" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">atraso eventual ponta a ponta: 100–300 ms</text>
+  <line x1="817" y1="245" x2="817" y2="228" stroke="#888" stroke-width="2" marker-end="url(#a2u-arrow)"/>
+  <text x="817" y="262" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">app da Ana lê saldo e extrato AQUI — nunca do ledger</text>
+
+  <!-- Footer -->
+  <rect x="20" y="290" width="882" height="88" rx="8" fill="#fff" stroke="#ccc"/>
+  <g font-family="sans-serif" font-size="11">
+    <text x="35" y="313" fill="#166534">+ escrita e leitura escalam separadas (a leitura, com réplica e Redis, cresce sem tocar no lock do ledger)</text>
+    <text x="35" y="333" fill="#166534">+ nenhum evento se perde: fato e evento nascem na mesma transação (sem dual write)</text>
+    <text x="35" y="353" fill="#b91c1c">− três peças novas para operar e monitorar (relay, Kafka, read stores) · − o extrato atrasa 100–300 ms, e isso precisa estar combinado com o produto</text>
+    <text x="35" y="371" fill="#666">Padrões: Transactional Outbox + CQRS — catálogo microservices.io (Chris Richardson)</text>
+  </g>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O CQRS da Seção 5.4 com a stack nomeada: Postgres → outbox → relay (poller→Debezium) → Kafka → Redis + réplica. O desenho conceitual e este são o mesmo sistema — um para entender, outro para operar.</p>
+</div>
+
+E o Redis ali no canto merece uma pausa, porque "botar um cache" é a frase mais enganosamente simples da engenharia. Existem três estratégias clássicas de manter um cache — e duas formas de ele parar de mentir. O TechPix usa duas combinações diferentes, para dois problemas diferentes:
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 920 430" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2u-c-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <!-- Panel 1: cache-aside -->
+  <rect x="15" y="20" width="285" height="215" rx="10" fill="#fff" stroke="#4338ca" stroke-width="2"/>
+  <text x="157" y="45" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">Cache-aside (lazy)</text>
+  <rect x="35" y="60" width="80" height="36" rx="7" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="75" y="82" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">app</text>
+  <rect x="185" y="60" width="90" height="36" rx="7" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="230" y="82" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">Redis</text>
+  <line x1="115" y1="70" x2="183" y2="70" stroke="#4338ca" stroke-width="1.5" marker-end="url(#a2u-c-arrow)"/>
+  <text x="149" y="62" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">1. consulta</text>
+  <rect x="185" y="130" width="90" height="36" rx="7" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+  <text x="230" y="152" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#78716c">banco</text>
+  <line x1="115" y1="88" x2="183" y2="145" stroke="#4338ca" stroke-width="1.5" marker-end="url(#a2u-c-arrow)"/>
+  <text x="120" y="130" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">2. miss? busca</text>
+  <line x1="230" y1="128" x2="230" y2="100" stroke="#4338ca" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#a2u-c-arrow)"/>
+  <text x="262" y="118" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">3. grava</text>
+  <g font-family="sans-serif" font-size="10">
+    <text x="30" y="192" fill="#166534">+ só cacheia o que é lido; app no controle</text>
+    <text x="30" y="209" fill="#b91c1c">− 1º acesso lento (miss) · lógica na app</text>
+    <text x="30" y="226" fill="#7a5c00">TechPix: cache do DICT (Aula 1)</text>
+  </g>
+  <!-- Panel 2: read-through -->
+  <rect x="315" y="20" width="285" height="215" rx="10" fill="#fff" stroke="#4338ca" stroke-width="2"/>
+  <text x="457" y="45" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">Read-through</text>
+  <rect x="335" y="60" width="80" height="36" rx="7" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="375" y="82" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">app</text>
+  <rect x="475" y="60" width="100" height="36" rx="7" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="525" y="82" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">cache</text>
+  <rect x="475" y="130" width="100" height="36" rx="7" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+  <text x="525" y="152" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#78716c">banco</text>
+  <line x1="415" y1="78" x2="473" y2="78" stroke="#4338ca" stroke-width="1.5" marker-end="url(#a2u-c-arrow)"/>
+  <line x1="525" y1="98" x2="525" y2="128" stroke="#4338ca" stroke-width="1.5" marker-end="url(#a2u-c-arrow)"/>
+  <text x="558" y="116" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">cache busca</text>
+  <g font-family="sans-serif" font-size="10">
+    <text x="330" y="192" fill="#166534">+ app não sabe que o cache existe</text>
+    <text x="330" y="209" fill="#b91c1c">− exige infra/biblioteca que suporte</text>
+    <text x="330" y="226" fill="#666">mesmos misses do cache-aside, sem o controle</text>
+  </g>
+  <!-- Panel 3: write-through -->
+  <rect x="615" y="20" width="290" height="215" rx="10" fill="#fff" stroke="#4338ca" stroke-width="2"/>
+  <text x="760" y="45" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">Write-through</text>
+  <rect x="635" y="60" width="80" height="36" rx="7" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="675" y="82" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">app</text>
+  <rect x="785" y="60" width="100" height="36" rx="7" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="835" y="82" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">cache</text>
+  <rect x="785" y="130" width="100" height="36" rx="7" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+  <text x="835" y="152" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#78716c">banco</text>
+  <line x1="715" y1="78" x2="783" y2="78" stroke="#4338ca" stroke-width="1.5" marker-end="url(#a2u-c-arrow)"/>
+  <text x="748" y="70" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">escrita</text>
+  <line x1="835" y1="98" x2="835" y2="128" stroke="#4338ca" stroke-width="1.5" marker-end="url(#a2u-c-arrow)"/>
+  <text x="875" y="116" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">sincroniza</text>
+  <g font-family="sans-serif" font-size="10">
+    <text x="630" y="192" fill="#166534">+ leitura sempre quente e coerente</text>
+    <text x="630" y="209" fill="#b91c1c">− toda escrita paga o custo do cache</text>
+    <text x="630" y="226" fill="#b91c1c">− cacheia até o que ninguém vai ler</text>
+  </g>
+  <!-- Invalidation band -->
+  <rect x="15" y="255" width="890" height="120" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="460" y="280" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">E quando o cache mente? — as duas formas de invalidar</text>
+  <g font-family="sans-serif" font-size="11">
+    <text x="35" y="305" fill="#333"><tspan font-weight="bold">TTL (expiração):</tspan> o dado morre sozinho depois de N segundos. Simples; a mentira dura no máximo o TTL.</text>
+    <text x="35" y="323" fill="#7a5c00">→ cache do DICT: TTL respeitando as regras de retenção do BACEN (Aula 1, Seção 5.4) — chave Pix muda raramente, staleness barata.</text>
+    <text x="35" y="348" fill="#333"><tspan font-weight="bold">Por evento:</tspan> o consumidor do Kafka atualiza o Redis a cada "PixLiquidado" — o saldo exibido não expira, ele é projeção.</text>
+    <text x="35" y="366" fill="#7a5c00">→ saldo exibido: staleness limitada aos 100–300 ms do relay — e reconstruível do ledger, como manda a Aula 1.</text>
+  </g>
+  <text x="460" y="400" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">O trade-off é sempre o mesmo triângulo: staleness aceitável × custo por leitura × complexidade de invalidação. Escolham por caso, não por moda.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Três estratégias de cache com Redis, duas formas de invalidar — e os dois casos reais do TechPix: DICT (cache-aside + TTL) e saldo exibido (projeção por evento).</p>
+</div>
 
 **Feature flags para o Strangler Fig.** O **Unleash** é a opção open source madura; o **LaunchDarkly** é a comercial mais conhecida. E vale dizer para a turma: começar com um sistema próprio de flags é tentador e quase sempre subestimado — o difícil não é o `if`, é a propagação de mudança de configuração em segundos para centenas de instâncias, com auditoria de quem mudou o quê. Isso importa muito na Aula 8, porque é o mecanismo do canary.
 
@@ -550,6 +750,58 @@ E um palpite educado, por melhor que seja, não escala para um time inteiro, nem
 
 É exatamente isso que a gente vai fazer na próxima aula. A gente vai pegar o próprio fluxo do Pix — evento por evento — e usar uma técnica chamada event storming para deixar as fronteiras **emergirem** dos fatos do domínio, ao vivo, na frente de vocês. E vamos descobrir, entre outras coisas, por que a palavra "conta" — que eu já usei um punhado de vezes hoje, sem me preocupar — pode significar coisas completamente diferentes dependendo de quem está falando, e por que isso, se não for tratado direito, quebra sistemas de um jeito muito mais sutil do que um pico de tráfego num dia 5.
 
+E antes de encerrar, o retrato de sempre — a gente vai tirar um desses ao fim de cada aula, para vocês verem a fintech crescendo tijolo a tijolo:
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 920 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="460" y="26" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 2</text>
+  <!-- Row 1: existed (A1) -->
+  <text x="30" y="58" font-family="sans-serif" font-size="11" fill="#78716c">Aula 1 (já existia):</text>
+  <g font-family="sans-serif" font-size="10">
+    <rect x="30" y="68" width="160" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="110" y="87" text-anchor="middle" fill="#57534e">monólito TechPix</text>
+    <text x="110" y="103" text-anchor="middle" fill="#78716c">um deploy, um processo</text>
+    <rect x="205" y="68" width="180" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="295" y="87" text-anchor="middle" fill="#57534e">Postgres — ledger Σ=Σ</text>
+    <text x="295" y="103" text-anchor="middle" fill="#78716c">partida dobrada, serializable</text>
+    <rect x="400" y="68" width="160" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="480" y="87" text-anchor="middle" fill="#57534e">idempotência</text>
+    <text x="480" y="103" text-anchor="middle" fill="#78716c">E2E ID, estado do registro</text>
+    <rect x="575" y="68" width="160" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="655" y="87" text-anchor="middle" fill="#57534e">DICT / SPI (BACEN)</text>
+    <text x="655" y="103" text-anchor="middle" fill="#78716c">síncronos, teto de 40s</text>
+    <rect x="750" y="68" width="140" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="820" y="87" text-anchor="middle" fill="#57534e">ADR-001</text>
+    <text x="820" y="103" text-anchor="middle" fill="#78716c">núcleo forte</text>
+  </g>
+  <!-- Row 2: new (A2) -->
+  <text x="30" y="148" font-family="sans-serif" font-size="11" fill="#166534">Aula 2 (construído hoje):</text>
+  <g font-family="sans-serif" font-size="10">
+    <rect x="30" y="158" width="160" height="46" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="110" y="177" text-anchor="middle" fill="#166534">6 módulos com fronteira</text>
+    <text x="110" y="193" text-anchor="middle" fill="#4d7c5f">regra de ouro + ArchUnit</text>
+    <rect x="205" y="158" width="180" height="46" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="295" y="177" text-anchor="middle" fill="#166534">Outbox → relay → Kafka</text>
+    <text x="295" y="193" text-anchor="middle" fill="#4d7c5f">poller→Debezium, sem dual write</text>
+    <rect x="400" y="158" width="160" height="46" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="480" y="177" text-anchor="middle" fill="#166534">read models (CQRS)</text>
+    <text x="480" y="193" text-anchor="middle" fill="#4d7c5f">Redis saldo · réplica extrato</text>
+    <rect x="575" y="158" width="160" height="46" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="655" y="177" text-anchor="middle" fill="#166534">defesas de tráfego</text>
+    <text x="655" y="190" text-anchor="middle" fill="#4d7c5f">backoff+jitter · budget</text>
+    <text x="655" y="201" text-anchor="middle" fill="#4d7c5f">shedding · bulkhead · breaker</text>
+    <rect x="750" y="158" width="140" height="46" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="820" y="177" text-anchor="middle" fill="#166534">partições + ADR-002</text>
+    <text x="820" y="193" text-anchor="middle" fill="#4d7c5f">hash(conta_id), 8+baldes</text>
+  </g>
+  <!-- Pending -->
+  <rect x="30" y="228" width="860" height="34" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="460" y="250" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">pendência aberta (linha "Revisão" do ADR-002): se a contenção persistir, reparticionar a própria escrita do ledger — ainda sem dono</text>
+  <text x="460" y="288" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A construção incremental do TechPix: o que a Aula 1 deixou de pé, o que a Aula 2 acrescentou — e a pendência que fica armada para o resto do curso.</p>
+</div>
+
 ---
 
 ## Apêndice — Termos novos desta aula
@@ -581,6 +833,12 @@ E um palpite educado, por melhor que seja, não escala para um time inteiro, nem
 | **Resilience4j** | Biblioteca Java com circuit breaker, bulkhead, rate limiter, retry e timeout componíveis (sucessor do Hystrix). |
 | **Debezium** | Implementação de referência de CDC: lê o WAL do banco e publica mudanças como eventos. |
 | **Unleash / LaunchDarkly** | Plataformas de feature flag — o mecanismo que a Aula 8 usa para canary. |
+| **Scale-up (escala vertical)** | Máquina maior (mais CPU/RAM/NVMe). Simples e preserva a transação local, mas tem teto físico, custo não-linear e continua um único ponto de falha. |
+| **Scale-out (escala horizontal)** | Mais máquinas. Para leitura, réplicas — quase de graça; para escrita fortemente consistente, exige particionar e pagar coordenação. |
+| **Cache-aside** | A aplicação consulta o cache; no miss, busca no banco e grava no cache. Só cacheia o que é lido; o primeiro acesso paga o miss. Caso TechPix: cache do DICT. |
+| **Read-through / write-through** | Variações em que o próprio cache busca no banco (read-through) ou toda escrita passa pelo cache e pelo banco juntos (write-through). |
+| **Invalidação: TTL × por evento** | TTL: o dado expira sozinho (mentira limitada ao TTL). Por evento: um consumidor atualiza o cache a cada evento — o saldo exibido no Redis é projeção, não expira. |
+| **microservices.io** | Catálogo de padrões de microsserviços de Chris Richardson — referência para Transactional Outbox, CQRS, Saga, Strangler Fig, Circuit Breaker e afins. |
 
 ---
 

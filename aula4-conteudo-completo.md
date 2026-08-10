@@ -198,6 +198,64 @@ O aplicativo da Ana fala com o TechPix por uma API REST/JSON — e deve continua
 
 Primeiro, o contrato: gRPC nasce de um arquivo `.proto` — a definição da interface é um artefato versionado, compilado, que gera cliente e servidor. Não existe "eu achava que esse campo era string". O contrato é código, e código entra em CI — vocês já estão vendo onde isso vai dar quando a gente chegar na Seção 4. Segundo, o custo: serialização binária e multiplexação sobre HTTP/2 importam quando o TechPix opera a 900 transações por segundo no pico e cada transação atravessa três ou quatro contextos — a diferença entre 5 ms e 0,5 ms de overhead por chamada, multiplicada pela cadeia, é uma fatia real do orçamento. Terceiro — e para mim o argumento decisivo — o **deadline propagation**, que merece a subseção própria.
 
+Antes disso, um parêntese que plantão me ensinou a nunca pular: quando eu falo "gRPC sobre HTTP/2", "TCP", "TLS na RSFN", eu estou andando por camadas diferentes de uma mesma pilha — o **modelo OSI**. E saber em qual camada cada coisa vive não é teoria de prova de certificação: é o que diz **qual ferramenta enxerga o quê**. Um firewall olha endereço e porta; ele não faz ideia do que é um retry. Um circuit breaker olha respostas de aplicação; ele não sabe o que é um pacote. Quem confunde as camadas compra defesa no andar errado.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 470" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="20" y="26" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333">O modelo OSI, com o TechPix morando dentro dele</text>
+  <!-- Layer bars -->
+  <g font-family="sans-serif">
+    <rect x="20" y="42" width="440" height="50" rx="7" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+    <text x="35" y="63" font-size="12" font-weight="bold" fill="#26215C">L7 · Aplicação</text>
+    <text x="35" y="82" font-size="10.5" fill="#5a55a0">HTTP/2 · gRPC · REST · header Idempotency-Key · deadline · pacs.008</text>
+
+    <rect x="20" y="97" width="440" height="44" rx="7" fill="#fff" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="35" y="115" font-size="12" font-weight="bold" fill="#57534e">L6 · Apresentação</text>
+    <text x="35" y="133" font-size="10.5" fill="#78716c">TLS (mTLS na RSFN) · serialização protobuf / JSON</text>
+
+    <rect x="20" y="146" width="440" height="44" rx="7" fill="#fff" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="35" y="164" font-size="12" font-weight="bold" fill="#57534e">L5 · Sessão</text>
+    <text x="35" y="182" font-size="10.5" fill="#78716c">streams multiplexados do HTTP/2 · conexões persistentes</text>
+
+    <rect x="20" y="195" width="440" height="50" rx="7" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+    <text x="35" y="216" font-size="12" font-weight="bold" fill="#26215C">L4 · Transporte</text>
+    <text x="35" y="235" font-size="10.5" fill="#5a55a0">TCP · portas · handshake · os pools de conexão da Aula 2 vivem aqui</text>
+
+    <rect x="20" y="250" width="440" height="44" rx="7" fill="#fff" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="35" y="268" font-size="12" font-weight="bold" fill="#57534e">L3 · Rede</text>
+    <text x="35" y="286" font-size="10.5" fill="#78716c">IP · roteamento entre datacenters e a RSFN</text>
+
+    <rect x="20" y="299" width="440" height="38" rx="7" fill="#fff" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="35" y="316" font-size="12" font-weight="bold" fill="#57534e">L2 · Enlace</text>
+    <text x="35" y="331" font-size="10.5" fill="#78716c">Ethernet · switches</text>
+
+    <rect x="20" y="342" width="440" height="38" rx="7" fill="#fff" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="35" y="359" font-size="12" font-weight="bold" fill="#57534e">L1 · Física</text>
+    <text x="35" y="374" font-size="10.5" fill="#78716c">fibra óptica — a RSFN que liga o TechPix ao BACEN é, no fim, isto</text>
+  </g>
+  <!-- Right: where each defense lives -->
+  <g font-family="sans-serif">
+    <rect x="500" y="42" width="360" height="106" rx="9" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="680" y="63" text-anchor="middle" font-size="12" font-weight="bold" fill="#166534">Enxergam L7 (conteúdo da conversa)</text>
+    <text x="680" y="83" text-anchor="middle" font-size="10.5" fill="#166534">timeout · retry · circuit breaker · deadline propagation</text>
+    <text x="680" y="101" text-anchor="middle" font-size="10.5" fill="#166534">LB L7: NGINX · Envoy · ALB — leem rota, header, status</text>
+    <text x="680" y="123" text-anchor="middle" font-size="10" fill="#3f6212">+ decide por conteúdo · − mais caro por requisição</text>
+    <line x1="500" y1="80" x2="465" y2="67" stroke="#166534" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+    <rect x="500" y="195" width="360" height="92" rx="9" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+    <text x="680" y="216" text-anchor="middle" font-size="12" font-weight="bold" fill="#7a5c00">Enxergam L3/L4 (pacotes e portas)</text>
+    <text x="680" y="236" text-anchor="middle" font-size="10.5" fill="#7a5c00">firewall · LB L4: kube-proxy, NLB — não leem HTTP</text>
+    <text x="680" y="254" text-anchor="middle" font-size="10.5" fill="#7a5c00">+ rápidos e baratos · − cegos ao conteúdo:</text>
+    <text x="680" y="271" text-anchor="middle" font-size="10.5" fill="#7a5c00">não distinguem /pix de /extrato, nem 200 de 500</text>
+    <line x1="500" y1="225" x2="465" y2="218" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="4 3"/>
+  </g>
+  <rect x="20" y="398" width="840" height="34" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="440" y="420" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#3730a3">Guardem o L4 × L7: é o LB L7 — que lê rota e header — que vai fatiar o tráfego do canary na Aula 6. O L4 não saberia nem por onde começar.</text>
+  <text x="440" y="456" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">Defesa comprada no andar errado é defesa que não dispara: firewall não vê retry storm; circuit breaker não vê pacote perdido.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O modelo OSI aplicado ao TechPix: cada defesa da Aula 2 e desta aula vive numa camada — e só enxerga o que a camada dela mostra.</p>
+</div>
+
 ### 2.2 Deadline propagation: o orçamento viaja com a requisição
 
 O professor da Aula 1 ensinou o orçamento de latência: teto normativo de 40 segundos, experiência-alvo de poucos segundos, cada componente gastando uma fatia. O erro clássico de implementação é traduzir esse orçamento em **timeouts locais e independentes**: Pagamentos espera o Antifraude por 2 segundos, o Antifraude espera a feature store por 2 segundos, a feature store espera o cache por 2 segundos... e ninguém percebe que, somados, os timeouts locais estouram o orçamento global — ou, pior, que um componente lá no fundo continua trabalhando duro numa requisição que o cliente lá em cima **já abandonou**. Trabalho zumbi: queima CPU, segura conexão do pool, e o resultado vai para o lixo.
@@ -355,6 +413,73 @@ Mas eu preciso ser honesto sobre o custo, porque DLQ tem uma rasteira que quase 
 ### 3.5 Backpressure: quando o produtor é mais rápido que o mundo
 
 Último modo de falha assíncrono, para completar o mapa: o produtor sustentadamente mais rápido que o consumidor. Não foi o caso da sexta-feira — ali o consumidor estava *parado*, não lento — mas é o caso clássico do pico: 900 TPS de eventos entrando, projetor dando conta de 600. A fila cresce, o atraso cresce com ela, e a promessa dos 300 ms morre por estrangulamento em vez de morrer por veneno. As saídas são três, e vocês já conhecem a lógica de todas pela Aula 2: **escalar o consumidor** (mais instâncias, até o limite do paralelismo por partição), **aliviar o trabalho** (processar em lote, simplificar a projeção), ou **derramar com critério** — o load shedding do lado de quem lê: em sobrecarga, o projetor prioriza eventos que afetam saldo exibido e atrasa os de notificação. Recusar trabalho continua sendo uma forma de proteger trabalho; a Aula 2 ensinou isso para requisições, e vale igual para eventos.
+
+### 3.6 Saga: a transação que atravessa fronteiras sem travar ninguém
+
+E antes de fechar o capítulo assíncrono, deixa eu nomear um padrão que está escondido na aresta mais lenta da tabela — Devoluções e Disputas, a que trabalha em horas, no trilho do MED. Lembram do que a Aula 1 cravou: liquidou, acabou. Pix liquidado não se desfaz; se **compensa**, com uma transação nova — a `pacs.004`. Pois o nome de engenharia desse desenho é **saga**, do catálogo de padrões de microsserviços do Chris Richardson (microservices.io) — a alternativa ao **two-phase commit** que o professor da Aula 1 já tinha posto na mesa lá na Seção 2.6, quando falou de transações entre partições. A devolução do MED é uma saga literal: uma sequência de transações locais — cada uma commitada de verdade, na sua instituição —, costurada por eventos, com uma ação compensatória escrita para cada passo que pode falhar. E reparem que o BACEN não teria como fazer diferente: two-phase commit entre instituições independentes significaria uma instituição travada no meio do protocolo esperando a outra responder — e o trilho do país inteiro parado junto. Quem opera fila sabe: **bloqueio distribuído é incidente distribuído.**
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 400" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a4u-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a4u-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <!-- Painel 2PC -->
+  <rect x="20" y="20" width="400" height="310" rx="12" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+  <text x="220" y="48" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#7f1d1d">Two-phase commit (2PC)</text>
+  <rect x="130" y="65" width="180" height="40" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="220" y="90" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">Coordenador</text>
+  <line x1="160" y1="105" x2="110" y2="150" stroke="#b91c1c" stroke-width="1.5" marker-end="url(#a4u-red)"/>
+  <line x1="280" y1="105" x2="330" y2="150" stroke="#b91c1c" stroke-width="1.5" marker-end="url(#a4u-red)"/>
+  <text x="220" y="135" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#991b1b">prepare → vote → commit</text>
+  <rect x="40" y="152" width="150" height="44" rx="8" fill="#fff" stroke="#999" stroke-width="1.5"/>
+  <text x="115" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">TechPix</text>
+  <text x="115" y="188" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">recursos TRAVADOS</text>
+  <rect x="250" y="152" width="150" height="44" rx="8" fill="#fff" stroke="#999" stroke-width="1.5"/>
+  <text x="325" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Banco Beta</text>
+  <text x="325" y="188" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">…não responde ⏳</text>
+  <rect x="40" y="220" width="360" height="52" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="220" y="242" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#7f1d1d">Se um participante trava no meio do protocolo,</text>
+  <text x="220" y="260" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#991b1b">TODOS ficam bloqueados esperando — o trilho para</text>
+  <text x="220" y="300" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">(+) atomicidade forte imediata</text>
+  <text x="220" y="318" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">(−) latência · fragilidade · bloqueio distribuído</text>
+
+  <!-- Painel Saga -->
+  <rect x="460" y="20" width="400" height="310" rx="12" fill="#fff" stroke="#166534" stroke-width="2"/>
+  <text x="660" y="48" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#166534">Saga (microservices.io) — o MED é uma</text>
+  <text x="660" y="66" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#166534">saga regulatória</text>
+  <g font-family="sans-serif" font-size="10">
+    <rect x="480" y="82" width="170" height="38" rx="7" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+    <text x="565" y="98" text-anchor="middle" fill="#166534">1. abre caso MED</text>
+    <text x="565" y="112" text-anchor="middle" fill="#4d7c0f">commit local · TechPix</text>
+    <rect x="680" y="82" width="160" height="38" rx="7" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+    <text x="760" y="98" text-anchor="middle" fill="#166534">2. bloqueio cautelar</text>
+    <text x="760" y="112" text-anchor="middle" fill="#4d7c0f">commit local · Banco Beta</text>
+    <rect x="480" y="150" width="170" height="38" rx="7" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+    <text x="565" y="166" text-anchor="middle" fill="#166534">3. pacs.004 (MD06) no SPI</text>
+    <text x="565" y="180" text-anchor="middle" fill="#4d7c0f">liquidação da devolução</text>
+    <rect x="680" y="150" width="160" height="38" rx="7" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+    <text x="760" y="166" text-anchor="middle" fill="#166534">4. credita a vítima</text>
+    <text x="760" y="180" text-anchor="middle" fill="#4d7c0f">fecha o caso</text>
+  </g>
+  <line x1="650" y1="101" x2="678" y2="101" stroke="#4338ca" stroke-width="2" marker-end="url(#a4u-arrow)"/>
+  <line x1="760" y1="120" x2="567" y2="148" stroke="#4338ca" stroke-width="2" marker-end="url(#a4u-arrow)"/>
+  <line x1="650" y1="169" x2="678" y2="169" stroke="#4338ca" stroke-width="2" marker-end="url(#a4u-arrow)"/>
+  <rect x="480" y="212" width="360" height="56" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="660" y="234" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#7a5c00">Passo 3 falhou? COMPENSA, não trava:</text>
+  <text x="660" y="252" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">desbloqueia o cautelar, reabre a análise — trilha auditável</text>
+  <text x="660" y="300" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">(+) ninguém trava ninguém · cada passo auditável (BACEN ✓)</text>
+  <text x="660" y="318" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">(−) consistência eventual · compensação tem que estar ESCRITA</text>
+
+  <text x="440" y="365" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">A Aula 1 (§2.6) apresentou os dois; o Outbox da Aula 2 é quem carrega os eventos que costuram a saga.</text>
+  <text x="440" y="385" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">Pix liquidado é irrevogável — "desfazer" não existe; existe transação nova de compensação. O BACEN escolheu saga.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Saga × two-phase commit na devolução do MED: transações locais costuradas por eventos, com compensação escrita — em vez de bloqueio distribuído entre instituições.</p>
+</div>
 
 ---
 
@@ -573,6 +698,52 @@ Terceiro: **resiliência é política declarada, não heroísmo de plantão.** T
 
 E a promessa: na tabela de políticas, a aresta Pagamentos → Antifraude ficou com o orçamento mais apertado do sistema — 100 milissegundos para decidir se um Pix é honesto. Hoje, atrás dessa aresta, moram regras: limiares, listas, heurísticas que o Diego mantém. Na próxima aula, a gente vai descobrir por que as regras não bastam — vai ser numa madrugada de outubro, com um golpe que nenhuma regra pegou — e vai colocar um **modelo de machine learning dentro desses 100 milissegundos**: feature store, inferência em tempo real, modelo aberto rodando na casa, e a pergunta que define IA em fintech: quando o modelo diz "talvez", quem decide? Tragam a tabela de políticas. Ela vai ganhar uma linha que pensa.
 
+E uma última coisa, que eu vou repetir no fim de todas as minhas aulas, porque plantão me ensinou a nunca perder de vista o estado da obra: o retrato do TechPix como ele fica hoje. Cinza é o que a gente herdou; verde é o que foi parafusado nesta aula.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 290" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="440" y="26" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 4</text>
+  <!-- Já existia (cinza) -->
+  <g font-family="sans-serif">
+    <rect x="20" y="48" width="200" height="48" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="120" y="68" text-anchor="middle" font-size="11" font-weight="bold" fill="#57534e">Monólito modular + ledger</text>
+    <text x="120" y="84" text-anchor="middle" font-size="10" fill="#78716c">PostgreSQL serializable · A1/A2</text>
+    <rect x="234" y="48" width="200" height="48" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="334" y="68" text-anchor="middle" font-size="11" font-weight="bold" fill="#57534e">Idempotência E2E ID</text>
+    <text x="334" y="84" text-anchor="middle" font-size="10" fill="#78716c">efeito exactly-once · A1</text>
+    <rect x="448" y="48" width="200" height="48" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="548" y="68" text-anchor="middle" font-size="11" font-weight="bold" fill="#57534e">Outbox → relay → Kafka</text>
+    <text x="548" y="84" text-anchor="middle" font-size="10" fill="#78716c">CQRS: Redis + réplica · A2</text>
+    <rect x="662" y="48" width="198" height="48" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="761" y="68" text-anchor="middle" font-size="11" font-weight="bold" fill="#57534e">5 contextos + ACL BACEN</text>
+    <text x="761" y="84" text-anchor="middle" font-size="10" fill="#78716c">spec + constituição · A3</text>
+    <rect x="20" y="104" width="200" height="48" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="120" y="124" text-anchor="middle" font-size="11" font-weight="bold" fill="#57534e">Defesas da Aula 2</text>
+    <text x="120" y="140" text-anchor="middle" font-size="10" fill="#78716c">backoff+jitter · breaker · bulkhead</text>
+  </g>
+  <!-- Novo desta aula (verde) -->
+  <g font-family="sans-serif">
+    <rect x="20" y="176" width="200" height="48" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="120" y="196" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">Contratos por aresta</text>
+    <text x="120" y="212" text-anchor="middle" font-size="10" fill="#4d7c0f">gRPC/.proto interno · REST borda</text>
+    <rect x="234" y="176" width="200" height="48" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="334" y="196" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">Deadline propagation</text>
+    <text x="334" y="212" text-anchor="middle" font-size="10" fill="#4d7c0f">o orçamento viaja com a requisição</text>
+    <rect x="448" y="176" width="200" height="48" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="548" y="196" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">Consumidor idempotente + DLQ</text>
+    <text x="548" y="212" text-anchor="middle" font-size="10" fill="#4d7c0f">lag vigiado · saga nas Devoluções</text>
+    <rect x="662" y="176" width="198" height="48" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="761" y="196" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">Schema registry + Pact</text>
+    <text x="761" y="212" text-anchor="middle" font-size="10" fill="#4d7c0f">expand/contract · registry no CI</text>
+    <rect x="234" y="232" width="414" height="44" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="441" y="250" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">Contrato de Integração — políticas timeout/retry/fallback por aresta</text>
+    <text x="441" y="266" text-anchor="middle" font-size="10" fill="#4d7c0f">fail-open/fail-closed decidido por valor, por escrito, antes do incidente</text>
+  </g>
+  <text x="440" y="288" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#999">cinza = já existia · verde = construído nesta aula</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A construção incremental do TechPix: a Aula 4 não adicionou caixas novas — ela transformou cada seta em contrato.</p>
+</div>
+
 ---
 
 ## Apêndice — Termos novos desta aula
@@ -594,6 +765,10 @@ E a promessa: na tabela de políticas, a aresta Pagamentos → Antifraude ficou 
 | **Fail-open / fail-closed** | Na falha do validador: deixar passar (disponibilidade, risco de fraude) ou recusar (segurança, custo de clientes barrados); em fintech, segmentado por valor — decisão de negócio, não de engenharia. |
 | **Política por aresta** | Timeout, retry, breaker, bulkhead e fallback declarados por escrito para cada aresta do mapa, versionados como código. |
 | **Contrato de Integração** | Artefato vivo, irmão da spec da Aula 3: uma entrada por aresta com estilo, contrato, orçamento, políticas, fallback e donos — amarrado a registry, Pact e dashboards para não virar wiki morta. |
+| **Saga** | Transação distribuída como sequência de transações locais costuradas por eventos, com ação compensatória escrita para cada passo — a devolução do MED (`pacs.004`/MD06) é uma saga regulatória. Padrão do catálogo microservices.io (Chris Richardson). |
+| **Two-phase commit (2PC)** | Protocolo de atomicidade forte entre participantes (prepare → vote → commit); se um trava no meio, todos ficam bloqueados esperando — inviável entre instituições independentes, por isso o BACEN escolheu saga. |
+| **Modelo OSI** | As 7 camadas da comunicação em rede; no TechPix: TLS/RSFN na apresentação, HTTP/2+gRPC em L7, TCP em L4 — timeout e circuit breaker enxergam L7; firewall enxerga L3/L4. Semente do L4×L7 que a Aula 6 usa no canary. |
+| **microservices.io** | Catálogo de padrões de microsserviços de Chris Richardson — referência dos padrões usados no curso: Transactional Outbox, Saga, CQRS, Event Sourcing, Circuit Breaker, Database per Service, Strangler Fig. |
 
 ---
 

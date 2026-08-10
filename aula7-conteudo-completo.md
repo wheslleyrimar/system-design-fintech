@@ -259,6 +259,97 @@ Como o span do Antifraude sabe que pertence ao trace que começou em Pagamentos?
 
 Tracing custa caro — cada span é dado gerado, transmitido, armazenado — então se amostra, tipicamente 1 a 10% do tráfego. E aqui, uma decisão de projeto que vai salvar a investigação de hoje: amostragem **na cabeça** (decidir no início da requisição) é barata mas cega — ela não sabe, ao decidir, se a requisição vai ser interessante. Amostragem **na cauda** (*tail-based*: coletar tudo, decidir reter *depois* de ver como terminou) permite a política que o TechPix adotou: **reter 100% dos traces lentos ou com erro, e 1% do caminho feliz.** O Pix da Ana levou 9 segundos — lento — logo, o trace dele foi retido. A agulha já estava separada do palheiro no momento em que caiu.
 
+Antes de abrir o trace da Ana, deixa eu desenhar num quadro só **onde toda essa telemetria mora** — porque até agora eu falei dos três pilares um por um, e em produção eles são um encanamento único, com stack de verdade em cada estágio:
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 400" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a7s-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a7s-arrow-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+
+  <!-- Producers -->
+  <text x="105" y="26" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Quem produz</text>
+  <rect x="30" y="40" width="150" height="52" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="105" y="61" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Pagamentos</text>
+  <rect x="55" y="68" width="100" height="17" rx="4" fill="#eef2ff" stroke="#4338ca"/>
+  <text x="105" y="80" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#3730a3">OTel SDK</text>
+
+  <rect x="30" y="104" width="150" height="52" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="105" y="125" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Antifraude</text>
+  <rect x="55" y="132" width="100" height="17" rx="4" fill="#eef2ff" stroke="#4338ca"/>
+  <text x="105" y="144" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#3730a3">OTel SDK</text>
+
+  <rect x="30" y="168" width="150" height="52" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="105" y="186" text-anchor="middle" font-family="sans-serif" font-size="11.5" font-weight="bold" fill="#333">Monólito</text>
+  <text x="105" y="199" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#666">Contas + Ledger</text>
+  <rect x="55" y="203" width="100" height="14" rx="4" fill="#eef2ff" stroke="#4338ca"/>
+  <text x="105" y="214" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#3730a3">OTel SDK</text>
+
+  <text x="105" y="245" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#666">traceparent (W3C) viaja</text>
+  <text x="105" y="258" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#666">no gRPC e nos eventos —</text>
+  <text x="105" y="271" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#666">a mesma carona do deadline (Aula 4)</text>
+
+  <!-- Arrows to collector -->
+  <line x1="180" y1="66" x2="255" y2="120" stroke="#4338ca" stroke-width="2" marker-end="url(#a7s-arrow)"/>
+  <line x1="180" y1="130" x2="255" y2="135" stroke="#4338ca" stroke-width="2" marker-end="url(#a7s-arrow)"/>
+  <line x1="180" y1="194" x2="255" y2="150" stroke="#4338ca" stroke-width="2" marker-end="url(#a7s-arrow)"/>
+
+  <!-- Collector -->
+  <rect x="258" y="95" width="170" height="90" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+  <text x="343" y="118" text-anchor="middle" font-family="sans-serif" font-size="12.5" font-weight="bold" fill="#26215C">OTel Collector</text>
+  <text x="343" y="136" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">recebe · processa · exporta</text>
+  <text x="343" y="151" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">amostragem tail-based:</text>
+  <text x="343" y="165" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">100% lentos/erro · 1% feliz</text>
+  <text x="343" y="200" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#666">neutro de fornecedor: trocar</text>
+  <text x="343" y="213" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#666">backend não muda o código</text>
+
+  <!-- Arrows to backends -->
+  <line x1="428" y1="115" x2="505" y2="70" stroke="#4338ca" stroke-width="2" marker-end="url(#a7s-arrow)"/>
+  <line x1="428" y1="140" x2="505" y2="150" stroke="#4338ca" stroke-width="2" marker-end="url(#a7s-arrow)"/>
+  <line x1="428" y1="165" x2="505" y2="230" stroke="#4338ca" stroke-width="2" marker-end="url(#a7s-arrow)"/>
+
+  <!-- Backends -->
+  <text x="595" y="26" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Onde mora cada pilar</text>
+  <rect x="508" y="42" width="175" height="56" rx="8" fill="#fff" stroke="#166534" stroke-width="2"/>
+  <text x="595" y="61" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Prometheus</text>
+  <text x="595" y="76" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#166534">métricas · pull · histogramas</text>
+  <text x="595" y="90" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#666">barato — cardinalidade controlada</text>
+
+  <rect x="508" y="122" width="175" height="56" rx="8" fill="#fff" stroke="#d4a017" stroke-width="2"/>
+  <text x="595" y="141" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Logs estruturados</text>
+  <text x="595" y="156" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#7a5c00">JSON · e2e_id · mascarados</text>
+  <text x="595" y="170" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#666">médio — cresce com o tráfego</text>
+
+  <rect x="508" y="202" width="175" height="56" rx="8" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+  <text x="595" y="221" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">Traces (Jaeger/Tempo)</text>
+  <text x="595" y="236" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#7f1d1d">spans · jornada por requisição</text>
+  <text x="595" y="250" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#666">caro — por isso se amostra</text>
+
+  <!-- Grafana -->
+  <line x1="683" y1="70" x2="758" y2="130" stroke="#166534" stroke-width="2" marker-end="url(#a7s-arrow-g)"/>
+  <line x1="683" y1="150" x2="758" y2="150" stroke="#166534" stroke-width="2" marker-end="url(#a7s-arrow-g)"/>
+  <line x1="683" y1="230" x2="758" y2="170" stroke="#166534" stroke-width="2" marker-end="url(#a7s-arrow-g)"/>
+  <rect x="760" y="110" width="95" height="86" rx="9" fill="#f0fdf4" stroke="#166534" stroke-width="2.5"/>
+  <text x="807" y="134" text-anchor="middle" font-family="sans-serif" font-size="12.5" font-weight="bold" fill="#166534">Grafana</text>
+  <text x="807" y="152" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#166534">dashboards</text>
+  <text x="807" y="166" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#166534">alerta = burn rate</text>
+  <text x="807" y="180" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#166534">exemplar → trace</text>
+
+  <!-- Bottom band -->
+  <rect x="30" y="300" width="825" height="52" rx="8" fill="#fef9e7" stroke="#d4a017"/>
+  <text x="442" y="322" text-anchor="middle" font-family="sans-serif" font-size="11.5" fill="#7a5c00">Trade-off do encanamento: métrica é barata e agregada (perde o indivíduo) · trace é caro e individual (por isso tail-based) · log é o meio-termo —</text>
+  <text x="442" y="339" text-anchor="middle" font-family="sans-serif" font-size="11.5" fill="#7a5c00">e o exemplar no Grafana é a ponte de um clique entre o agregado e a jornada da Ana</text>
+
+  <text x="442" y="380" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">Instrumentar uma vez (OTel), exportar para onde quiser — o Collector desacopla o código dos backends</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O encanamento de observabilidade do TechPix, com a stack nomeada: OTel SDK → Collector → Prometheus / logs / traces → Grafana.</p>
+</div>
+
 ### 4.2 O trace da Ana, span a span
 
 O Rafael pegou o `e2e_id` do ticket — o atendimento consegue vê-lo na ferramenta interna, mascarado de dados pessoais —, colou na busca de traces, e a história inteira abriu na tela. Eu reproduzo aqui a estrutura, com as durações reais:
@@ -617,6 +708,63 @@ Primeiro: **observabilidade é responder perguntas que você ainda não fez.** M
 Segundo: **SLO transforma confiabilidade em aritmética combinada.** O error budget é a moeda que compra velocidade: sobrando, o time ousa; queimado, o time estabiliza — e a guerra entre lançar e estabilizar vira conta, não opinião. Alerta acorda gente por sintoma com prova matemática; causa é assunto de dashboard.
 
 Terceiro: **operar é aprender em público.** Falha é regime permanente, não anomalia; MTTR vale mais que MTBF; o postmortem é o ADR do incidente — imutável, datado, blameless — porque punir quem conta a verdade é assassinar a informação que previne a próxima falha.
+
+E o último retrato de plantão da minha parte no curso. Reparem no que esta aula acrescentou: nenhuma caixa nova processa um Pix sequer — todas elas **enxergam**. E reparem também na caixinha âmbar, porque ela é deliberada: tem um sinal ali dentro que ninguém tratou, e isso não é esquecimento — é a herança que eu deixo para a Aula 8.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 7</text>
+
+  <text x="20" y="44" font-family="sans-serif" font-size="10" font-weight="bold" fill="#a8a29e">JÁ EXISTIA — AULAS 1 A 6</text>
+  <g font-family="sans-serif">
+    <rect x="20" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="122" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Monólito Contas + Ledger</text>
+    <text x="122" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">Postgres serializable · pix_a_liquidar · [A1]</text>
+    <rect x="232" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="334" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Outbox → Kafka + CQRS</text>
+    <text x="334" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">read models Redis/réplica · [A2]</text>
+    <rect x="444" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="546" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Contextos + contratos</text>
+    <text x="546" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">specs · gRPC · registry · DLQ · [A3·A4]</text>
+    <rect x="656" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="758" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Antifraude com ML</text>
+    <text x="758" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">GPU · feature store Redis · [A5]</text>
+
+    <rect x="20" y="104" width="416" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="228" y="123" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Serviços em Kubernetes (Antifraude · Pagamentos)</text>
+    <text x="228" y="139" text-anchor="middle" font-size="9.5" fill="#78716c">database-per-service · Ledger fica no monólito · [A6]</text>
+    <rect x="444" y="104" width="416" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="652" y="123" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Entrega progressiva</text>
+    <text x="652" y="139" text-anchor="middle" font-size="9.5" fill="#78716c">ArgoCD · canary via Envoy · Unleash · fitness functions · [A6]</text>
+  </g>
+
+  <text x="20" y="172" font-family="sans-serif" font-size="10" font-weight="bold" fill="#166534">CONSTRUÍDO NESTA AULA</text>
+  <g font-family="sans-serif">
+    <rect x="20" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="101" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Métricas</text>
+    <text x="101" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">OTel → Prometheus · Grafana</text>
+    <rect x="192" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="273" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Logs estruturados</text>
+    <text x="273" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">correlação por e2e_id · LGPD</text>
+    <rect x="364" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="445" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Tracing distribuído</text>
+    <text x="445" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">spans ponta a ponta · exemplars</text>
+    <rect x="536" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="617" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Monitoração do modelo</text>
+    <text x="617" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">drift · fallback · sombra×ativo</text>
+    <rect x="708" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="789" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">SLOs + error budget</text>
+    <text x="789" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">burn rate · postmortem blameless</text>
+  </g>
+
+  <rect x="192" y="246" width="496" height="42" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="440" y="264" text-anchor="middle" font-family="sans-serif" font-size="11.5" font-weight="bold" fill="#7a5c00">Série do p99 de escrita do ledger: 42 → 58 ms em 5 meses — anotada, SEM AÇÃO</text>
+  <text x="440" y="281" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#7a5c00">dentro do SLO · não dispara alerta · esperando um leitor — Aula 8</text>
+
+  <text x="440" y="316" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula · âmbar = sinal anotado, herdado pela Aula 8</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução do TechPix: a Aula 7 não processa nada novo — ela dá olhos ao sistema. E deixa, de propósito, um sinal sem leitor.</p>
+</div>
 
 Essa aula encerra a minha parte no curso. Em quatro aulas, o TechPix saiu de um monólito com fronteiras bem desenhadas para um sistema distribuído com contratos explícitos, um modelo de risco servindo no caminho crítico, entrega progressiva com rede de validação, e — a partir de hoje — olhos para se ver por inteiro. Foi uma honra ser o professor da fase em que o sistema foi para a rua. Na próxima aula, vocês voltam para as mãos de quem começou tudo isso — e ele vai fechar o círculo que abriu na Aula 1: *da fé para a evidência*. O sistema agora produz evidência de sobra; a série histórica do ledger está lá, subindo devagarinho, esperando. O que falta é o leitor. Até lá.
 

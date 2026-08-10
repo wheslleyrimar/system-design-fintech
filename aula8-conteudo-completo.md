@@ -485,6 +485,121 @@ Guardem essa frase, porque é o resumo do curso inteiro: hoje vocês decidiram n
 <p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O arco do curso: cada decisão deixou uma pergunta em aberto, e a produção — lida por um agente, sob o Harness — respondeu.</p>
 </div>
 
+E para fechar de verdade, deixa eu desenhar o TechPix inteiro — não como ele nasceu, mas como ele está hoje, com cada peça carregando a etiqueta da aula em que foi construída. Reparem: nenhuma dessas caixas entrou por moda. Cada uma nasceu de uma dor concreta — um pagamento duplicado, um dia 5, um substantivo ambíguo, um extrato congelado, um golpe de madrugada, um pool mal dimensionado, um Pix de 9 segundos — e é por isso que o desenho se sustenta.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 660" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a8u-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a8u-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+    <marker id="a8u-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+  </defs>
+  <text x="450" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#1a1a1a">O TechPix completo — construído aula a aula</text>
+
+  <!-- Clientes -->
+  <rect x="40" y="40" width="180" height="48" rx="9" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="130" y="60" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Apps dos clientes</text>
+  <text x="130" y="77" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">Ana · Bruno · REST/HTTPS</text>
+
+  <!-- BACEN external -->
+  <rect x="660" y="40" width="200" height="70" rx="9" fill="#fef9e7" stroke="#d4a017" stroke-width="2" stroke-dasharray="7 4"/>
+  <text x="760" y="60" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">BACEN (externo)  [A1]</text>
+  <text x="760" y="77" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">DICT p99 ≤ 1s · SPI p99 4,6s</text>
+  <text x="760" y="93" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">teto normativo: 40s ponta a ponta</text>
+
+  <!-- NGINX -->
+  <line x1="130" y1="88" x2="130" y2="112" stroke="#4338ca" stroke-width="2" marker-end="url(#a8u-arrow)"/>
+  <rect x="40" y="114" width="180" height="44" rx="9" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="130" y="132" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#26215C">NGINX — LB L7  [A6]</text>
+  <text x="130" y="149" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">borda: TLS, rotas, rate limit</text>
+
+  <!-- Kubernetes band -->
+  <rect x="30" y="180" width="580" height="170" rx="12" fill="none" stroke="#a8a29e" stroke-width="1.5" stroke-dasharray="8 5"/>
+  <text x="46" y="200" font-family="sans-serif" font-size="11" font-weight="bold" fill="#78716c">Kubernetes  [A6]</text>
+
+  <line x1="130" y1="158" x2="130" y2="212" stroke="#4338ca" stroke-width="2" marker-end="url(#a8u-arrow)"/>
+
+  <rect x="55" y="214" width="230" height="76" rx="9" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="170" y="234" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#26215C">Pagamentos  [A3·A6]</text>
+  <text x="170" y="251" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">gRPC/protobuf · deadline propagation</text>
+  <text x="170" y="267" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">ACLs DICT/SPI (pacs.008/002)</text>
+  <text x="170" y="283" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">contratos por aresta  [A4]</text>
+
+  <line x1="285" y1="252" x2="345" y2="252" stroke="#4338ca" stroke-width="2" marker-end="url(#a8u-arrow)"/>
+  <text x="315" y="243" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">gRPC · 100ms</text>
+
+  <rect x="347" y="214" width="240" height="76" rx="9" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="467" y="234" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#26215C">Antifraude  [A5·A6]</text>
+  <text x="467" y="251" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">modelo ML em GPU · shadow mode</text>
+  <text x="467" y="267" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">feature store online: Redis</text>
+  <text x="467" y="283" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">"modelo sugere, regra decide"</text>
+
+  <!-- Pagamentos -> BACEN -->
+  <path d="M 285 228 Q 480 150 660 90" fill="none" stroke="#d4a017" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a8u-arrow)"/>
+  <text x="500" y="163" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#7a5c00">via ACL · circuit breaker + timeout  [A2·A4]</text>
+
+  <!-- Envoy note inside k8s -->
+  <rect x="55" y="302" width="532" height="36" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="321" y="325" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">malha Envoy/Istio: traffic-split do canary 1%→5%→25%→100% · rollback automático  [A6]</text>
+
+  <!-- Monólito -->
+  <line x1="170" y1="290" x2="170" y2="296" stroke="#4338ca" stroke-width="0"/>
+  <line x1="120" y1="290" x2="120" y2="374" stroke="#4338ca" stroke-width="2" marker-end="url(#a8u-arrow)"/>
+  <text x="106" y="360" text-anchor="end" font-family="sans-serif" font-size="9" fill="#666">reserva (ACID)</text>
+  <rect x="40" y="376" width="330" height="86" rx="9" fill="#fff" stroke="#1a1a1a" stroke-width="2.5"/>
+  <text x="205" y="396" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Monólito: Contas + Ledger  [A1→A8]</text>
+  <text x="205" y="413" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">PostgreSQL serializable (SSI) · partida dobrada · Σ = Σ</text>
+  <text x="205" y="429" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">idempotência por E2E ID [A1] · escrita particionada (ADR-003) [A8]</text>
+  <text x="205" y="446" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#166534">+ tabela Outbox na mesma transação [A2]</text>
+
+  <!-- Outbox -> Debezium -> Kafka -->
+  <line x1="370" y1="419" x2="430" y2="419" stroke="#166534" stroke-width="2" marker-end="url(#a8u-green)"/>
+  <rect x="432" y="396" width="120" height="46" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="492" y="415" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">Debezium  [A2]</text>
+  <text x="492" y="432" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">CDC via WAL</text>
+  <line x1="552" y1="419" x2="612" y2="419" stroke="#166534" stroke-width="2" marker-end="url(#a8u-green)"/>
+  <rect x="614" y="388" width="130" height="62" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="679" y="408" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">Kafka  [A2]</text>
+  <text x="679" y="424" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">rio de eventos · schema</text>
+  <text x="679" y="438" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">registry + DLQ  [A4]</text>
+
+  <!-- Kafka -> read models + feature store -->
+  <line x1="679" y1="450" x2="679" y2="478" stroke="#166534" stroke-width="2" marker-end="url(#a8u-green)"/>
+  <rect x="560" y="480" width="240" height="58" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="680" y="499" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#333">Read models (CQRS)  [A2]</text>
+  <text x="680" y="515" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">Redis: saldo exibido · cache do DICT</text>
+  <text x="680" y="530" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">réplica Postgres: extrato · atraso 100–300ms</text>
+  <path d="M 744 396 Q 800 300 587 262" fill="none" stroke="#166534" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#a8u-green)"/>
+  <text x="800" y="310" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">alimenta features  [A5]</text>
+
+  <!-- Observabilidade + entrega rail -->
+  <rect x="40" y="480" width="240" height="58" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="160" y="499" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#333">Observabilidade  [A7]</text>
+  <text x="160" y="515" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">OTel → Prometheus + Grafana · traces</text>
+  <text x="160" y="530" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">logs com e2e_id · SLOs + error budget</text>
+  <rect x="300" y="480" width="240" height="58" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="420" y="499" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#333">Entrega contínua  [A6]</text>
+  <text x="420" y="515" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">ArgoCD (GitOps) · Unleash (flags)</text>
+  <text x="420" y="530" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">fitness functions contínuas no CI  [A2]</text>
+
+  <!-- IA governada -->
+  <line x1="160" y1="538" x2="160" y2="566" stroke="#888" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#a8u-gray)"/>
+  <text x="230" y="558" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">métricas via MCP (leitura)</text>
+  <rect x="40" y="568" width="760" height="52" rx="9" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+  <text x="420" y="588" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#26215C">Agente + 3 servidores MCP sob o Harness  [A8]</text>
+  <text x="420" y="606" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">lê métricas e specs/ADRs · propõe (rascunho de ADR + canary) · humano aprova · NUNCA move dinheiro · copiloto da Carla  [A5]</text>
+
+  <text x="450" y="646" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">Oito aulas, um sistema — cada caixa nasceu de uma dor concreta.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O fechamento da construção: a arquitetura completa do TechPix, com a stack real e a aula em que cada componente entrou — [A1] ledger e BACEN, [A2] Outbox/Kafka/CQRS, [A3] fronteiras, [A4] contratos e resiliência, [A5] IA no núcleo, [A6] serviços e entrega, [A7] observabilidade, [A8] o agente sob o Harness.</p>
+</div>
+
 ---
 
 ## Apêndice — Termos novos desta aula

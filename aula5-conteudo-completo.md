@@ -565,6 +565,59 @@ Segundo: **inferência em tempo real é um problema de orçamento, e a feature s
 
 Terceiro: **confiança em componente não-determinístico se constrói por observação, não por revisão.** Shadow mode antes de decidir; fronteira de permissão por ausência quando um modelo ganha ferramentas; humano no comando do irreversível. A Carla decide; o copiloto monta o palco.
 
+E antes do gancho, o retrato de plantão que eu tiro no fim de todo turno: o que está de pé, e o que subiu hoje. Reparem que tudo que esta aula construiu se apoia no rio de eventos que já corria — a feature store bebe do Outbox da Aula 2, e o copiloto respeita as fronteiras da Aula 3.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 280" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 5</text>
+
+  <text x="20" y="44" font-family="sans-serif" font-size="10" font-weight="bold" fill="#a8a29e">JÁ EXISTIA — AULAS 1 A 4</text>
+  <g font-family="sans-serif">
+    <rect x="20" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="122" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Monólito TechPix</text>
+    <text x="122" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">Postgres · ledger partida dobrada · [A1]</text>
+    <rect x="232" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="334" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Idempotência · DICT · SPI</text>
+    <text x="334" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">E2E ID · cache · rate limit · [A1]</text>
+    <rect x="444" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="546" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Outbox → relay → Kafka</text>
+    <text x="546" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">+ read models Redis/réplica · [A2]</text>
+    <rect x="656" y="52" width="204" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="758" y="71" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">5 bounded contexts</text>
+    <text x="758" y="87" text-anchor="middle" font-size="9.5" fill="#78716c">context map · specs · constituição · [A3]</text>
+
+    <rect x="20" y="104" width="416" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="228" y="123" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Contratos por aresta (Contrato de Integração)</text>
+    <text x="228" y="139" text-anchor="middle" font-size="9.5" fill="#78716c">gRPC/.proto · schema registry · DLQ · deadline propagation · [A4]</text>
+    <rect x="444" y="104" width="416" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
+    <text x="652" y="123" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#57534e">Defesas de resiliência + orçamento de 100 ms</text>
+    <text x="652" y="139" text-anchor="middle" font-size="9.5" fill="#78716c">circuit breaker · bulkhead · fail-open/closed por valor · [A2·A4]</text>
+  </g>
+
+  <text x="20" y="172" font-family="sans-serif" font-size="10" font-weight="bold" fill="#166534">CONSTRUÍDO NESTA AULA</text>
+  <g font-family="sans-serif">
+    <rect x="20" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="101" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Modelo ML em GPU</text>
+    <text x="101" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">score no Antifraude · &lt;100 ms</text>
+    <rect x="192" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="273" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Feature store</text>
+    <text x="273" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">Redis online · warehouse offline</text>
+    <rect x="364" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="445" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Shadow mode</text>
+    <text x="445" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">decide "de mentira", loga tudo</text>
+    <rect x="536" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="617" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Copiloto MCP (leitura)</text>
+    <text x="617" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">dossiê p/ Carla · sem escrita</text>
+    <rect x="708" y="180" width="163" height="50" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+    <text x="789" y="200" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#166534">Model Card + Política</text>
+    <text x="789" y="217" text-anchor="middle" font-size="9.5" fill="#15803d">modelo sugere, regra decide</text>
+  </g>
+
+  <text x="440" y="266" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução do TechPix: a Aula 5 coloca inteligência dentro do orçamento de latência — sem tocar no ledger, sem tirar o humano do comando.</p>
+</div>
+
 E o gancho, porque este curso não anda sem: o Antifraude agora tem GPU, retreino mensal, perfil de tráfego próprio, um contrato de integração maduro na frente e um time dono. Ele não cabe mais confortavelmente dentro do monólito — os critérios de extração que o professor da Aula 3 listou estão, um a um, ficando verdes. Na próxima aula, a gente tira ele de lá. Ao vivo, com rede embaixo: canary, feature flag, rollback automático. E eu já aviso: a primeira tentativa vai dar errado — e vai dar errado *do jeito certo*.
 
 ---

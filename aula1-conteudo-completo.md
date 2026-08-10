@@ -133,6 +133,62 @@ O log append-only resolve os três de uma vez: vocês só acrescentam um fato, n
 
 E já plantando uma semente para a Aula 2: se a verdade (a escrita) e a projeção (a leitura) têm modelos diferentes, vocês já estão no caminho de duas ideias importantes — **CQRS**, que significa Command Query Responsibility Segregation, ou seja, separar o "lado que escreve" do "lado que lê" em modelos distintos; e **event sourcing**, que é guardar o histórico de eventos como fonte da verdade, em vez de guardar só o estado atual. Na prática, vocês vão manter um saldo materializado — pré-calculado e guardado, para não somar tudo de novo a cada leitura — mas ele sempre pode ser reconstituído a partir do log. A verdade nunca mora no saldo.
 
+Deixa eu colocar as duas alternativas lado a lado, porque esse é o desenho que eu quero que vocês carreguem na cabeça — e reparem que o da direita tem nome de catálogo: é o padrão **Event Sourcing**, documentado no microservices.io, do Chris Richardson. Pacioli chegou lá 500 anos antes do catálogo.
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 880 340" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a1t-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a1t-arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <!-- Left panel: UPDATE destrutivo -->
+  <rect x="20" y="20" width="410" height="270" rx="12" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="225" y="46" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7f1d1d">Saldo numa coluna — UPDATE destrutivo</text>
+  <rect x="140" y="60" width="170" height="36" rx="6" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="225" y="83" text-anchor="middle" font-family="monospace" font-size="12" fill="#333">saldo = R$ 900</text>
+  <line x1="90" y1="130" x2="180" y2="102" stroke="#b91c1c" stroke-width="2" marker-end="url(#a1t-arrow-red)"/>
+  <line x1="360" y1="130" x2="270" y2="102" stroke="#b91c1c" stroke-width="2" marker-end="url(#a1t-arrow-red)"/>
+  <rect x="35" y="132" width="160" height="52" rx="6" fill="#fff" stroke="#999" stroke-width="1.5"/>
+  <text x="115" y="152" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">T1 lê 900,</text>
+  <text x="115" y="170" text-anchor="middle" font-family="monospace" font-size="11" fill="#7f1d1d">UPDATE saldo=800</text>
+  <rect x="255" y="132" width="160" height="52" rx="6" fill="#fff" stroke="#999" stroke-width="1.5"/>
+  <text x="335" y="152" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">T2 lê 900 (junto),</text>
+  <text x="335" y="170" text-anchor="middle" font-family="monospace" font-size="11" fill="#7f1d1d">UPDATE saldo=850</text>
+  <rect x="90" y="200" width="270" height="34" rx="6" fill="#b91c1c"/>
+  <text x="225" y="222" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#fff" font-weight="bold">T2 apaga T1: lost update — dinheiro criado</text>
+  <text x="225" y="256" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#991b1b">− sem auditoria · − não reconstruível · − corrida destrói conservação</text>
+  <text x="225" y="276" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#991b1b">a verdade ERA o número; corrompeu, acabou</text>
+
+  <!-- Right panel: Event Sourcing -->
+  <rect x="450" y="20" width="410" height="270" rx="12" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="655" y="46" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">Log append-only + projeção — Event Sourcing</text>
+  <rect x="470" y="60" width="185" height="130" rx="8" fill="#fff" stroke="#166534" stroke-width="1.5"/>
+  <text x="562" y="80" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">Log de lançamentos (Postgres)</text>
+  <text x="562" y="100" text-anchor="middle" font-family="monospace" font-size="11" fill="#333">+1.000 (depósito)</text>
+  <text x="562" y="118" text-anchor="middle" font-family="monospace" font-size="11" fill="#333">−100 (Pix p/ Bruno)</text>
+  <text x="562" y="136" text-anchor="middle" font-family="monospace" font-size="11" fill="#333">−50 (tarifa)</text>
+  <text x="562" y="156" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">só INSERT — nunca UPDATE</text>
+  <text x="562" y="172" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">write model · a verdade</text>
+  <line x1="655" y1="125" x2="700" y2="125" stroke="#4338ca" stroke-width="2" marker-end="url(#a1t-arrow)"/>
+  <text x="677" y="112" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#4338ca">Σ</text>
+  <rect x="702" y="95" width="140" height="60" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="772" y="118" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#26215C">Projeção: saldo</text>
+  <text x="772" y="136" text-anchor="middle" font-family="monospace" font-size="12" fill="#26215C">R$ 850</text>
+  <text x="772" y="172" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">read model · materializado,</text>
+  <text x="772" y="186" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">sempre recalculável</text>
+  <text x="655" y="226" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">+ auditoria completa · + reconstruível do zero · + append não sobrescreve</text>
+  <text x="655" y="246" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">− saldo exige projeção (custo que a Aula 2 paga com CQRS)</text>
+  <text x="655" y="272" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">padrão Event Sourcing — microservices.io (Chris Richardson)</text>
+
+  <text x="440" y="322" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">A mesma pergunta — "quanto a Ana tem?" — respondida por um número frágil ou por uma história somável.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Coluna de saldo vs log-como-verdade: o trade-off que define o ledger — e que já é o embrião de CQRS e Event Sourcing.</p>
+</div>
+
 ### 2.4 Um Pix de R$100, contado como movimento
 
 Vamos ver como isso fica na prática. A Ana, no nosso TechPix, manda R$100 para o Bruno, que tem conta no Banco Beta. No nosso ledger, esse pagamento **não é** "saldo -= 100". São fatos encadeados:
@@ -231,6 +287,77 @@ Até aqui eu falei de "consistência forte" como uma propriedade abstrata. Deixa
 **Nível de isolamento.** A maioria dos bancos relacionais oferece, por padrão, o nível **read committed** — cada leitura enxerga só dados já commitados, mas duas transações concorrentes ainda podem produzir um resultado que viola uma invariante que envolve mais de uma linha. Para o ledger, isso não basta: a invariante Σ débitos = Σ créditos depende de múltiplas linhas se manterem coerentes entre si. O nível que protege isso de verdade é o **serializable** — o banco garante que o resultado de rodar várias transações concorrentes é equivalente a rodá-las uma de cada vez, em alguma ordem. Ele resolve o problema, mas ao custo de mais abortos e mais retentativas quando duas transações disputam os mesmos dados — que é, tecnicamente, a origem exata do "ponto quente" que a Aula 2 vai investigar. Existe um meio-termo comum, o **snapshot isolation** (ou repeatable read, dependendo do banco), que evita a maioria dos problemas práticos com menos contenção que o serializable puro — mas ainda pode permitir um fenômeno chamado *write skew*, onde duas transações, cada uma vendo um retrato consistente do mundo, tomam decisões que juntas violam uma invariante que nenhuma delas violaria sozinha. Para o núcleo do ledger, a escolha defensável é serializable, ou um mecanismo equivalente — o custo de contenção é o preço da correção.
 
 **Controle de concorrência: pessimista ou otimista.** Existem duas famílias de mecanismo para garantir isso na prática. O **locking pessimista** — o equivalente a "trave a linha antes de mexer nela" — é simples de raciocinar, mas é exatamente o mecanismo por trás do ponto quente: toda transação que quer tocar a mesma conta de liquidação espera na fila do lock, uma de cada vez. O **controle de concorrência otimista** troca o lock por uma coluna de versão: a transação lê o valor atual e sua versão, calcula o novo estado, e só grava se a versão não mudou desde a leitura; se mudou, ela sabe que perdeu a corrida e tenta de novo. Sob baixa contenção, isso é mais rápido, porque ninguém fica esperando lock nenhum. Sob **alta** contenção — o cenário exato do dia 5 —, o controle otimista pode virar uma tempestade de retentativas, porque muita gente perde a corrida ao mesmo tempo e todo mundo tenta de novo junto. Nenhuma das duas famílias resolve sozinha um hotspot real; as duas só tornam explícito, de formas diferentes, o mesmo custo de coordenação que a consistência forte exige.
+
+Deixa eu desenhar as duas famílias lado a lado, com a nossa conta quente no meio do desenho — porque é vendo a fila de um lado e a tempestade de retentativas do outro que o trade-off deixa de ser abstrato:
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 340" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a1u-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a1u-arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+    <marker id="a1u-arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+
+  <!-- LEFT: Pessimistic -->
+  <rect x="15" y="15" width="425" height="255" rx="12" fill="#fff" stroke="#ccc" stroke-width="1.5"/>
+  <text x="227" y="42" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">Locking PESSIMISTA</text>
+  <text x="227" y="60" text-anchor="middle" font-family="monospace" font-size="11" fill="#4338ca">SELECT … FOR UPDATE</text>
+
+  <!-- Locked row -->
+  <rect x="150" y="80" width="155" height="42" rx="7" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="227" y="98" text-anchor="middle" font-family="monospace" font-size="11" fill="#26215C">pix_a_liquidar</text>
+  <text x="227" y="114" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">🔒 travada por T1</text>
+
+  <!-- Queue -->
+  <rect x="35" y="150" width="80" height="34" rx="7" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="75" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">T2 espera</text>
+  <rect x="135" y="150" width="80" height="34" rx="7" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="175" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">T3 espera</text>
+  <rect x="235" y="150" width="80" height="34" rx="7" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="275" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">T4 espera</text>
+  <line x1="335" y1="167" x2="227" y2="128" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a1u-arrow-red)"/>
+  <text x="345" y="171" font-family="sans-serif" font-size="11" fill="#b91c1c">fila no lock</text>
+
+  <text x="35" y="215" font-family="sans-serif" font-size="11" fill="#166534">+ simples de raciocinar; nenhum trabalho perdido</text>
+  <text x="35" y="233" font-family="sans-serif" font-size="11" fill="#b91c1c">− sob contenção, vira fila: uma de cada vez</text>
+  <text x="35" y="251" font-family="sans-serif" font-size="11" fill="#b91c1c">− é o mecanismo por trás do "ponto quente" (Aula 2)</text>
+
+  <!-- RIGHT: Optimistic -->
+  <rect x="460" y="15" width="425" height="255" rx="12" fill="#fff" stroke="#ccc" stroke-width="1.5"/>
+  <text x="672" y="42" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">Concorrência OTIMISTA</text>
+  <text x="672" y="60" text-anchor="middle" font-family="monospace" font-size="11" fill="#4338ca">UPDATE … WHERE version = 41</text>
+
+  <!-- Versioned row -->
+  <rect x="595" y="80" width="155" height="42" rx="7" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="672" y="98" text-anchor="middle" font-family="monospace" font-size="11" fill="#26215C">pix_a_liquidar</text>
+  <text x="672" y="114" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">version = 41 (sem lock)</text>
+
+  <!-- Racers -->
+  <rect x="480" y="150" width="90" height="34" rx="7" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="525" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">T1 grava ✓ v42</text>
+  <rect x="590" y="150" width="90" height="34" rx="7" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="635" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">T2 perdeu ↻</text>
+  <rect x="700" y="150" width="90" height="34" rx="7" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="745" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">T3 perdeu ↻</text>
+  <text x="810" y="171" font-family="sans-serif" font-size="11" fill="#b91c1c">retry…</text>
+
+  <text x="480" y="215" font-family="sans-serif" font-size="11" fill="#166534">+ sob baixa contenção, ninguém espera lock nenhum</text>
+  <text x="480" y="233" font-family="sans-serif" font-size="11" fill="#b91c1c">− sob ALTA contenção: tempestade de retentativas</text>
+  <text x="480" y="251" font-family="sans-serif" font-size="11" fill="#b91c1c">− trabalho perdido: quem perde a corrida refaz tudo</text>
+
+  <!-- Bottom banner -->
+  <rect x="15" y="285" width="870" height="40" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="450" y="303" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Nenhuma das duas resolve o hotspot — as duas só expõem, de formas diferentes, o custo de coordenação da consistência forte.</text>
+  <text x="450" y="319" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">A saída estrutural é particionar a escrita (abaixo) — e é isso que a Aula 8 fecha com o ADR-003.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">As duas famílias de controle de concorrência sobre a mesma conta quente: fila de um lado, corrida com retentativas do outro.</p>
+</div>
 
 **Particionamento do ledger — o desenho concreto.** A saída estrutural, que a Aula 2 só vai poder aplicar de verdade depois de identificar o problema, e que a Aula 8 fecha com o ADR-003, é particionar a escrita por uma chave que distribua o tráfego — tipicamente um hash da conta do cliente, `hash(conta_id) mod N`, ou um esquema de hashing consistente para facilitar rebalanceamento futuro. Isso faz com que a maioria das transações — as que envolvem só uma conta, ou duas contas na mesma partição — continue cabendo numa transação local, serializable, rápida. O caso difícil é a transação que atravessa partições — a Ana numa partição, o Bruno em outra —, porque agora vocês precisam de coordenação **entre** partições. Existem duas respostas clássicas: **two-phase commit**, que mantém a atomicidade forte entre partições ao custo de mais latência e mais fragilidade (se um participante trava no meio do protocolo, o sistema inteiro fica bloqueado esperando); ou o padrão **saga**, onde cada partição commita sua parte localmente, e uma ação compensatória desfaz o que for preciso se uma etapa posterior falhar — trocando atomicidade forte imediata por consistência eventual entre partições, com uma trilha explícita de compensação. Reparem que isso é, estruturalmente, a mesma ideia do Outbox que a Aula 2 vai apresentar: um registro imutável do que precisa acontecer depois, em vez de uma promessa implícita de que tudo vai dar certo na mesma transação.
 
@@ -741,6 +868,43 @@ Segundo: **idempotência é correção sob incerteza.** A rede é ambígua por n
 
 Terceiro: **trade-off explícito é o ofício do arquiteto.** CAP e PACELC, orçamento de latência, forte no núcleo e eventual na borda — e tudo isso registrado formalmente num ADR.
 
+E antes do gancho final, deixa eu inaugurar um ritual que vai se repetir no fim de cada aula desse curso: uma foto do TechPix como ele está **hoje**. A gente vai construir essa fintech peça por peça, aula a aula — e essa régua é como vocês vão ver o sistema crescer. Hoje ela está inteira verde, porque tudo nasceu agora:
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 210" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="450" y="26" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 1</text>
+
+  <rect x="20" y="50" width="160" height="80" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="100" y="78" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Monólito TechPix</text>
+  <text x="100" y="96" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">uma aplicação,</text>
+  <text x="100" y="110" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">um deploy</text>
+
+  <rect x="196" y="50" width="170" height="80" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="281" y="74" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Ledger · PostgreSQL</text>
+  <text x="281" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">partida dobrada, append-only,</text>
+  <text x="281" y="106" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">serializable (Σ = Σ)</text>
+
+  <rect x="382" y="50" width="160" height="80" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="462" y="74" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Idempotência</text>
+  <text x="462" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">chave = E2E ID,</text>
+  <text x="462" y="106" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">efeito exactly-once</text>
+
+  <rect x="558" y="50" width="170" height="80" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="643" y="74" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">BACEN · DICT + SPI</text>
+  <text x="643" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">síncronos no caminho crítico,</text>
+  <text x="643" y="106" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">teto 40s · DICT p99 1s</text>
+
+  <rect x="744" y="50" width="136" height="80" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="812" y="74" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">ADR-001</text>
+  <text x="812" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">consistência forte,</text>
+  <text x="812" y="106" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">decidida na fé</text>
+
+  <rect x="20" y="150" width="860" height="34" rx="8" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <text x="450" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula — hoje é tudo verde: o alicerce da fintech nasceu aqui</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução do TechPix: a cada aula, uma foto do que existe — e do que acabou de nascer.</p>
+</div>
+
 E aqui está a moldura que abriu essa aula inteira: **hoje, a gente decidiu na fé** — sem dados de produção, apoiados em princípios, no que o Banco Central exige, e na experiência. E isso foi o certo a se fazer. Mas guardem o ADR-001, porque um dia a produção — e um agente, operando sob guardrails, via MCP — vão ter opinião sobre ele. A Aula 8 troca fé por evidência, e fecha esse loop.
 
 Deixo essa pergunta para vocês pensarem até lá: onde, no sistema de vocês, uma decisão está sendo tomada na fé, sem nenhuma evidência? Anotem. É exatamente aí que a arquitetura evolutiva — e a inteligência artificial — vão agir.
@@ -822,6 +986,7 @@ Isso fecha a aula de hoje. Deixo abaixo alguns glossários de apoio — consulte
 - **Banco Central (fontes verificadas nesta versão):** *Manual de Tempos do Pix* v7.0 (SLAs de SPI, DICT e Recuperação de Valores por fraude/falha operacional); *Regulamento do Pix* (Resolução BCB nº 195, de 3/3/2022); Instrução Normativa BCB nº 243, de 16/3/2022; *Manual de Fluxos do Processo de Efetivação do Pix*; *Manual Operacional do DICT* e documentação da API do DICT (rate limiting / anti-scraping por token bucket); *Guia de Implementação dos Procedimentos de Devolução no Pix, com ênfase no MED*, v4.3 (grafo de rastreamento, bloqueio cautelar, código MD06 — v4.4 já publicada, vigência a partir de set/out de 2026); Resolução BCB nº 493, de 28/8/2025 (MED 2.0 — rastreamento em 5 camadas, bloqueio cautelar de 72h, obrigatório desde 2/2/2026); catálogo de mensagens ISO 20022 (pacs.008 / pacs.002 / pacs.004); Estatísticas do Pix do Portal de Dados Abertos do BACEN (volume e TPS médio, jan-mai/2026).
 - **Nota de manutenção:** os números de volume/TPS e as versões de manuais citados aqui foram verificados nesta atualização; como o Pix e seus manuais operacionais mudam com frequência, revalide antes de reusar esses números em uma turma futura.
 - Michael Nygard, "Documenting Architecture Decisions" (origem do ADR).
+- Chris Richardson, catálogo de padrões de microsserviços — microservices.io/patterns (Event Sourcing, Transactional Outbox, Saga, CQRS, Circuit Breaker — padrões que o TechPix aplica ao longo do curso).
 - Anthropic: documentação do Model Context Protocol; materiais sobre engenharia de contexto e agentes. GitHub Spec Kit (SDD) — repositório oficial: github.com/github/spec-kit (fluxo `/speckit.constitution → specify → clarify → plan → tasks → analyze → implement`, aplicado na Aula 3).
 
 ---
