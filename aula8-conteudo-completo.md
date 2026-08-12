@@ -395,7 +395,7 @@ Reparem no que **não** mudou nessa história: o agente nunca teve acesso a uma 
 Vamos escrever o registro final dessa jornada, o terceiro ADR do curso — e reparem no campo novo que ele carrega, registrando quem propôs e quem aprovou.
 
 ```
-ADR-003 · Reparticionamento da escrita do ledger      Status: Aceito (2026-01-14)
+ADR-003 · Reparticionamento da escrita do ledger      Status: Aceito (2027-01-14)
 
 Origem        Proposto por agente (leitura via MCP: métricas + ADR-001/002
               + spec do contexto Contas & Ledger). Aprovado por humano

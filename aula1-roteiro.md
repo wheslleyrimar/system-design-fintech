@@ -184,13 +184,16 @@ title: "Aula 1 — Roteiro (fonte)"
 
 **Diagrama 9 — ADR-001 (escreva ao vivo):**
 ```
-ADR-001 · Consistência forte no ledger            [status: aceito]
+ADR-001 · Consistência forte no ledger      [aceito · 2026-07-30]
 
 Contexto:      PIX é irreversível; saldo não pode ficar negativo;
                liquidação final no SPI; teto normativo de 40s.
-Decisão:       escrita no ledger é ACID, serializable, síncrona,
-               protegida por idempotency-key (E2E ID).
+Decisão:       lançamentos imutáveis em double-entry; escrita ACID,
+               serializable, síncrona; idempotência por identidade
+               de operação (E2E ID correlaciona; devolução tem a
+               sua); correção só por lançamento compensatório.
 Consequências: (+) correção garantida
+               (+) invariantes viram teste — base do Harness
                (−) latência na escrita — a validar em produção
                (−) contenção sob pico — o preço do isolamento forte
 

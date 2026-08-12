@@ -709,7 +709,7 @@ E o Redis ali no canto merece uma pausa, porque "botar um cache" é a frase mais
 Chegou a hora de formalizar. Vamos escrever, juntos, o segundo registro de decisão do TechPix — e reparem que ele **não contradiz** o ADR-001. Ele o complementa, resolvendo exatamente o ponto de fratura que a gente diagnosticou hoje, sem tocar na consistência forte do núcleo.
 
 ```
-ADR-002 · Outbox + CQRS para o caminho de leitura          Status: Aceito (2025-08-06)
+ADR-002 · Outbox + CQRS para o caminho de leitura          Status: Aceito (2026-08-06)
 
 Contexto      No incidente do dia 5, o caminho de escrita do ledger sofreu
               contenção sob pico de tráfego, e a leitura (extrato, feed)

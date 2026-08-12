@@ -436,6 +436,8 @@ Aqui vai uma boa notícia: o Pix já embute idempotência no próprio protocolo.
 
 Quando o regulador exige que o E2E ID seja único, ele está — e isso é bom — obrigando vocês a construir efeito exactly-once. Guardem essa frase: o pagamento fantasma foi proibido por desenho regulatório. Cabe a vocês, na implementação, honrar esse desenho.
 
+Uma precisão que vale desde já, porque ela volta no ADR que a gente vai escrever no fim da aula: o E2E ID deduplica **o pagamento** — ele é a identidade daquele movimento específico. Uma devolução do mesmo dinheiro não é o mesmo movimento: ela viaja como uma `pacs.004` própria, com identidade própria. Ou seja, dentro do sistema de vocês, o E2E ID **correlaciona** tudo que diz respeito àquela transação, mas a chave de idempotência de cada operação monetária — pagamento, devolução, estorno — precisa ter escopo explícito. Confundir as duas coisas é como tratar "o caso" e "cada movimento do caso" como se fossem a mesma chave.
+
 ### 3.5 Os modos de falha que todo arquiteto de pagamento carrega na cabeça
 
 Deixa eu resumir numa tabela os cenários de falha e o que muda com o design certo:
@@ -863,29 +865,95 @@ Juntando essas seis ideias: com IA no jogo, o arquiteto passa a escrever especif
 <details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
 <summary style="cursor:pointer;font-weight:600;list-style:none;">📝 Registrando a decisão: o ADR-001 <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
 
-Tudo que a gente viu até agora converge para um único artefato. Um **ADR**, Architecture Decision Record — um formato criado por Michael Nygard, um engenheiro de software que popularizou esse conceito em 2011 — é um documento curto, datado, e **imutável**, que registra uma única decisão: o contexto, a decisão em si, as consequências — de forma honesta, incluindo o custo —, as alternativas que foram descartadas, e um status, que vai de proposto, para aceito, até eventualmente substituído. Vocês nunca editam um ADR antigo; escrevem um novo, que o substitui. Assim, a história do pensamento arquitetural fica preservada — e um agente, lendo essa sequência de ADRs, entende *como o sistema pensou*, não só como ele está hoje.
+Tudo que a gente viu até agora converge para um único artefato. Um **ADR**, Architecture Decision Record — um formato criado por Michael Nygard, um engenheiro de software que popularizou esse conceito em 2011 — é um documento objetivo, datado, e **imutável**, que registra uma única decisão: o contexto, a decisão em si, as consequências — de forma honesta, incluindo o custo —, as alternativas que foram descartadas, e um status, que vai de proposto, para aceito, até eventualmente substituído. Vocês nunca editam um ADR antigo; escrevem um novo, que o substitui. Assim, a história do pensamento arquitetural fica preservada — e um agente, lendo essa sequência de ADRs, entende *como o sistema pensou*, não só como ele está hoje.
 
 Vamos escrever juntos o primeiro ADR do TechPix:
 
 ```
-ADR-001 · Consistência forte no ledger do core          Status: Aceito (2025-07-30)
+ADR-001 · Consistência forte no ledger do core          Status: Aceito (2026-07-30)
 
 Contexto      O Pix é irreversível e liquida em moeda de banco central (SPI).
               O ledger não pode criar/destruir dinheiro nem permitir saldo
               negativo; cada movimento é auditável (BACEN/LGPD).
               Operamos sob teto normativo de 40 s ponta a ponta (SPI real: p99 4,6 s).
-Decisão       Escrita no ledger será ACID e fortemente consistente
-              (linearizável), síncrona no caminho crítico, idempotente
-              pelo EndToEndId.
+Decisão       Lançamentos imutáveis em double-entry. Escrita ACID e
+              fortemente consistente (linearizável), síncrona no caminho
+              crítico, idempotente por identidade de operação — o
+              EndToEndId correlaciona o Pix; a devolução tem identidade
+              própria. Correção só por lançamento compensatório.
 Consequências (+) Correção garantida; trilha de auditoria completa.
               (+) As invariantes viram testes — base do Harness.
               (−) Custo de latência na escrita — consome parte do teto de 40 s.
               (−) Escrita não escala na horizontal como a leitura.
 Alternativas  Ledger eventual (REJEITADO: viola conservação/auditoria).
               Saldo em coluna única (REJEITADO: sem auditoria; não reconstruível).
+              Alterar/apagar lançamento (REJEITADO: quebra a imutabilidade).
 Revisão       A consequência de latência será MEDIDA em produção. Se o p99
               ameaçar o SLA, reavaliar em novo ADR — via agente + MCP.
 ```
+
+Esse é o cartão que eu leio em voz alta — o ADR-001 na forma em que ele cabe num slide. Mas o registro que vai para o repositório é mais completo: ele numera as invariantes uma a uma (porque é delas que os testes nascem) e declara o que será observado em produção (porque é disso que a revisão vai se alimentar). Deixo a versão integral logo abaixo, para quem for implementar:
+
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#fff;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">📄 ADR-001 na íntegra — versão de repositório <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
+
+#### ADR-001 — Consistência forte no ledger do core
+
+**Status:** Aceito (2026-07-30)
+
+**Contexto**
+
+O Pix opera em tempo real, sob teto normativo de **40 segundos** ponta a ponta — com o SPI real liquidando em p99 de 4,6 s. Uma liquidação confirmada não pode ser alterada nem removida retroativamente; devoluções, MED e demais correções financeiras precisam ser representadas por novos movimentos, vinculados à transação original.
+
+O core financeiro precisa garantir, independentemente de falhas, retries ou concorrência: conservação de valor; ausência de double-spend; idempotência das operações monetárias; integridade dos saldos; reconstruibilidade completa do estado financeiro; e rastreabilidade dos movimentos.
+
+O orçamento de latência do ledger faz parte do tempo total disponível para processar a transação Pix.
+
+**Decisão**
+
+O ledger monetário usará **lançamentos imutáveis em double-entry**, com escrita **ACID e fortemente consistente** para toda operação que altere saldo.
+
+Cada operação monetária será efetivada atomicamente, incluindo: débito e crédito correspondentes; atualização do estado necessário ao controle de saldo; registro da identidade da operação, para idempotência; e persistência do estado transacional necessário ao processamento. Nenhum saldo será considerado alterado antes do commit bem-sucedido.
+
+O `EndToEndId` será usado como identificador de **correlação** do Pix, mas a idempotência interna usará uma **identidade transacional de escopo explícito**, capaz de diferenciar operações relacionadas à mesma transação — pagamento, devolução e demais movimentos compensatórios.
+
+Eventos, analytics, notificações e outros efeitos que não participam diretamente das invariantes monetárias **não devem ampliar a transação crítica**; serão desacoplados por mecanismo transacional confiável, a ser definido quando a carga real justificar.
+
+**Invariantes**
+
+1. Para cada grupo de lançamentos: **Σ débitos = Σ créditos**.
+2. Uma mesma operação lógica não pode produzir lançamentos monetários duplicados.
+3. Um lançamento confirmado nunca pode ser alterado ou apagado.
+4. Correções, devoluções e estornos contábeis devem ocorrer por novos lançamentos compensatórios, vinculados ao movimento original.
+5. O saldo de uma conta **não pode ficar negativo**, salvo limite explicitamente concedido pela política daquela conta.
+6. O estado financeiro deve ser reconstruível a partir dos lançamentos confirmados e de seus vínculos.
+7. Falhas parciais não podem resultar em débito sem crédito, crédito sem débito, ou estado financeiro intermediário observável.
+
+**Consequências**
+
+*Positivas:* preservação das invariantes monetárias; proteção contra double-spend e contra duplicidade causada por retries; histórico imutável e reconstruível; maior capacidade de auditoria e investigação; modelo explícito para devoluções e movimentos compensatórios; base objetiva para testes de invariante e fault injection.
+
+*Negativas:* a escrita paga custo maior de coordenação e latência; **a escrita não escala na horizontal como a leitura** — o throughput de escrita paga o preço da coordenação; a contenção sobre contas muito movimentadas pode exigir estratégias específicas de particionamento e concorrência; o tempo de commit passa a consumir parte do orçamento total de processamento do Pix.
+
+**Alternativas consideradas**
+
+*Ledger eventualmente consistente* — **rejeitado**: abre janelas em que saldos, limites ou movimentos concorrentes divergem, elevando o risco de double-spend e a necessidade de reconciliação corretiva.
+
+*Saldo como única fonte de verdade* — **rejeitado**: uma coluna com o saldo atual não dá histórico para reconstrução, auditoria ou explicação determinística das alterações. O saldo pode existir como projeção de leitura, nunca como fonte de verdade.
+
+*Alteração ou exclusão de lançamentos anteriores* — **rejeitado**: movimentos confirmados são imutáveis; qualquer correção entra como novo lançamento compensatório.
+
+**Observabilidade**
+
+Serão monitorados, no mínimo: p50, p95 e p99 do commit do ledger; taxa de contenção e conflitos de concorrência; retries de transação; rejeições por saldo ou limite; tentativas de operação duplicada; violações de invariante; e a diferença entre o orçamento interno de processamento e o teto de 40 s do Pix.
+
+**Revisão**
+
+A consequência de latência será **MEDIDA em produção**. Se o p99 do commit ameaçar o SLA, reavaliar em novo ADR — via agente + MCP. A decisão também deve ser reavaliada se a contenção impedir o throughput necessário, se o modelo de particionamento deixar de atender à capacidade projetada, ou se novas exigências regulatórias alterarem as invariantes do domínio.
+
+Qualquer revisão deve preservar as invariantes monetárias. **Limitação de performance, por si só, não justifica adotar consistência eventual no caminho crítico financeiro.**
+
+</details>
 
 Reparem na última linha, "Revisão". Ela é uma promessa que amarra os dois grandes temas dessa aula: a decisão de hoje, tomada na fé, vai ser validada pela produção, com evidência. Pelo caminho, a Aula 2 ainda vai complementar essa decisão com um ADR próprio — sem contradizê-la —, e é só na Aula 8, depois de meses de dados reais, que um agente, conectado via MCP, participa do loop propondo, sempre sob guardrails, um novo ADR. É assim que a Aula 1 e a Aula 8 se costuram.
 

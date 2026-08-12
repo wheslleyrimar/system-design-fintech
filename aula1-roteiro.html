@@ -654,19 +654,19 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   </div>
 
   <h2>16 · ADR-001 — Consistência forte no ledger do core</h2>
-  <p class="teach">Ensina: um ADR (Architecture Decision Record, formato criado por Michael Nygard em 2011) é um documento curto, datado e <b>imutável</b>, que registra uma única decisão — contexto, decisão, consequências honestas (incluindo o custo), alternativas rejeitadas e status. Vocês nunca editam um ADR antigo; escrevem um novo que o substitui. Assim, a história do pensamento arquitetural fica preservada — e um agente lendo essa sequência de ADRs entende <i>como o sistema pensou</i>, não só como está hoje. Este é o ADR que abre o TechPix, e a produção vai validá-lo.</p>
+  <p class="teach">Ensina: um ADR (Architecture Decision Record, formato criado por Michael Nygard em 2011) é um documento objetivo, datado e <b>imutável</b>, que registra uma única decisão — contexto, decisão, consequências honestas (incluindo o custo), alternativas rejeitadas e status. Vocês nunca editam um ADR antigo; escrevem um novo que o substitui. Assim, a história do pensamento arquitetural fica preservada — e um agente lendo essa sequência de ADRs entende <i>como o sistema pensou</i>, não só como está hoje. Este é o ADR que abre o TechPix, e a produção vai validá-lo.</p>
   <div class="fig">
     <div class="box" style="background:#fff;border:2px solid var(--border);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
         <div style="font-size:17px;color:var(--text-primary);font-weight:500;">ADR-001 · Consistência forte no ledger do core</div>
-        <span class="tag" style="background:#E1F5EE;color:#04342C;">Status: Aceito (2025-07-30)</span>
+        <span class="tag" style="background:#E1F5EE;color:#04342C;">Status: Aceito (2026-07-30)</span>
       </div>
       <div style="display:grid;grid-template-columns:110px 1fr;gap:8px 14px;align-items:start;font-size:17px;">
         <div style="font-weight:500;color:var(--text-secondary);">Contexto</div>
         <div style="color:var(--text-primary);line-height:1.5;">O Pix é irreversível e liquida em moeda de banco central (SPI). O ledger não pode criar/destruir dinheiro nem permitir saldo negativo; cada movimento é auditável (BACEN/LGPD). Operamos sob teto normativo de 40 s ponta a ponta (SPI real: p99 4,6 s).</div>
 
         <div style="font-weight:500;color:var(--text-secondary);">Decisão</div>
-        <div style="color:var(--text-primary);line-height:1.5;">Escrita no ledger será ACID e fortemente consistente (linearizável), síncrona no caminho crítico, idempotente pelo EndToEndId.</div>
+        <div style="color:var(--text-primary);line-height:1.5;">Lançamentos imutáveis em double-entry. Escrita ACID e fortemente consistente (linearizável), síncrona no caminho crítico, idempotente por identidade de operação — o EndToEndId correlaciona o Pix; a devolução tem identidade própria. Correção só por lançamento compensatório.</div>
 
         <div style="font-weight:500;color:var(--text-secondary);">Consequências</div>
         <div style="line-height:1.6;">
@@ -679,7 +679,8 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
         <div style="font-weight:500;color:var(--text-secondary);">Alternativas</div>
         <div style="line-height:1.7;">
           <span class="tag" style="background:#FCEBEB;color:#791F1F;">REJEITADO</span> <span style="color:var(--text-primary);">Ledger eventual — viola conservação/auditoria.</span><br>
-          <span class="tag" style="background:#FCEBEB;color:#791F1F;">REJEITADO</span> <span style="color:var(--text-primary);">Saldo em coluna única — sem auditoria; não reconstruível.</span>
+          <span class="tag" style="background:#FCEBEB;color:#791F1F;">REJEITADO</span> <span style="color:var(--text-primary);">Saldo em coluna única — sem auditoria; não reconstruível.</span><br>
+          <span class="tag" style="background:#FCEBEB;color:#791F1F;">REJEITADO</span> <span style="color:var(--text-primary);">Alterar/apagar lançamento — quebra a imutabilidade.</span>
         </div>
 
         <div style="font-weight:500;color:var(--text-secondary);">Revisão</div>
