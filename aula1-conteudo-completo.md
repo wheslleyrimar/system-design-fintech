@@ -690,9 +690,17 @@ E aqui vai a tabela com todos os números oficiais que eu usei, tirados diretame
 
 ### 5.7 O STR e o alto valor
 
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">🏦 O STR e o alto valor <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
+
 Nem tudo é Pix. A **TED** e as liquidações de grande valor rodam num outro trilho, o **STR**, o Sistema de Transferência de Reservas — também em tempo real, também em moeda de banco central. A lição de design aqui é simples: existem trilhos diferentes, com propriedades diferentes. O Pix foi desenhado para varejo instantâneo, 24 horas por dia; o STR, para alto valor. Escolher o trilho certo é, de novo, escolher um trade-off — e conhecer o cardápio inteiro faz parte do ofício de vocês.
 
+</details>
+
 ### 5.8 O Pix não é estático
+
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">🔄 O Pix não é estático <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
 
 Eu quero deixar bem claro para vocês que essa infraestrutura **continua mudando**, porque a evolução do trilho é, ela mesma, um dos temas centrais desse curso.
 
@@ -706,7 +714,12 @@ E, no horizonte mais distante, existe o **Drex**, o Real Digital, uma moeda digi
 
 O recado de arquitetura que eu quero que fique: a infraestrutura muda debaixo dos pés de vocês. Uma fintech precisa ser desenhada para **evoluir junto com o trilho**, não para resistir a ele. Esse é o fio que a Aula 2 puxa, e que a Aula 8 fecha.
 
+</details>
+
 ### 5.9 Recuperação de Valores: rastreando fraude como um problema de grafo
+
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">🕸️ Recuperação de Valores: fraude como problema de grafo <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
 
 Vou contar para vocês sobre o mecanismo mais tecnicamente interessante que o BACEN construiu recentemente, e que praticamente nenhum curso de arquitetura menciona. Na mídia e no mercado, ele é chamado de **MED 2.0** — a evolução do Mecanismo Especial de Devolução instituída pela **Resolução BCB nº 493, de 28/8/2025**, que se tornou obrigatória para todos os participantes do Pix a partir de **2 de fevereiro de 2026**. Tecnicamente, ela é especificada pelo *Guia de Implementação do MED*, versão 4.3, com uma versão 4.4 já publicada e com vigência a partir de setembro e outubro de 2026.
 
@@ -769,7 +782,12 @@ Vale registrar também que existe uma via mais simples, para quando não há fra
 
 Para o contexto de **Devoluções**, que a gente vai desenhar como bounded context próprio na Aula 3, isso muda a conversa: não é mais só "receber uma notificação e devolver dinheiro" — é operar, em tempo quase real, um algoritmo de busca em grafo sobre dados financeiros sensíveis, coordenado com outras instituições, dentro de SLAs regulatórios apertados. Se vocês já trabalharam com grafos de fraude, detecção de anel de lavagem de dinheiro, ou sistemas de recomendação por proximidade em grafo, o paralelo técnico é direto — só que aqui o grafo não é sobre relevância de conteúdo, é sobre para onde o dinheiro roubado de alguém foi parar.
 
+</details>
+
 ### 5.10 Resumindo: o que o Banco Central impõe à arquitetura de vocês
+
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">📋 Resumo: o que o Banco Central impõe à arquitetura <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
 
 Antes de seguir para a parte de inteligência artificial, deixa eu consolidar tudo que vimos numa única tabela:
 
@@ -783,9 +801,14 @@ Antes de seguir para a parte de inteligência artificial, deixa eu consolidar tu
 | MED 2.0 (Res. BCB 493/2025, obrigatório desde 2/2/2026): Recuperação de Valores por fraude (p99 6 h), rastreamento em até 5 camadas, bloqueio cautelar (até 72 h) | Rastreamento de grafo federado, entre instituições, sob SLA apertado | Bounded context de Devoluções com integração cross-institucional e busca em grafo |
 | Evolução constante — Pix Automático, Drex | O trilho não para de mudar | Arquitetura evolutiva (Aulas 2, 6 e 8) |
 
+</details>
+
 ---
 
 ## 6. A inteligência artificial como novo eixo da arquitetura
+
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">🤖 A IA como novo eixo da arquitetura — SDD, Context, Harness, Looping, MCP <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
 
 Chegamos na parte que eu considero o diferencial desse curso, e que é o gancho direto para a Aula 8. A minha tese é esta: **a inteligência artificial não é uma funcionalidade que se adiciona a um sistema — ela muda o que significa, hoje, arquitetar.** Eu vou apresentar quatro disciplinas para vocês, como um sistema coerente, todas ancoradas no que a gente já construiu até aqui.
 
@@ -831,9 +854,14 @@ E em fintech, é justamente no MCP que a **governança** vira uma decisão de ar
 
 Juntando essas seis ideias: com IA no jogo, o arquiteto passa a escrever especificações precisas — isso é SDD —, a projetar o contexto que os agentes recebem — Context Engineering —, a construir o aparato de validação — o Harness —, a desenhar os loops de melhoria — Looping — e a definir as fronteiras de permissão — via MCP. O arquiteto não desaparece; ele sobe de altitude. Em vez de "como eu escrevo essa função", a pergunta vira "como esse sistema decide, valida e evolui — com humanos e agentes dentro do mesmo loop, sob as leis do dinheiro e do Banco Central".
 
+</details>
+
 ---
 
 ## 7. Registrando a decisão: o ADR-001
+
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">📝 Registrando a decisão: o ADR-001 <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
 
 Tudo que a gente viu até agora converge para um único artefato. Um **ADR**, Architecture Decision Record — um formato criado por Michael Nygard, um engenheiro de software que popularizou esse conceito em 2011 — é um documento curto, datado, e **imutável**, que registra uma única decisão: o contexto, a decisão em si, as consequências — de forma honesta, incluindo o custo —, as alternativas que foram descartadas, e um status, que vai de proposto, para aceito, até eventualmente substituído. Vocês nunca editam um ADR antigo; escrevem um novo, que o substitui. Assim, a história do pensamento arquitetural fica preservada — e um agente, lendo essa sequência de ADRs, entende *como o sistema pensou*, não só como ele está hoje.
 
@@ -860,6 +888,8 @@ Revisão       A consequência de latência será MEDIDA em produção. Se o p99
 ```
 
 Reparem na última linha, "Revisão". Ela é uma promessa que amarra os dois grandes temas dessa aula: a decisão de hoje, tomada na fé, vai ser validada pela produção, com evidência. Pelo caminho, a Aula 2 ainda vai complementar essa decisão com um ADR próprio — sem contradizê-la —, e é só na Aula 8, depois de meses de dados reais, que um agente, conectado via MCP, participa do loop propondo, sempre sob guardrails, um novo ADR. É assim que a Aula 1 e a Aula 8 se costuram.
+
+</details>
 
 ---
 
@@ -920,6 +950,9 @@ Isso fecha a aula de hoje. Deixo abaixo alguns glossários de apoio — consulte
 
 ## Apêndice A — Glossário BACEN / Pix
 
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">📖 Glossário BACEN / Pix <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
+
 | Sigla | O que é |
 |---|---|
 | **SPB** | Sistema de Pagamentos Brasileiro — o conjunto de trilhos, sob o BACEN. |
@@ -947,7 +980,12 @@ Isso fecha a aula de hoje. Deixo abaixo alguns glossários de apoio — consulte
 | **Pix Automático** | Pagamentos recorrentes por mandato, em produção em 2025. |
 | **Drex** | Real Digital (CBDC) do BACEN, em pilotos, sobre DLT. |
 
+</details>
+
 ## Apêndice B — Glossário do eixo IA
+
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">📖 Glossário do eixo IA <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
 
 | Conceito | O que é | Onde no curso |
 |---|---|---|
@@ -958,7 +996,12 @@ Isso fecha a aula de hoje. Deixo abaixo alguns glossários de apoio — consulte
 | **MCP (Model Context Protocol)** | Protocolo aberto (Anthropic) que conecta agentes a ferramentas/dados, com fronteira de permissão. | Governança do agente; Aula 8. |
 | **RLHF** | Reinforcement Learning from Human Feedback — sistema melhora com feedback real, humano no circuito. | Metáfora do loop longo; Aula 8. |
 
+</details>
+
 ## Apêndice C — Glossário de termos técnicos gerais (não exclusivos de Pix/BACEN)
+
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">📖 Glossário de termos técnicos gerais <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
 
 | Termo | O que é |
 |---|---|
@@ -984,7 +1027,12 @@ Isso fecha a aula de hoje. Deixo abaixo alguns glossários de apoio — consulte
 | **Next-key locking** | Mecanismo do MySQL/InnoDB para evitar leituras fantasmas: trava linhas e as lacunas entre elas. |
 | **Raft** | Protocolo de consenso distribuído usado por bancos NewSQL (CockroachDB, YugabyteDB, TiDB) para replicar partições entre nós. |
 
+</details>
+
 ## Apêndice D — Para aprofundar
+
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">📚 Para aprofundar — fontes e referências <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
 
 - CAP (Brewer, "CAP Twelve Years Later") e PACELC (Abadi).
 - Martin Kleppmann, *Designing Data-Intensive Applications* — consistência, replicação, transações, CQRS/event sourcing.
@@ -993,6 +1041,8 @@ Isso fecha a aula de hoje. Deixo abaixo alguns glossários de apoio — consulte
 - Michael Nygard, "Documenting Architecture Decisions" (origem do ADR).
 - Chris Richardson, catálogo de padrões de microsserviços — microservices.io/patterns (Event Sourcing, Transactional Outbox, Saga, CQRS, Circuit Breaker — padrões que o TechPix aplica ao longo do curso).
 - Anthropic: documentação do Model Context Protocol; materiais sobre engenharia de contexto e agentes. GitHub Spec Kit (SDD) — repositório oficial: github.com/github/spec-kit (fluxo `/speckit.constitution → specify → clarify → plan → tasks → analyze → implement`, aplicado na Aula 3).
+
+</details>
 
 ---
 
