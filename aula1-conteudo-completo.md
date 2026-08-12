@@ -107,7 +107,7 @@ Vamos falar do ledger. Ele é o átomo de qualquer fintech — mas eu quero que 
 
 Em 1494, um matemático italiano chamado Luca Pacioli documentou uma técnica que os mercadores já usavam havia séculos: as **partidas dobradas**. A regra é simples de enunciar: todo evento econômico é registrado em dois lados, que sempre se equilibram. Se eu escrever Σ para "soma", a regra fica: Σ dos débitos é sempre igual a Σ dos créditos.
 
-Por que isso sobreviveu 500 anos? Porque resolve, de uma tacada só, três problemas que todo sistema financeiro enfrenta: **conservação** (nada some sem explicação), **auditoria** (a história inteira fica registrada, não só o resultado final) e **reconstrução** (o estado atual pode sempre ser recalculado a partir do histórico). E aqui vai uma provocação: toda vez que um engenheiro "inventa" um log append-only e balanceado — um log em que só se acrescenta informação, nunca se apaga nem se sobrescreve — ele está, sem saber, redescobrindo Pacioli.
+Por que isso sobreviveu 500 anos? Porque resolve, de uma tacada só, três problemas que todo sistema financeiro enfrenta: **conservação** (nada some sem explicação), **auditoria** (a história inteira fica registrada, não só o resultado final) e **reconstrução** (o estado atual pode sempre ser recalculado a partir do histórico).
 
 ### 2.2 O modelo conceitual
 
