@@ -670,6 +670,9 @@ Teto normativo ≈ 40.000 ms   (canal primário do SPI, t0'→t4 · Res. BCB 195
 
 Deixa eu bater na mesma tecla: o "10 segundos" que todo mundo repete **não é o número normativo**. O teto real, para o pior caso, é de **40 segundos**; a experiência-alvo, no dia a dia, é de poucos segundos — SPI com p99 de 4,6 segundos, DICT com p99 de 1 segundo. Só que sob pico — pensem numa véspera de feriado, ou 20h de um dia de pagamento de salário —, as filas incham, e o que era 300 milissegundos vira alguns segundos. E furar o SLA do DICT, ou a disponibilidade de vocês, tem consequência regulatória, não é só um incômodo técnico. É exatamente por isso que a Aula 2 começa quebrando esse orçamento.
 
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">📊 Tabela: números oficiais do <em>Manual de Tempos do Pix</em> v7.0 <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
+
 E aqui vai a tabela com todos os números oficiais que eu usei, tirados diretamente do *Manual de Tempos do Pix*, versão 7.0:
 
 | Indicador | Valor oficial |
@@ -682,6 +685,8 @@ E aqui vai a tabela com todos os números oficiais que eu usei, tirados diretame
 | Disponibilidade do SPI (meta) | **99,9%** |
 | Disponibilidade dos participantes | meta 100% · referência de 80% a 90% por categoria |
 | Pix Automático — autorização entra no **IGA** (o Índice Geral de ANS, o indicador agregado que resume o cumprimento dos SLAs) | desde **1º de julho de 2025** |
+
+</details>
 
 ### 5.7 O STR e o alto valor
 
