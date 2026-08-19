@@ -15,8 +15,6 @@ Antes de entrar no conteúdo de hoje, eu quero começar retomando o **ADR-001** 
 - **O preço, já registrado nas consequências:** a escrita paga coordenação e latência, e **não escala na horizontal como a leitura** — e o próprio ADR avisa que a contenção em contas muito movimentadas pode exigir estratégia específica de particionamento.
 - **A linha de revisão:** a consequência de latência seria **medida em produção** — e, se o p99 do commit ameaçasse o SLA, a decisão voltaria à mesa.
 
-Eu disse uma coisa no fim daquela aula que eu quero que vocês lembrem: guardem o ADR-001, porque um dia a produção vai ter opinião sobre ele. Hoje é o dia em que a produção fala.
-
 Deixa eu contar o que aconteceu.
 
 A TechPix decolou. Cresceu rápido — desses crescimentos que todo fundador sonha e todo arquiteto teme. E chegou um dia comum, um dia 5 do mês, hora do almoço, quando salário cai na conta de meio Brasil e todo mundo decide pagar boleto, mandar dinheiro pro aluguel e comprar o almoço ao mesmo tempo. O tráfego da TechPix triplicou em vinte minutos. E o sistema, que vinha rodando liso havia meses, começou a devolver erro. Não caiu de vez — foi pior que isso: começou a ficar **lento**, cada vez mais lento, até parecer travado. Os pagamentos que ainda passavam demoravam segundos a mais para confirmar. Alguns clientes tocaram duas, três vezes — vocês já sabem o que isso significa, a gente resolveu isso na Aula 1. Mas o sintoma novo, o que ninguém tinha visto antes, foi esse: o sistema inteiro andando em câmera lenta, como se estivesse com os pés na areia.
