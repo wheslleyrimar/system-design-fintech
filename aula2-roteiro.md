@@ -85,6 +85,7 @@ title: "Aula 2 — Roteiro (fonte)"
 
 **Parte B — o composto com Lei de Little + retry storm [42–52]**
 
+- **Relembre Little em 30 s, na própria padaria:** chegam 2 clientes/min × 3 min lá dentro = 6 pessoas na loja a qualquer momento. `L = λ × W`: dentro = chegada/s × tempo lá dentro. Traduza as letras (λ = taxa de chegada; W = tempo no sistema — o que a curva explode; L = transações simultâneas, cada uma ocupando uma conexão do pool).
 - **Encadeie os 5 passos no Excalidraw:** tráfego 3× → utilização 30%→90% → W explode (fator 0,4→9) → L explode (45→450 conexões) → pool de 100 esgota → timeout → **retry** → volta ao passo 1, pior.
 - **Nomeie:** "Isso é retry storm. O tráfego que ele recebe agora não é a demanda dos usuários — é a demanda **mais** as retentativas que ele próprio causou. O sistema está se atacando."
 - **A ironia (excelente pergunta):** "A idempotência da Aula 1 protegeu a correção — ninguém foi cobrado 3×. Ela protegeu a disponibilidade?" (Não. As 3 tentativas consumiram recurso 3×. Idempotência resolve duplicação de efeito, não amplificação de carga.)

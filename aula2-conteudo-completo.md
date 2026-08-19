@@ -422,7 +422,15 @@ Quando alguém na sua empresa disser "esses servidores estão a 40%, dá para co
 
 ### 3.2 O efeito composto com a Lei de Little
 
-Agora juntem isso com a Lei de Little da Aula 1, porque o combo é o que explica o colapso completo. Lembram: `L = λ × W`. A concorrência necessária é a taxa de chegada vezes o tempo no sistema.
+Agora juntem isso com a **Lei de Little**, que apareceu na Aula 1 — e vale relembrar em trinta segundos, porque o combo dela com a curva de filas é o que explica o colapso completo.
+
+A lei diz uma coisa só: **quantas coisas estão dentro do sistema ao mesmo tempo = quantas chegam por segundo × quanto tempo cada uma passa lá dentro.** Testem na padaria: se chegam 2 clientes por minuto e cada um passa 3 minutos lá dentro (fila + atendimento), então, em média, há 2 × 3 = **6 pessoas dentro da padaria** a qualquer momento. Não precisa contar cabeças — a multiplicação dá o número.
+
+Nos livros, ela se escreve `L = λ × W`. Traduzindo as três letras:
+
+- **λ** (lambda, outra letra grega de apelido) — a **taxa de chegada**: quantas transações chegam por segundo;
+- **W** — o **tempo no sistema**: quanto cada transação demora, da chegada à resposta. Reparem: é exatamente o tempo que a curva da Seção 3.1 faz explodir quando a folga acaba;
+- **L** — o resultado: quantas transações estão **dentro** do sistema ao mesmo tempo. E no TechPix, cada uma dessas transações ocupa uma conexão do pool enquanto está lá dentro.
 
 Sigam o encadeamento comigo, porque ele é vicioso:
 
