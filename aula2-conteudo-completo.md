@@ -230,7 +230,7 @@ E agora que vocês viram o fluxo, deixa eu preencher a planta do prédio — por
 
 Uma palavra honesta sobre essa última linha, porque ela vai aparecer em todo desenho do curso: **Cartões existe como fronteira reservada, não como funcionalidade.** O mundo de cartões — PSPs como Stripe e Adyen, as bandeiras, o settlement em D+n — é um trilho inteiro próprio, com diagramas clássicos próprios, e está fora do escopo deste curso, que segue o trilho do Pix. Mas a fronteira fica desenhada desde o dia 1 de propósito: quando (se) o TechPix entrar nesse mundo, o lugar dele no monólito já tem nome e regra de ouro esperando.
 
-Minha recomendação, e isso vem de gente que já bateu a cabeça nisso — Martin Fowler chama essa estratégia de "monolith first" —: comecem com o monólito modular. Não é fase intermediária vergonhosa; é a decisão mais defensável no dia 1, porque vocês ainda não sabem exatamente onde as fronteiras de verdade do domínio de vocês vão cair. Extrair serviço cedo demais, antes de entender o domínio, é pagar o preço de operar sistemas distribuídos sem ter comprado ainda o benefício de escalar de forma independente. E tem uma regra prática que eu gosto de usar: só extraiam um módulo para um serviço separado depois que a fronteira dele ficar **estável por meses** — depois que vocês tiverem certeza de que aquela linha não vai se mover. Extrair cedo demais é caro; extrair tarde demais só custa um refactor. A assimetria favorece esperar.
+Minha recomendação, e isso vem de gente que já bateu a cabeça nisso — Martin Fowler chama essa estratégia de "[monolith first](https://martinfowler.com/bliki/MonolithFirst.html)" —: comecem com o monólito modular. Não é fase intermediária vergonhosa; é a decisão mais defensável no dia 1, porque vocês ainda não sabem exatamente onde as fronteiras de verdade do domínio de vocês vão cair. Extrair serviço cedo demais, antes de entender o domínio, é pagar o preço de operar sistemas distribuídos sem ter comprado ainda o benefício de escalar de forma independente. E tem uma regra prática que eu gosto de usar: só extraiam um módulo para um serviço separado depois que a fronteira dele ficar **estável por meses** — depois que vocês tiverem certeza de que aquela linha não vai se mover. Extrair cedo demais é caro; extrair tarde demais só custa um refactor. A assimetria favorece esperar.
 
 ---
 
@@ -494,9 +494,146 @@ Três, e todas valem nomear porque são padrões de indústria:
 
 **Backoff exponencial com jitter.** Se uma requisição falha, o cliente não deve tentar de novo imediatamente, nem em intervalo fixo. Deve esperar um intervalo que **cresce exponencialmente** a cada tentativa (100 ms, 200 ms, 400 ms, 800 ms...) e — esta é a parte que quase todo mundo esquece — com um componente **aleatório** somado, o *jitter*. Por que o jitter importa tanto? Porque sem ele, mil clientes que falharam no mesmo instante vão tentar de novo exatamente no mesmo instante seguinte, e vocês transformaram uma tempestade em uma sequência de tempestades sincronizadas. O jitter espalha as retentativas no tempo. É uma linha de código que salva sistemas.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 860 350" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="430" y="24" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">1.000 clientes falharam no mesmo instante. E agora?</text>
+
+  <!-- SEM jitter -->
+  <text x="60" y="56" font-family="sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">SEM jitter</text>
+  <line x1="60" y1="140" x2="820" y2="140" stroke="#666" stroke-width="1.5"/>
+  <rect x="86" y="90" width="8" height="50" fill="#1a1a1a"/>
+  <text x="90" y="82" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#333">falha inicial</text>
+  <g fill="#b91c1c">
+    <rect x="166" y="70" width="10" height="70"/>
+    <rect x="286" y="70" width="10" height="70"/>
+    <rect x="466" y="70" width="10" height="70"/>
+    <rect x="726" y="70" width="10" height="70"/>
+  </g>
+  <g font-family="sans-serif" font-size="9.5" fill="#666" text-anchor="middle">
+    <text x="171" y="156">+100 ms</text>
+    <text x="291" y="156">+200 ms</text>
+    <text x="471" y="156">+400 ms</text>
+    <text x="731" y="156">+800 ms</text>
+  </g>
+  <text x="470" y="52" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">os 1.000 tentam de novo juntos, no MESMO instante — tempestades sincronizadas</text>
+
+  <!-- COM jitter -->
+  <text x="60" y="206" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">COM jitter</text>
+  <line x1="60" y1="290" x2="820" y2="290" stroke="#666" stroke-width="1.5"/>
+  <rect x="86" y="240" width="8" height="50" fill="#1a1a1a"/>
+  <g fill="#d4a017">
+    <rect x="140" y="272" width="3" height="18"/><rect x="150" y="266" width="3" height="24"/><rect x="159" y="276" width="3" height="14"/><rect x="170" y="270" width="3" height="20"/><rect x="181" y="278" width="3" height="12"/><rect x="192" y="268" width="3" height="22"/><rect x="203" y="274" width="3" height="16"/>
+    <rect x="252" y="274" width="3" height="16"/><rect x="264" y="268" width="3" height="22"/><rect x="277" y="276" width="3" height="14"/><rect x="291" y="270" width="3" height="20"/><rect x="306" y="278" width="3" height="12"/><rect x="320" y="272" width="3" height="18"/><rect x="333" y="276" width="3" height="14"/>
+    <rect x="420" y="276" width="3" height="14"/><rect x="438" y="270" width="3" height="20"/><rect x="457" y="278" width="3" height="12"/><rect x="476" y="272" width="3" height="18"/><rect x="495" y="276" width="3" height="14"/><rect x="513" y="268" width="3" height="22"/><rect x="530" y="278" width="3" height="12"/>
+    <rect x="660" y="278" width="3" height="12"/><rect x="684" y="272" width="3" height="18"/><rect x="708" y="276" width="3" height="14"/><rect x="733" y="270" width="3" height="20"/><rect x="757" y="278" width="3" height="12"/><rect x="781" y="274" width="3" height="16"/>
+  </g>
+  <text x="470" y="206" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">as MESMAS 1.000 retentativas — cada uma sorteia um extra aleatório e o pico desaparece</text>
+
+  <text x="430" y="332" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">a receita: intervalo que <tspan font-weight="bold">dobra</tspan> a cada tentativa (100 → 200 → 400 → 800 ms) <tspan font-weight="bold">+ sorteio aleatório somado</tspan> (o jitter)</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Backoff exponencial com jitter: sem o sorteio, o exponencial só agenda as próximas tempestades; com ele, a mesma carga vira um chuvisco.</p>
+</div>
+
 **Orçamento de retentativa (retry budget).** Uma regra global: as retentativas não podem passar de, digamos, 10% do tráfego total. Se passarem, o sistema **para de tentar** — porque acima disso, as retentativas estão claramente causando mais dano do que resolvendo. Isso é contraintuitivo e importante: existe um ponto em que insistir é pior do que desistir.
 
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 860 310" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="430" y="24" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">Retry budget: as retentativas têm um teto — 10% do tráfego total</text>
+
+  <!-- painel esquerdo: dentro do orçamento -->
+  <text x="215" y="56" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">dia normal — dentro do orçamento</text>
+  <rect x="160" y="100" width="110" height="150" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="215" y="180" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">demanda real</text>
+  <rect x="160" y="86" width="110" height="14" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="288" y="97" font-family="sans-serif" font-size="10" fill="#7a5c00">retries: ~6%</text>
+  <line x1="130" y1="79" x2="300" y2="79" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="215" y="70" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">teto: 10% do tráfego</text>
+  <text x="215" y="275" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#166534">✓ abaixo do teto: retenta normalmente</text>
+
+  <!-- painel direito: estourou -->
+  <text x="640" y="56" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">dia 5 — o orçamento estoura</text>
+  <rect x="585" y="120" width="110" height="130" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="640" y="190" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">demanda real</text>
+  <rect x="585" y="107" width="110" height="13" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <line x1="555" y1="107" x2="725" y2="107" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="748" y="111" font-family="sans-serif" font-size="10" fill="#b91c1c">teto: 10%</text>
+  <rect x="585" y="45" width="110" height="62" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <g stroke="#b91c1c" stroke-width="1" opacity="0.55">
+    <line x1="585" y1="52" x2="695" y2="100"/>
+    <line x1="585" y1="68" x2="695" y2="116"/>
+    <line x1="585" y1="45" x2="695" y2="93"/>
+    <line x1="605" y1="45" x2="695" y2="84"/>
+    <line x1="630" y1="45" x2="695" y2="73"/>
+    <line x1="585" y1="84" x2="640" y2="108"/>
+  </g>
+  <text x="640" y="79" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#7f1d1d">retries que NÃO acontecem</text>
+  <text x="640" y="93" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#7f1d1d">falham de vez, rápido</text>
+  <text x="640" y="275" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">✗ acima do teto: o sistema PARA de retentar</text>
+
+  <text x="430" y="300" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">acima do teto, cada retentativa só alimenta a tempestade — o orçamento marca onde insistir vira dano</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Retry budget: retentativas até 10% do tráfego, nunca mais que isso. O que passa do teto falha imediatamente — e isso protege quem ainda pode ser atendido.</p>
+</div>
+
 **Load shedding, de novo.** Já vimos isso na topologia, e aqui reaparece como defesa direta: rejeitar rápido e explicitamente parte do tráfego mantém a utilização abaixo do cotovelo da curva. Rejeitar 10% com erro imediato mantém os outros 90% rápidos; aceitar 100% deixa todos na fila e derruba tudo. Sob a curva de filas, **recusar tráfego é uma forma de proteger tráfego.**
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 860 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2ls-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+    <marker id="a2ls-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+    <marker id="a2ls-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d4a017"/>
+    </marker>
+  </defs>
+
+  <!-- painel esquerdo: aceitar tudo -->
+  <text x="215" y="30" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">aceitar 100%</text>
+  <text x="55" y="98" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">100% do</text>
+  <text x="55" y="113" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">tráfego</text>
+  <line x1="90" y1="105" x2="140" y2="105" stroke="#b91c1c" stroke-width="2.5" marker-end="url(#a2ls-b)"/>
+  <g fill="#d4a017">
+    <circle cx="158" cy="105" r="5"/><circle cx="172" cy="105" r="5"/><circle cx="186" cy="105" r="5"/><circle cx="200" cy="105" r="5"/><circle cx="214" cy="105" r="5"/><circle cx="228" cy="105" r="5"/><circle cx="242" cy="105" r="5"/>
+  </g>
+  <text x="200" y="88" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#7a5c00">a fila cresce sem limite</text>
+  <rect x="262" y="75" width="130" height="60" rx="10" fill="#fef2f2" stroke="#b91c1c" stroke-width="2.5"/>
+  <text x="327" y="99" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#7f1d1d">sistema a ~98%</text>
+  <text x="327" y="117" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7f1d1d">depois do cotovelo</text>
+  <text x="215" y="170" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b91c1c">fator de espera: 98 ÷ 2 = 49 atendimentos de fila</text>
+  <text x="215" y="188" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#b91c1c">todos esperam · todos lentos · colapso</text>
+
+  <line x1="430" y1="20" x2="430" y2="270" stroke="#ddd" stroke-width="1.5"/>
+
+  <!-- painel direito: shedding -->
+  <text x="645" y="30" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">rejeitar 10% (load shedding)</text>
+  <text x="490" y="98" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">100% do</text>
+  <text x="490" y="113" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">tráfego</text>
+  <line x1="525" y1="105" x2="565" y2="105" stroke="#166534" stroke-width="2.5" marker-end="url(#a2ls-g)"/>
+  <rect x="567" y="72" width="110" height="66" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2.5"/>
+  <text x="622" y="96" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">porteiro</text>
+  <text x="622" y="114" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#166534">(load shedder)</text>
+  <line x1="677" y1="92" x2="722" y2="92" stroke="#166534" stroke-width="2.5" marker-end="url(#a2ls-g)"/>
+  <text x="699" y="82" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#166534">90% passa</text>
+  <rect x="724" y="62" width="120" height="60" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="784" y="86" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">sistema a ~70%</text>
+  <text x="784" y="104" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">antes do cotovelo</text>
+  <line x1="622" y1="140" x2="622" y2="185" stroke="#d4a017" stroke-width="2.5" marker-end="url(#a2ls-a)"/>
+  <text x="640" y="165" font-family="sans-serif" font-size="9.5" fill="#7a5c00">10% recusado</text>
+  <rect x="540" y="190" width="165" height="46" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="622" y="209" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">erro imediato — sem fila</text>
+  <text x="622" y="226" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#7a5c00">cliente volta com backoff + jitter</text>
+  <text x="784" y="150" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#166534">fator: 70 ÷ 30 = 2,3</text>
+  <text x="784" y="167" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">os 90% ficam rápidos</text>
+
+  <rect x="150" y="278" width="560" height="34" rx="8" fill="#fff" stroke="#166534" stroke-width="1.5"/>
+  <text x="430" y="300" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">recusar tráfego é uma forma de proteger tráfego</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Load shedding: o porteiro segura a utilização antes do cotovelo. Aceitar todo mundo derruba todo mundo; recusar 10% com erro imediato salva os outros 90% — e o recusado volta com backoff.</p>
+</div>
 
 ---
 
@@ -614,7 +751,7 @@ Aí alguém mais calmo, do outro lado da mesa, faz a pergunta certa: *"Ok, reesc
 
 ### 5.1 Strangler Fig
 
-A primeira estratégia tem um nome bonito e uma imagem melhor ainda: **Strangler Fig**, a figueira estranguladora — uma planta que cresce em volta de uma árvore hospedeira, aos poucos, até que a árvore original desaparece e só resta a nova estrutura. Martin Fowler emprestou essa imagem para descrever como migrar um sistema sem um corte único e arriscado: vocês colocam uma fachada, um roteador, na frente do monólito, e começam a desviar uma fatia do tráfego — digamos, uma rota específica, ou um conjunto específico de clientes — para uma nova implementação, enquanto o resto continua batendo no monólito antigo. Aos poucos, mais tráfego migra, até que o monólito, naquele pedaço específico, para de receber chamada nenhuma — e pode ser desligado sem drama.
+A primeira estratégia tem um nome bonito e uma imagem melhor ainda: **Strangler Fig**, a figueira estranguladora — uma planta que cresce em volta de uma árvore hospedeira, aos poucos, até que a árvore original desaparece e só resta a nova estrutura. [Martin Fowler emprestou essa imagem](https://martinfowler.com/bliki/StranglerFigApplication.html) para descrever como migrar um sistema sem um corte único e arriscado: vocês colocam uma fachada, um roteador, na frente do monólito, e começam a desviar uma fatia do tráfego — digamos, uma rota específica, ou um conjunto específico de clientes — para uma nova implementação, enquanto o resto continua batendo no monólito antigo. Aos poucos, mais tráfego migra, até que o monólito, naquele pedaço específico, para de receber chamada nenhuma — e pode ser desligado sem drama.
 
 No TechPix, a estratégia seria: colocar uma fachada na frente do módulo de Pagamentos, e migrar gradualmente a lógica de resolução de chave — que hoje mora dentro do monólito e sofre com o esgotamento de pool que eu descrevi — para um componente isolado, com seu próprio pool de conexões, suas próprias réplicas, dedicado só a essa responsabilidade. Se esse componente ficar sobrecarregado, ele fica sobrecarregado sozinho — não arrasta o resto do sistema junto.
 
@@ -832,7 +969,7 @@ Tudo que a gente discutiu tem implementação de indústria. Vale vocês saírem
 
 **Broker.** O **Kafka** é o log distribuído dominante, com a propriedade de retenção e reprocessamento que combina com a natureza append-only de um ledger. Alternativas gerenciadas com semântica parecida existem em todas as nuvens. Para filas tradicionais, **RabbitMQ** e **SQS**. A escolha real, como vimos na topologia, é log vs fila — retenção e reprocessamento vs simplicidade operacional.
 
-E agora que os nomes estão na mesa, deixa eu juntar as peças num desenho só — o CQRS da Seção 5.4, mas com a stack de verdade, caixa por caixa, do jeito que ele roda em produção. Reparem que cada caixa desse desenho é um dos padrões do catálogo do microservices.io, do Chris Richardson — Transactional Outbox e CQRS têm página própria lá, e vale a visita:
+E agora que os nomes estão na mesa, deixa eu juntar as peças num desenho só — o CQRS da Seção 5.4, mas com a stack de verdade, caixa por caixa, do jeito que ele roda em produção. Reparem que cada caixa desse desenho é um dos padrões do catálogo do [microservices.io](https://microservices.io/), do Chris Richardson — [Transactional Outbox](https://microservices.io/patterns/data/transactional-outbox.html) e [CQRS](https://microservices.io/patterns/data/cqrs.html) têm página própria lá, e vale a visita:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 920 400" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
@@ -1235,7 +1372,7 @@ E antes de encerrar, o retrato de sempre — a gente vai tirar um desses ao fim 
 | **Cache-aside** | A aplicação consulta o cache; no miss, busca no banco e grava no cache. Só cacheia o que é lido; o primeiro acesso paga o miss. Caso TechPix: cache do DICT. |
 | **Read-through / write-through** | Variações em que o próprio cache busca no banco (read-through) ou toda escrita passa pelo cache e pelo banco juntos (write-through). |
 | **Invalidação: TTL × por evento** | TTL: o dado expira sozinho (mentira limitada ao TTL). Por evento: um consumidor atualiza o cache a cada evento — o saldo exibido no Redis é projeção, não expira. |
-| **microservices.io** | Catálogo de padrões de microsserviços de Chris Richardson — referência para Transactional Outbox, CQRS, Saga, Strangler Fig, Circuit Breaker e afins. |
+| **[microservices.io](https://microservices.io/)** | Catálogo de padrões de microsserviços de Chris Richardson — referência para Transactional Outbox, CQRS, Saga, Strangler Fig, Circuit Breaker e afins. |
 
 ---
 

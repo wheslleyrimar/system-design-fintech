@@ -89,7 +89,7 @@ title: "Aula 2 — Roteiro (fonte)"
 - **Encadeie os 5 passos no Excalidraw:** tráfego 3× → utilização 30%→90% → W explode (fator 0,4→9) → L explode (45→450 conexões) → pool de 100 esgota → timeout → **retry** → volta ao passo 1, pior.
 - **Nomeie:** "Isso é retry storm. O tráfego que ele recebe agora não é a demanda dos usuários — é a demanda **mais** as retentativas que ele próprio causou. O sistema está se atacando."
 - **A ironia (excelente pergunta):** "A idempotência da Aula 1 protegeu a correção — ninguém foi cobrado 3×. Ela protegeu a disponibilidade?" (Não. As 3 tentativas consumiram recurso 3×. Idempotência resolve duplicação de efeito, não amplificação de carga.)
-- **Apresente as 3 defesas:** backoff exponencial **com jitter** (explique por que sem jitter você sincroniza as tempestades), retry budget (existe ponto em que insistir é pior que desistir), load shedding.
+- **Apresente as 3 defesas, cada uma com seu diagrama (3b):** backoff **com jitter** (duas linhas do tempo: sem jitter = tempestades sincronizadas nos mesmos instantes; com jitter = mesmas retentativas viram chuvisco), retry budget (barra de tráfego com teto de 10% — o que passa do teto não retenta, falha de vez), load shedding (porteiro: aceitar 100% → sistema a 98%, fator 49; recusar 10% → sistema a 70%, fator 2,3).
 - **Armadilha:** não deixe a fórmula virar exercício de matemática. Cada número precisa voltar ao dia 5.
 
 ---
@@ -194,6 +194,7 @@ Percorra rápido, sem se alongar em nenhuma:
 2. Loop de fitness function.
 3a. **A padaria em três linhas** (50/90/95%: linha do tempo do caixa + fila média + a conta).
 3. **Curva do cotovelo** (utilização × espera) + encadeamento do retry storm.
+3b. **As três defesas** — jitter (duas linhas do tempo), retry budget (barra com teto de 10%), load shedding (porteiro antes do cotovelo).
 4. Anatomia da fratura (hotspot + DICT/pool).
 5. Strangler Fig.
 6. Outbox + CQRS (com os 4 consumidores — o 4º é a Reconciliação).
