@@ -1338,6 +1338,9 @@ E antes de encerrar, o retrato de sempre — a gente vai tirar um desses ao fim 
 
 ## Apêndice — Termos novos desta aula
 
+<details markdown="1" style="margin:16px 0;border:1px solid #d0d7de;border-radius:6px;padding:12px 16px;background:#f6f8fa;">
+<summary style="cursor:pointer;font-weight:600;list-style:none;">📖 Glossário da Aula 2 — todos os termos novos <span style="font-weight:400;color:#666;">(clique para mostrar/ocultar)</span></summary>
+
 | Termo | O que é |
 |---|---|
 | **Big Ball of Mud** | Sistema sem fronteiras internas reais; qualquer parte pode acoplar em qualquer outra. O oposto de um monólito modular bem-feito. |
@@ -1373,6 +1376,8 @@ E antes de encerrar, o retrato de sempre — a gente vai tirar um desses ao fim 
 | **Read-through / write-through** | Variações em que o próprio cache busca no banco (read-through) ou toda escrita passa pelo cache e pelo banco juntos (write-through). |
 | **Invalidação: TTL × por evento** | TTL: o dado expira sozinho (mentira limitada ao TTL). Por evento: um consumidor atualiza o cache a cada evento — o saldo exibido no Redis é projeção, não expira. |
 | **[microservices.io](https://microservices.io/)** | Catálogo de padrões de microsserviços de Chris Richardson — referência para Transactional Outbox, CQRS, Saga, Strangler Fig, Circuit Breaker e afins. |
+
+</details>
 
 ---
 
