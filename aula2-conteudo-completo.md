@@ -26,6 +26,8 @@ Deixa eu mostrar como era o TechPix: um único artefato de deploy — um monóli
 
 E por que eu insisto tanto nisso? Porque as fronteiras de um monólito modular bem-feito não são decoração. Elas são, literalmente, um **ensaio** para as fronteiras de serviço que talvez, um dia, vocês precisem extrair. Se o módulo de Cartões nunca vazou uma consulta direta na tabela do Ledger, então no dia que vocês decidirem tirar Cartões do monólito e colocar num serviço separado, a cirurgia é limpa — porque a fronteira já existia, só que dentro do mesmo processo. Se, ao contrário, o módulo de Cartões faz um `JOIN` direto na tabela de lançamentos do Ledger porque "era mais rápido assim", vocês não têm um monólito modular — vocês têm uma bola de lama com um nome bonito.
 
+E existe uma segunda armadilha, mais sutil que o `JOIN` — e mais perigosa, porque ela nem parece errada: **dois módulos escrevendo na mesma transação ACID.** No monólito, com todos os schemas no mesmo banco, isso é tecnicamente grátis: Pagamentos grava a ordem, Contas atualiza o extrato, tudo num `COMMIT` só, atômico, lindo. E é exatamente por ser grátis que todo mundo faz. Só que essa transação compartilhada é um acoplamento invisível: no dia em que um dos dois módulos virar serviço, a chamada vira rede — e **atomicidade não atravessa a rede.** O que era um `COMMIT` vira uma saga com compensação, e vocês descobrem, no meio da extração, que os dois módulos nunca foram separáveis de verdade. Por isso a regra de ouro tem uma irmã: **cada transação pertence a um módulo só.** O que precisa acontecer atomicamente, junto, mora dentro do mesmo módulo; entre módulos, a comunicação aceita atraso. A Aula 3 vai dar um nome preciso para "o que precisa acontecer junto" — guardem a inquietação até lá.
+
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 860 320" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
   <!-- Monólito modular -->
@@ -495,7 +497,11 @@ Reparem que essas três táticas — bulkhead, circuit breaker, timeout calibrad
 
 ## 5. Desacoplamento incremental: cortando sem parar de operar
 
-Agora que a gente sabe onde dói, vamos falar de como tratar — sem, no processo, criar um novo incidente pior que o primeiro. Porque um erro comum, depois de um susto desses, é a reação de pânico: "vamos reescrever tudo do zero em microsserviços". Isso quase sempre piora as coisas. O caminho certo é o **desacoplamento incremental**.
+Agora que a gente sabe onde dói, vamos falar de como tratar — sem, no processo, criar um novo incidente pior que o primeiro. E antes da técnica, deixa eu encenar a reunião que aconteceu no TechPix na manhã seguinte ao dia 5, porque essa reunião acontece em **toda** empresa depois de um susto desses, e vocês vão estar nela um dia.
+
+O primeiro a falar é um dev da equipe, ainda com a adrenalina do plantão: *"A causa é óbvia: a gente é um monólito. A Netflix quebrou tudo em microsserviços e escala infinito. Vamos reescrever."* E eu quero que vocês notem que esse argumento é sedutor e **não sobrevive ao diagnóstico que a gente acabou de fazer**. Voltem nas duas fraturas da Seção 4. O ponto quente era o lock da conta `pix_a_liquidar` — se vocês colocarem o Ledger num serviço separado, aquele lock **continua existindo**, só que agora cada transação paga uma viagem de rede para chegar até ele. Vocês não removeram a contenção; mudaram o endereço dela e adicionaram latência e falha parcial no caminho. E o esgotamento de pool era uma dependência externa lenta sequestrando recurso compartilhado — que se resolve com bulkhead e circuit breaker, dentro ou fora de um monólito, indiferente. **Nenhuma das duas fraturas tem "deploy único" como causa raiz.** Microsserviços trocam o problema da contenção pelo problema da distribuição; quem extrai sem critério paga os dois ao mesmo tempo.
+
+Aí alguém mais calmo, do outro lado da mesa, faz a pergunta certa: *"Ok, reescrever tudo não. Mas alguma coisa a gente extrai, não? O quê? E como a gente saberia?"* — e essa pergunta eu quero deixar **aberta**, deliberadamente, porque ela é a pergunta mais importante das próximas aulas. Para respondê-la, vocês precisam de duas coisas que ainda não temos: fronteiras descobertas com técnica em vez de palpite (é a Aula 3), e critérios de evidência — não de vontade — para decidir que uma fronteira está madura para virar serviço (isso vem mais adiante no curso, com nome e checklist). O que dá para fazer **hoje**, com o incidente ainda quente, é o caminho do meio: o **desacoplamento incremental** — aliviar os pontos de fratura específicos, sem big bang, sem reescrita, sem apostar a empresa numa migração.
 
 ### 5.1 Strangler Fig
 
@@ -589,21 +595,39 @@ Isso fecha o círculo que eu abri na Aula 1, quando falei que write model e read
   <line x1="582" y1="172" x2="648" y2="172" stroke="#166534" stroke-width="2.5" marker-end="url(#a2o-arrow-g)"/>
   <text x="615" y="160" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">assíncrono</text>
   <!-- read models -->
-  <rect x="650" y="60" width="230" height="44" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
-  <text x="765" y="87" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">Extrato (read model)</text>
-  <rect x="650" y="150" width="230" height="44" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
-  <text x="765" y="177" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">Saldo exibido (read model)</text>
-  <rect x="650" y="240" width="230" height="44" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
-  <text x="765" y="267" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">Feed / notificações</text>
-  <line x1="648" y1="172" x2="650" y2="82" stroke="#166534" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <line x1="648" y1="172" x2="650" y2="262" stroke="#166534" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <text x="765" y="120" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">atraso eventual: 100–300 ms</text>
+  <rect x="650" y="48" width="230" height="40" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="765" y="73" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">Extrato (read model)</text>
+  <rect x="650" y="100" width="230" height="40" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="765" y="125" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">Saldo exibido (read model)</text>
+  <rect x="650" y="152" width="230" height="40" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="765" y="177" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">Feed / notificações</text>
+  <rect x="650" y="204" width="230" height="56" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2.5"/>
+  <text x="765" y="226" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Reconciliação (Seção 5.5)</text>
+  <text x="765" y="244" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#4d7c5f">ledger × Conta PI, por E2E ID</text>
+  <line x1="648" y1="172" x2="650" y2="68" stroke="#166534" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="648" y1="172" x2="650" y2="232" stroke="#166534" stroke-width="1.5" stroke-dasharray="4 3"/>
   <!-- rodapé -->
   <rect x="165" y="290" width="715" height="30" rx="6" fill="#fef9e7" stroke="#d4a017"/>
-  <text x="522" y="310" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a5c00">escrita: forte e síncrona (ADR-001) · leitura: eventual e escalando sozinha (ADR-002)</text>
+  <text x="522" y="310" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7a5c00">escrita: forte e síncrona (ADR-001) · leitura: eventual, 100–300 ms atrás, escalando sozinha (ADR-002)</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Outbox + CQRS: o log imutável da Aula 1, reaplicado como ponte confiável entre escrita e leitura.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Outbox + CQRS: o log imutável da Aula 1, reaplicado como ponte confiável entre escrita e leitura — com quatro consumidores, não três.</p>
 </div>
+
+### 5.5 O quarto consumidor: a reconciliação
+
+Reparem que eu desenhei **quatro** consumidores saindo do relay, e o quarto não é um read model como os outros — ele é uma promessa da Aula 1 sendo paga. Lembram do que eu disse lá, quase de passagem, na seção do SPI? *"O ledger interno de vocês precisa espelhar e reconciliar com o que acontece na Conta PI — e reconciliação é uma disciplina de engenharia por si só."* Pois bem: até hoje, isso era uma frase. Agora vira um componente.
+
+O mecanismo: o serviço de **Reconciliação** consome duas fontes independentes. De um lado, os eventos `PixLiquidado` que saem do Outbox — o que o **nosso** livro diz que aconteceu. Do outro, o extrato da Conta PI que o próprio SPI fornece — o que o livro do **Banco Central** diz que aconteceu. E ele bate as duas listas, movimento a movimento, usando a chave que costura o curso inteiro: o **E2E ID**. É por isso que aquele identificador viaja em tudo — no registro de idempotência, na `pacs.008`, no evento do Outbox: ele é o que permite dizer "este lançamento aqui é aquele movimento lá".
+
+Cada comparação tem três resultados possíveis, e a gravidade cresce na ordem:
+
+- **Bateu.** O caso normal, 99,9-e-alguma-coisa por cento das vezes. Ninguém escreve post-mortem sobre ele.
+- **Está no nosso ledger, não está no extrato do BACEN.** Dentro da janela de propagação, é trânsito normal — o evento pode estar a caminho. Persistiu além da janela? Alguma coisa que a gente **acha** que liquidou, não liquidou. Investigação.
+- **Está no extrato do BACEN, não está no nosso ledger.** Este é o grave. Dinheiro se moveu em moeda de banco central e o nosso livro não sabe. Não existe "janela de tolerância" confortável aqui — é alarme, e é gente olhando **agora**.
+
+E duas regras de conduta, que valem mais que a implementação. Primeira: **divergência abre investigação, nunca correção automática.** Um robô que "conserta" o ledger para bater com o extrato é um robô que transforma um bug detectável num rombo silencioso. Segunda: quando a investigação concluir, a correção entra como **lançamento novo, vinculado ao original** — nunca como edição do passado. É a regra de imutabilidade da Aula 1, de novo, agora protegendo vocês do próprio processo de correção.
+
+Se vocês já viram o diagrama clássico de payment system — aquele com PSP, settlement file e uma caixa de *Reconciliation* recebendo o arquivo de fora — reconheçam a estrutura: é exatamente esta. Muda o nome do trilho (lá, adquirência e bandeiras; aqui, SPI e Conta PI), não muda o papel: **a reconciliação é o sistema que salva vocês quando todos os outros falharem em silêncio.** Como esse componente se opera no dia a dia — o que monitorar, quando alarmar, o que é taxa de divergência aceitável — é assunto da Aula 7.
 
 E antes de eu fazer a conta do particionamento, deixa eu nomear uma distinção que está implícita em tudo isso — porque ela explica **por que** o caminho de leitura sai barato e o de escrita sai caro. Existem dois eixos para escalar qualquer sistema: **vertical** (scale-up: máquina maior) e **horizontal** (scale-out: mais máquinas). E a consequência que o ADR-001 já registrava — "a escrita não escala na horizontal como a leitura" — é exatamente isso em uma linha: para a leitura, o eixo horizontal é quase de graça (réplicas); para a escrita fortemente consistente, o eixo horizontal cobra o preço da coordenação, e é essa conta que a Seção 6 vai fazer.
 
@@ -1072,6 +1096,7 @@ E antes de encerrar, o retrato de sempre — a gente vai tirar um desses ao fim 
 |---|---|
 | **Big Ball of Mud** | Sistema sem fronteiras internas reais; qualquer parte pode acoplar em qualquer outra. O oposto de um monólito modular bem-feito. |
 | **Monolith first** | Recomendação (Martin Fowler) de começar um sistema novo como monólito modular, extraindo serviços só depois que as fronteiras se provarem estáveis. |
+| **Transação cross-módulo** | Dois módulos escrevendo no mesmo `COMMIT` ACID. Grátis no monólito, fatal na extração: atomicidade não atravessa a rede, e o `COMMIT` vira saga. Cada transação pertence a um módulo só. |
 | **Fitness function** | Verificação objetiva e automatizável de uma característica arquitetural desejada. Pode ser atômica ou holística; disparada (CI) ou contínua (produção). |
 | **Hot partition / ponto quente** | Um recurso (conta, partição, chave de lock) que concentra tráfego desproporcional e vira gargalo de contenção. |
 | **Esgotamento de pool** | Quando requisições lentas seguram recursos compartilhados (threads, conexões) até não sobrar nenhum para o resto do sistema. |
@@ -1083,6 +1108,7 @@ E antes de encerrar, o retrato de sempre — a gente vai tirar um desses ao fim 
 | **Dual write problem** | O risco de inconsistência quando uma operação escreve em dois lugares (ex.: banco + fila) como passos separados e não atômicos. |
 | **Outbox Pattern** | Gravar o evento a publicar na mesma transação do dado de negócio; um processo separado publica o evento depois, de forma confiável. |
 | **CQRS** | Command Query Responsibility Segregation — separar o modelo de escrita do modelo de leitura (já visto na Aula 1; aqui, materializado via Outbox). |
+| **Reconciliação** | Bater, movimento a movimento (por E2E ID), o ledger interno contra o extrato da Conta PI no BACEN. Divergência abre investigação — nunca correção automática; a correção entra como lançamento novo. |
 | **Utilização (ρ)** | Fração do tempo em que um recurso está ocupado. O tempo de espera cresce com ρ/(1−ρ) — explode perto de 100%. |
 | **Curva de filas / cotovelo** | A relação não-linear entre utilização e latência. Entre 80% e 95% de utilização, a espera quintuplica. |
 | **Retry storm** | Timeouts geram retentativas, que aumentam a carga, que geram mais timeouts. O sistema se ataca. |

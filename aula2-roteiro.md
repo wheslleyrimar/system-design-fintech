@@ -107,7 +107,9 @@ title: "Aula 2 — Roteiro (fonte)"
 
 **Objetivo:** Strangler Fig e Branch by Abstraction como alternativas seguras a "reescrever tudo".
 
-- **Fala-chave:** "Depois de um susto desses, a reação errada é 'vamos reescrever tudo em microsserviços'."
+- **Encene a reunião do dia seguinte:** dev com adrenalina do plantão pede microsserviços citando Netflix. Desmonte com o diagnóstico da Seção 4: o lock da `pix_a_liquidar` num serviço separado continua existindo — só ganhou uma viagem de rede; o pool esgotado se resolve com bulkhead, dentro ou fora do monólito. Nenhuma fratura tem "deploy único" como causa raiz.
+- **Plante a pergunta aberta:** "Ok, tudo não. Mas alguma coisa a gente extrai — o quê, e como saberíamos?" Não responda: fronteiras com técnica é a Aula 3; critérios de evidência para extrair vêm adiante no curso.
+- **Fala-chave:** "Microsserviços trocam o problema da contenção pelo problema da distribuição — quem extrai sem critério paga os dois."
 - **Desenhe o Diagrama 5:** monólito + fachada/roteador + novo componente, tráfego migrando aos poucos.
 - **Conecte à topologia:** "Reparem que a fachada do Strangler Fig **é** o balanceador L7 da Camada 1 da topologia. Não é componente novo — é uso novo de um componente que já existia."
 - **Pergunte:** "No TechPix, o que sai do monólito primeiro — a resolução de chave via DICT, ou a escrita do ledger?" (a resolução de chave: é o que sofre esgotamento de pool e tem menor acoplamento com a consistência forte).
@@ -123,6 +125,7 @@ title: "Aula 2 — Roteiro (fonte)"
 - **Desenhe o Diagrama 6:** mesma transação grava ledger + outbox; relay publica assíncrono.
 - **Pergunte:** "Por que a tabela de outbox é, estruturalmente, a mesma ideia do ledger da Aula 1?" (log append-only — mesma solução, nova camada).
 - **Poller vs CDC:** mencione as duas implementações e a recomendação (comece com poller, migre para CDC quando for problema **medido**).
+- **Feche com o 4º consumidor — Reconciliação (Seção 5.5):** bate o ledger contra o extrato da Conta PI, por E2E ID. Três resultados: bateu; está em nós e não no BACEN (janela, depois investigação); está no BACEN e não em nós (alarme, gente olhando agora). Regras: divergência nunca vira correção automática; correção entra como lançamento novo. É a caixa de settlement → reconciliation dos diagramas clássicos de payment system.
 - **Armadilha:** outbox não substitui consistência forte no ledger — resolve a propagação do evento.
 
 ---
