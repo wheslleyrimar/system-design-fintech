@@ -247,7 +247,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
 
   <h2>1 · Mapa narrativo do curso</h2>
   <p class="teach">Ensina: hoje as fronteiras "no olho" da Aula 2 ganham técnica — emergem dos eventos, não de palpite. Domain-Driven Design, de Eric Evans, dá quatro ferramentas para o problema que acabamos de ver: linguagem ubíqua, bounded context, agregados e eventos de domínio. Não vou dar o curso completo de DDD — vou pegar só as quatro ideias que realmente mudam a arquitetura de uma fintech.</p>
-  <div class="lead">O mapa do curso reflete a jornada real do TechPix: <b>Nascimento</b> — as decisões fundacionais do ledger; <b>Crescimento</b> — o monólito rachou sob carga; <b>Linguagem</b> (hoje) — as fronteiras descobertas pelo event storming viram especificações executáveis; <b>Aula 8</b> — agentes olhando para essas mesmas especificações para propor a próxima evolução. O eixo IA não é adicional: é o mesmo artefato (bounded context, spec, ADR) visto de outro ângulo.</div>
+  <div class="lead">O mapa do curso reflete a jornada real da TechPix: <b>Nascimento</b> — as decisões fundacionais do ledger; <b>Crescimento</b> — o monólito rachou sob carga; <b>Linguagem</b> (hoje) — as fronteiras descobertas pelo event storming viram especificações executáveis; <b>Aula 8</b> — agentes olhando para essas mesmas especificações para propor a próxima evolução. O eixo IA não é adicional: é o mesmo artefato (bounded context, spec, ADR) visto de outro ângulo.</div>
   <div class="fig">
     <div class="grid5">
       <div class="rowlabel" style="font-size:18px;color:var(--text-primary);">A jornada do<br>TechPix →</div>
@@ -315,7 +315,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
 
   <h2>4 · Context map <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(diagrama-estrela da aula)</span></h2>
   <p class="teach">Ensina: como os contextos se relacionam. Contas&amp;Ledger é upstream de quase tudo; o ACL protege a linguagem do domínio contra o BACEN. Descobrir os contextos é metade do trabalho — a outra metade é desenhar como eles se relacionam, porque contextos isolados não existem numa fintech.</p>
-  <div class="lead">No TechPix, <b>Contas e Ledger</b> é upstream de quase tudo — Pagamentos, Cartões, Antifraude dependem da verdade que o Ledger define, mas o Ledger não muda seu modelo para agradar nenhum deles. O <b>ACL</b> já estava no TechPix desde a Aula 1, só que sem esse nome: é a camada que traduz a mensagem pacs.008 do ISO 20022 para o evento de domínio "PixIniciado". Se o BACEN mudar o formato, o ACL absorve — o resto do domínio nem sabe que algo mudou do lado de fora.</div>
+  <div class="lead">No TechPix, <b>Contas e Ledger</b> é upstream de quase tudo — Pagamentos, Cartões, Antifraude dependem da verdade que o Ledger define, mas o Ledger não muda seu modelo para agradar nenhum deles. O <b>ACL</b> já estava na TechPix desde a Aula 1, só que sem esse nome: é a camada que traduz a mensagem pacs.008 do ISO 20022 para o evento de domínio "PixIniciado". Se o BACEN mudar o formato, o ACL absorve — o resto do domínio nem sabe que algo mudou do lado de fora.</div>
   <div class="fig">
     <div style="display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;justify-content:center;">

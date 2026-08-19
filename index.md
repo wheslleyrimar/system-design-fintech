@@ -9,7 +9,7 @@ Curso ao vivo, com o caso contínuo da fintech fictícia **TechPix**, desenhado 
 
 ## Companion
 
-- [A topologia progressiva do TechPix](topologia-progressiva.md) — o artefato central de System Design do curso: a arquitetura sendo construída camada por camada, cada camada justificada por uma falha concreta.
+- [A topologia progressiva da TechPix](topologia-progressiva.md) — o artefato central de System Design do curso: a arquitetura sendo construída camada por camada, cada camada justificada por uma falha concreta.
 
 ## Aula 1 — Fundamentos de Arquitetura em Fintech
 

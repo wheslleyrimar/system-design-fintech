@@ -94,7 +94,7 @@ title: "Aula 3 — Roteiro (fonte)"
 - **Explicite a tensão:** as regras 2 e 4 se opõem. Agregado grande = mais invariantes protegidas + mais contenção. Pequeno = escala + mais consistência eventual para gerenciar.
 - **Desenhe o Diagrama 6** e então faça a conexão, devagar:
 
-  > "O ponto quente do ledger, que derrubou o TechPix no dia 5, era um **agregado grande demais**. A conta `pix_a_liquidar` estava dentro da fronteira transacional de todas as transações ao mesmo tempo. **Não era um problema de banco de dados; era um problema de modelagem de domínio que se manifestou como problema de banco.**"
+  > "O ponto quente do ledger, que derrubou a TechPix no dia 5, era um **agregado grande demais**. A conta `pix_a_liquidar` estava dentro da fronteira transacional de todas as transações ao mesmo tempo. **Não era um problema de banco de dados; era um problema de modelagem de domínio que se manifestou como problema de banco.**"
 
 - **Pare e deixe decantar.** Depois: "Quando a gente falou de 'reparticionar a escrita' na Aula 2, a gente estava falando, em DDD, de **redesenhar a fronteira do agregado**. É a mesma decisão vista de dois ângulos."
 
@@ -124,7 +124,7 @@ title: "Aula 3 — Roteiro (fonte)"
 - **Escreva a spec do contexto Pagamentos ao vivo:** linguagem, invariantes, eventos, dependências, SLA herdado.
 - **Pergunte:** "Qual linha dessa spec, virando teste automático, teria pegado o bug do Diego e da Marina?" (a linha "Linguagem", que distingue explicitamente 'Pagamento' de 'Transferência').
 - **Mostre o Spec Kit (GitHub):** desenhe o pipeline `/speckit.constitution → specify → clarify → plan → tasks → analyze → implement` e a árvore `.specify/memory/constitution.md` + `specs/001-…/spec.md·plan.md·tasks.md`. Roda dentro do agente de código (Claude Code, Copilot, Gemini CLI).
-- **Fala-chave:** "A constituição do TechPix já estava escrita — a gente só não sabia o nome: Σ=Σ, E2E ID único, falhar fechado. O ADR é a jurisprudência; a constituição é a lei consolidada."
+- **Fala-chave:** "A constituição da TechPix já estava escrita — a gente só não sabia o nome: Σ=Σ, E2E ID único, falhar fechado. O ADR é a jurisprudência; a constituição é a lei consolidada."
 - **Pergunte:** "Que pergunta o `/speckit.clarify` faria sobre a spec do limite diário do Diego?" ("quando você escreve 'conta', quer dizer identidade ou sub-carteira?" — o bug da abertura não sobrevive ao clarify).
 - **Desenhe o Diagrama 9 (Context Engineering):** o que entra na janela do agente (spec, glossário do contexto, ADRs, eventos) vs. o que fica **de fora** (internals de Antifraude e Identidade).
 - **Fala-chave de fecho:** "O bounded context de vocês é, literalmente, a unidade de contexto que um agente deveria receber."
@@ -156,7 +156,7 @@ title: "Aula 3 — Roteiro (fonte)"
 
 - Aprofundar os 9 padrões de context map do DDD clássico (partnership, customer-supplier, separate ways, big ball of mud, open host service, published language).
 - Discutir property-based testing das invariantes da spec: em vez de testar casos, gerar milhares de entradas aleatórias e verificar que a invariante nunca quebra.
-- **Exercício (10 min):** encontrar outra palavra do TechPix que provavelmente significa coisas diferentes em contextos diferentes — "limite"? "cliente"? "transação"? "pagamento"?
+- **Exercício (10 min):** encontrar outra palavra da TechPix que provavelmente significa coisas diferentes em contextos diferentes — "limite"? "cliente"? "transação"? "pagamento"?
 
 ---
 

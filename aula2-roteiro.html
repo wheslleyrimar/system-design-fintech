@@ -243,7 +243,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   </div>
 
   <h2>1 · Mapa narrativo do curso</h2>
-  <p class="teach">Ensina: o TechPix decolou — e num dia 5 do mês, com o salário de meio Brasil caindo ao mesmo tempo, o sistema racha. Hoje é o dia em que a produção responde ao ADR-001, não revertendo, mas complementando. Este mapa situa a jornada completa do curso: do nascimento modular, passando pelo crescimento doloroso, até o sistema que aprende e evolui com apoio de IA na Aula 8.</p>
+  <p class="teach">Ensina: a TechPix decolou — e num dia 5 do mês, com o salário de meio Brasil caindo ao mesmo tempo, o sistema racha. Hoje é o dia em que a produção responde ao ADR-001, não revertendo, mas complementando. Este mapa situa a jornada completa do curso: do nascimento modular, passando pelo crescimento doloroso, até o sistema que aprende e evolui com apoio de IA na Aula 8.</p>
   <p class="lead">O curso tem dois eixos que correm em paralelo. No eixo Fintech, cada aula enfrenta um desafio real do setor regulado — ledger, DICT sob carga, bounded contexts, resiliência. No eixo IA, o mesmo desafio é revisitado sob a perspectiva de como modelos e agentes mudam as ferramentas do arquiteto. A Aula 2 é onde esses dois eixos se tocam pela primeira vez: <em>fitness functions</em> têm exatamente o mesmo formato de <em>evals</em>.</p>
   <div class="fig">
     <div class="grid5">
@@ -271,7 +271,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   </div>
   <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">Com o mapa da jornada claro, vamos ao ponto de partida técnico — e ao primeiro mito a desfazer.</p>
 
-  <h2>2 · O monólito modular do TechPix</h2>
+  <h2>2 · O monólito modular da TechPix</h2>
   <p class="teach">Ensina: antes de qualquer diagrama, preciso desfazer um mito — monólito não é vilão. O vilão tem nome: <em>Big Ball of Mud</em>, um sistema onde qualquer módulo pode chamar qualquer tabela e ninguém sabe mais o que depende do quê. Um monólito <em>modular</em>, com fronteiras explícitas, é uma decisão arquitetural legítima — e frequentemente a mais defensável no dia 1.</p>
   <p class="lead">A regra de ouro — nenhum módulo faz JOIN na tabela de outro — não é decoração de arquitetura. Toda comunicação passa por interface explícita mesmo dentro do mesmo processo, mesmo no mesmo binário. Se essa regra for mantida com rigor, as fronteiras do monólito se tornam um ensaio para as futuras fronteiras de serviço: se o módulo de Cartões nunca acessou diretamente a tabela do Ledger, a futura extração será uma cirurgia limpa. Se acessou, você não tem um monólito modular — tem uma bola de lama com um nome bonito. Martin Fowler chama essa estratégia de <em>monolith first</em>: não é fase intermediária vergonhosa, é a decisão mais defensável enquanto as fronteiras reais do domínio ainda não estão claras.</p>
   <div class="fig">
@@ -349,7 +349,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
 
   <h2>5 · A conta quente <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(por que 8 parti&ccedil;&otilde;es n&atilde;o d&atilde;o 8&times; de capacidade)</span></h2>
   <p class="teach">Ensina: antes de escrever o ADR, preciso fazer uma conta que a maioria dos times esquece — e que evita uma decepção caríssima. A promessa intuitiva do particionamento é linear: 8 partições = 8&times; mais capacidade. Isso só é verdade se o tráfego se distribuir uniformemente — e tráfego financeiro real quase nunca é uniforme. O ganho é limitado pela partição mais quente — Lei de Amdahl aplicada a dados. Antes de particionar, meça a distribuição real das suas chaves.</p>
-  <p class="lead">No cenário realista do TechPix: você particiona por <code style="font-family:monospace;background:#f0eee6;padding:1px 5px;border-radius:4px;">hash(conta_id)</code> em 8 partições. Mas há uma conta de marketplace que concentra 15% de todo o volume de recebimento — coisa comum em qualquer PSP que atenda um grande vendedor. Sete partições ficam com ~12% cada; a do marketplace absorve ~27%. Aplique a curva do cotovelo: se o sistema está a 60% de utilização média, essa partição específica está perto de 100% — e ela sozinha está no colapso. O sistema tem 8 partições e 1 gargalo. A Lei de Amdahl é implacável: 100 partições não resolvem uma conta que é inerentemente quente.</p>
+  <p class="lead">No cenário realista da TechPix: você particiona por <code style="font-family:monospace;background:#f0eee6;padding:1px 5px;border-radius:4px;">hash(conta_id)</code> em 8 partições. Mas há uma conta de marketplace que concentra 15% de todo o volume de recebimento — coisa comum em qualquer PSP que atenda um grande vendedor. Sete partições ficam com ~12% cada; a do marketplace absorve ~27%. Aplique a curva do cotovelo: se o sistema está a 60% de utilização média, essa partição específica está perto de 100% — e ela sozinha está no colapso. O sistema tem 8 partições e 1 gargalo. A Lei de Amdahl é implacável: 100 partições não resolvem uma conta que é inerentemente quente.</p>
   <div class="fig">
     <div style="display:flex;align-items:flex-end;gap:5px;height:110px;">
       <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;"><div style="background:#9FE1CB;width:100%;height:34px;border-radius:3px 3px 0 0;"></div><div style="font-size:16px;color:var(--text-secondary);">P1<br>12%</div></div>
@@ -409,7 +409,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
       </div>
     </div>
   </div>
-  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">Com as ferramentas no radar, voltamos ao incidente para ver exatamente onde, anatomicamente, o TechPix quebrou.</p>
+  <p style="color:var(--text-secondary);font-size:14.5px;margin:0 0 10px;font-style:italic;">Com as ferramentas no radar, voltamos ao incidente para ver exatamente onde, anatomicamente, a TechPix quebrou.</p>
 
   <h2>7 · Anatomia da fratura <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(diagrama-estrela da aula)</span></h2>
   <p class="teach">Ensina: o dia 5 não foi um mistério — foi a soma de dois pontos de fratura previsíveis. Nenhum deles invalida o ADR-001. O problema não é a decisão de consistência forte; é a implementação ingênua que concentra contenção onde não precisava. Saber nomear e separar os dois pontos é o que permite corrigir cirurgicamente, sem desfazer o que foi bem decidido.</p>
@@ -512,7 +512,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
 
   <h2>10 · Outbox pattern + CQRS materializado</h2>
   <p class="teach">Ensina: o <em>dual write problem</em> é um dos jeitos mais silenciosos de um sistema ficar inconsistente — gravar no banco e publicar num broker como duas operações separadas abre uma janela de falha real. O Outbox resolve gravando dado e evento na <em>mesma</em> transação ACID; um relay publica de forma assíncrona depois. É a mesma ideia do ledger da Aula 1 — log append-only como fonte da verdade — reaplicada numa nova camada do sistema.</p>
-  <p class="lead">Aqui está o ponto mais sutil e, para mim, o mais bonito desta aula: o problema da escrita dupla. O que acontece quando o TechPix precisa, na mesma operação, gravar um lançamento no ledger <em>e</em> avisar o resto do sistema que aquilo aconteceu — para atualizar o extrato, disparar uma notificação, alimentar o feed? Se as duas escritas forem operações separadas, existe uma janela de falha real: o sistema pode gravar no banco e cair exatamente antes de publicar o evento. O lançamento existe; ninguém jamais soube. Semanas depois, o extrato de alguém estará errado — e ninguém vai saber dizer quando e por quê.</p>
+  <p class="lead">Aqui está o ponto mais sutil e, para mim, o mais bonito desta aula: o problema da escrita dupla. O que acontece quando a TechPix precisa, na mesma operação, gravar um lançamento no ledger <em>e</em> avisar o resto do sistema que aquilo aconteceu — para atualizar o extrato, disparar uma notificação, alimentar o feed? Se as duas escritas forem operações separadas, existe uma janela de falha real: o sistema pode gravar no banco e cair exatamente antes de publicar o evento. O lançamento existe; ninguém jamais soube. Semanas depois, o extrato de alguém estará errado — e ninguém vai saber dizer quando e por quê.</p>
   <div class="fig">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <div class="box" style="flex:1.3;min-width:220px;background:#E1F5EE;border:2px solid #9FE1CB;">

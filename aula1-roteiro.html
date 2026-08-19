@@ -255,7 +255,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   </div>
 
   <h2>1 · Mapa narrativo do curso</h2>
-  <p class="teach">Ensina: a jornada do sistema e os dois fios condutores — BACEN (como o dinheiro se move) e IA (como agentes mudam o que é arquitetar). Cada aula é um passo na evolução do TechPix, de uma startup que decide "na fé" até um sistema que decide "na evidência". A aula 8 fecha o loop sobre a aula 1: o ADR-001 que abrimos hoje será validado em produção.</p>
+  <p class="teach">Ensina: a jornada do sistema e os dois fios condutores — BACEN (como o dinheiro se move) e IA (como agentes mudam o que é arquitetar). Cada aula é um passo na evolução da TechPix, de uma startup que decide "na fé" até um sistema que decide "na evidência". A aula 8 fecha o loop sobre a aula 1: o ADR-001 que abrimos hoje será validado em produção.</p>
   <div class="fig">
     <div class="grid5">
       <div class="rowlabel" style="font-size:18px;color:var(--text-primary);">A jornada do<br>TechPix →</div>
@@ -532,7 +532,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
 
   <h2>11 · BACEN: anatomia de um PIX <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(diagrama-estrela)</span></h2>
   <p class="teach">Ensina: quantos sistemas <b>externos</b> (DICT, SPI, banco do recebedor) estão no caminho crítico — cada um é latência e ponto de falha que você não controla. Passos 1–7 mapeiam o Pix completo; passos 1–6 precisam caber sob teto de 40 s (SPI p99 4,6 s). Azul = externo. Projetar o Pix é, em grande parte, projetar resiliência contra dependências externas — e cada conceito visto nesta aula aparece em pelo menos um passo desse fluxo.</p>
-  <div class="lead"><b>O caminho completo de um Pix da Ana (TechPix) para o Bruno (Banco Beta):</b> <b>1.</b> App da Ana envia chave + valor ao TechPix. <b>2.</b> TechPix consulta o DICT — resolve chave em conta/titular, consome orçamento de latência e um token do rate limit. <b>3.</b> TechPix valida localmente: saldo, limites, antifraude, PLD-FT — na dúvida, falha fechado. <b>4.</b> Reserva no ledger: débito carteira_ana / crédito a_liquidar, idempotente pelo E2E ID — o dinheiro entra no estado "a liquidar". <b>5.</b> TechPix envia <code>pacs.008</code> ao SPI com esse mesmo E2E ID. <b>6.</b> SPI debita Conta PI do TechPix e credita Conta PI do Banco Beta — liquidação final, irrevogável, em moeda de banco central. <b>7.</b> SPI responde <code>pacs.002</code>; TechPix reconcilia o ledger; Banco Beta credita Bruno. Borda assíncrona: notificações e extrato atualizados.</div>
+  <div class="lead"><b>O caminho completo de um Pix da Ana (TechPix) para o Bruno (Banco Beta):</b> <b>1.</b> App da Ana envia chave + valor à TechPix. <b>2.</b> TechPix consulta o DICT — resolve chave em conta/titular, consome orçamento de latência e um token do rate limit. <b>3.</b> TechPix valida localmente: saldo, limites, antifraude, PLD-FT — na dúvida, falha fechado. <b>4.</b> Reserva no ledger: débito carteira_ana / crédito a_liquidar, idempotente pelo E2E ID — o dinheiro entra no estado "a liquidar". <b>5.</b> TechPix envia <code>pacs.008</code> ao SPI com esse mesmo E2E ID. <b>6.</b> SPI debita Conta PI da TechPix e credita Conta PI do Banco Beta — liquidação final, irrevogável, em moeda de banco central. <b>7.</b> SPI responde <code>pacs.002</code>; TechPix reconcilia o ledger; Banco Beta credita Bruno. Borda assíncrona: notificações e extrato atualizados.</div>
   <div class="fig">
     <div class="lad">
       <div class="lrow"><div class="lnum">1</div><div class="actors">App Ana → TechPix</div><div class="act">inicia PIX (chave + valor)</div><span class="tag" style="background:#F1EFE8;color:#2C2C2A;">interno</span></div>
@@ -654,7 +654,7 @@ h2 { font-size: 20px !important; font-weight: 600 !important;
   </div>
 
   <h2>16 · ADR-001 — Consistência forte no ledger do core</h2>
-  <p class="teach">Ensina: um ADR (Architecture Decision Record, formato criado por Michael Nygard em 2011) é um documento objetivo, datado e <b>imutável</b>, que registra uma única decisão — contexto, decisão, consequências honestas (incluindo o custo), alternativas rejeitadas e status. Vocês nunca editam um ADR antigo; escrevem um novo que o substitui. Assim, a história do pensamento arquitetural fica preservada — e um agente lendo essa sequência de ADRs entende <i>como o sistema pensou</i>, não só como está hoje. Este é o ADR que abre o TechPix, e a produção vai validá-lo.</p>
+  <p class="teach">Ensina: um ADR (Architecture Decision Record, formato criado por Michael Nygard em 2011) é um documento objetivo, datado e <b>imutável</b>, que registra uma única decisão — contexto, decisão, consequências honestas (incluindo o custo), alternativas rejeitadas e status. Vocês nunca editam um ADR antigo; escrevem um novo que o substitui. Assim, a história do pensamento arquitetural fica preservada — e um agente lendo essa sequência de ADRs entende <i>como o sistema pensou</i>, não só como está hoje. Este é o ADR que abre a TechPix, e a produção vai validá-lo.</p>
   <div class="fig">
     <div class="box" style="background:#fff;border:2px solid var(--border);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">

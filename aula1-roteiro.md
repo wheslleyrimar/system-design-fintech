@@ -22,7 +22,7 @@ title: "Aula 1 — Roteiro (fonte)"
 | 5 | 50–64 | Isolamento, particionamento e tecnologias reais | Diagrama 7 — locking, sharding, saga, tecnologias |
 | 6 | 64–80 | "Aconteceu quantas vezes?" (idempotência) | Diagrama 3 — idempotência |
 | 7 | 80–96 | O arquiteto e os trade-offs (CAP/PACELC) | Diagrama 4 — PACELC |
-| 8 | 96–110 | O guardanapo do TechPix + Recuperação de Valores | Diagrama 5 — arquitetura + BACEN + Diagrama 8 — grafo de rastreamento |
+| 8 | 96–110 | O guardanapo da TechPix + Recuperação de Valores | Diagrama 5 — arquitetura + BACEN + Diagrama 8 — grafo de rastreamento |
 | 9 | 110–120 | Decidir por escrito: ADR → Spec | Diagrama 9 — ADR-001 |
 | 10 | 120–124 | Fecho e ganchos | Recap + mapa do curso |
 
@@ -86,7 +86,7 @@ title: "Aula 1 — Roteiro (fonte)"
 - **Fala-chave (a técnica, não só o número):** "Dado real da fonte oficial + fator de pico estimado com critério = capacidade defensável, mesmo sem número de pico publicado."
 - **Pergunte:** "Por que o TPS de pico é uma estimativa e o TPS médio não é?"
 - **Segunda parte — a Lei de Little (não pule, é a ferramenta mais subestimada de System Design):** construa `L = λ × W` no Excalidraw. Explique: concorrência = taxa de chegada × tempo no sistema.
-  7. Assuma 5% de mercado para o TechPix: 18 mil × 0,05 = **900 TPS** na infraestrutura própria.
+  7. Assuma 5% de mercado para a TechPix: 18 mil × 0,05 = **900 TPS** na infraestrutura própria.
   8. Com 50 ms por escrita: L = 900 × 0,05 = **45 conexões simultâneas** no pico — número pequeno e tranquilizador.
   9. **O golpe pedagógico:** "e se, sob contenção, essa escrita passar de 50ms para 500ms?" → L = 900 × 0,5 = **450 conexões**. "Se o pool foi dimensionado pra 100... é isso, com número, que é o esgotamento de pool da Aula 2."
   10. IOPS: 900 TPS × 3 lançamentos ≈ 2.700 escritas/s — muito abaixo da capacidade de um SSD NVMe (500k-1M IOPS). **"O disco nunca é o gargalo. É coordenação."**
@@ -112,7 +112,7 @@ title: "Aula 1 — Roteiro (fonte)"
   - **Spanner**: soma **consistência externa** via TrueTime ao serializable distribuído — a garantia mais forte em produção hoje.
   - **DynamoDB**: forte por item é fácil; transação multi-item (`TransactWriteItems`) tem limites — desafio real pra um ledger.
   - **Vitess** (YouTube, Slack): a prova viva de que `hash(conta_id) mod N` roda em produção, em escala nacional, sobre MySQL comum.
-- **Pergunte:** "Dado tudo isso, vocês começariam o TechPix com Postgres bem particionado, ou já iriam de CockroachDB?" (não há resposta errada — o valor é justificar o trade-off).
+- **Pergunte:** "Dado tudo isso, vocês começariam a TechPix com Postgres bem particionado, ou já iriam de CockroachDB?" (não há resposta errada — o valor é justificar o trade-off).
 - **Armadilha:** não deixe esse bloco ficar 100% teórico. Sempre volte pro TechPix: "é essa fila de lock, numa única conta de liquidação, que vai explodir no dia 5 — Aula 2."
 
 **Diagrama 7 — isolamento/locking/sharding + tecnologias (ver HTML):** os 3 níveis de isolamento em escada; pessimista vs. otimista; partição com caso fácil/difícil; logos/nomes das tecnologias reais.
@@ -141,10 +141,10 @@ title: "Aula 1 — Roteiro (fonte)"
 **Objetivo:** definir o ofício — arquiteto é quem torna trade-off **explícito e defensável**. Sair de CAP para **PACELC**, com exemplos reais.
 
 - **Fala-chave:** "Arquitetura são as decisões caras de reverter. Toda decisão de fintech é um trade-off: consistência custa latência; disponibilidade custa consistência."
-- **Aplique ao TechPix:** o **ledger** fica no polo forte; o **extrato/feed** fica no polo eventual.
+- **Aplique à TechPix:** o **ledger** fica no polo forte; o **extrato/feed** fica no polo eventual.
 - **Exemplos reais (não pule):** Google Spanner (PC/PC, via TrueTime) vs. DynamoDB/Cassandra (PA/EL, consistência ajustável) vs. Postgres num nó só.
 - **Ponte BACEN:** "O teto normativo do PIX é 40 s ponta a ponta (Manual de Tempos do Pix v7.0) — mas o SPI real roda em p99 de 4,6 s. Bem mais folgado do que o '10 segundos' que todo mundo repete."
-- **Pergunte:** "Onde no TechPix vocês aceitariam consistência eventual? E onde jamais?"
+- **Pergunte:** "Onde na TechPix vocês aceitariam consistência eventual? E onde jamais?"
 - **Armadilha:** desfaça o mito "eventual = errado". Eventual é *correto, com atraso limitado*.
 
 **Diagrama 4 — PACELC (desenhe):**
@@ -154,11 +154,11 @@ title: "Aula 1 — Roteiro (fonte)"
 
 ---
 
-## Bloco 8 · [96–110] · O guardanapo do TechPix + Recuperação de Valores
+## Bloco 8 · [96–110] · O guardanapo da TechPix + Recuperação de Valores
 
 **Objetivo:** montar a arquitetura de guardanapo e apresentar o achado mais atual da aula — o rastreamento de fraude por grafo.
 
-- **Fala-chave:** "Esse é o TechPix hoje. Guardem esse desenho: na Aula 2 ele racha, na Aula 3 a gente corta em contextos, na Aula 8 ele se conserta sozinho."
+- **Fala-chave:** "Esse é a TechPix hoje. Guardem esse desenho: na Aula 2 ele racha, na Aula 3 a gente corta em contextos, na Aula 8 ele se conserta sozinho."
 - **Explique as caixas do BACEN:** `SPI`, `DICT` (com o token bucket anti-scraping — 404 custa 20× mais que 200), `STR`.
 - **Pergunte:** "Qual dessas caixas é a mais perigosa de escalar?" — ledger e DICT síncrono. Gancho da Aula 2.
 - **Vire a chave para Recuperação de Valores:** "MED evoluiu. Hoje, quando alguém sofre fraude, o BACEN não devolve só da conta que recebeu — ele rastreia um **grafo**: a transação raiz, e todos os saltos subsequentes para onde o dinheiro foi." Explique: grafo de rastreamento, contas no caminho todas contribuem, marcação de fraude em cascata no DICT, bloqueio cautelar de até 72h, SLA de conclusão p99 6h (fraude) / p95 48h (falha operacional), o código `MD06` no `pacs.004`.
@@ -245,4 +245,4 @@ Consequências: (+) correção garantida
 
 - Aprofundar TrueTime do Spanner: como GPS + relógio atômico limitam a incerteza entre datacenters.
 - Discutir por que "SELECT FOR UPDATE" sozinho não escala: fila de lock cresce linear com contenção.
-- **Exercício:** em duplas, refazer a matemática de capacidade do Bloco 4 assumindo que o TechPix tem 5% do mercado nacional — qual o TPS de pico esperado só na infraestrutura dele?
+- **Exercício:** em duplas, refazer a matemática de capacidade do Bloco 4 assumindo que a TechPix tem 5% do mercado nacional — qual o TPS de pico esperado só na infraestrutura dele?

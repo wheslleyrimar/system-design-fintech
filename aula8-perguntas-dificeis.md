@@ -50,7 +50,7 @@ Você está certo em desconfiar, e é por isso que ele está no **último** luga
 
 **"Como eu monto um golden dataset para arquitetura? Não existe 'resposta certa' para uma decisão de design."**
 
-Não existe resposta certa única, mas existem **respostas erradas identificáveis** — e é aí que o golden dataset funciona. O caso do TechPix é bom: dado o conjunto de métricas do dia 5, um agente que identifica "a contenção está no ledger" acertou; um que diz "precisamos de mais réplicas de leitura" errou de forma verificável, porque leitura não era o gargalo. O dataset não avalia se a solução proposta é ótima; avalia se o **diagnóstico** está certo. E diagnóstico é verificável a posteriori, porque vocês sabem o que realmente causou o incidente.
+Não existe resposta certa única, mas existem **respostas erradas identificáveis** — e é aí que o golden dataset funciona. O caso da TechPix é bom: dado o conjunto de métricas do dia 5, um agente que identifica "a contenção está no ledger" acertou; um que diz "precisamos de mais réplicas de leitura" errou de forma verificável, porque leitura não era o gargalo. O dataset não avalia se a solução proposta é ótima; avalia se o **diagnóstico** está certo. E diagnóstico é verificável a posteriori, porque vocês sabem o que realmente causou o incidente.
 
 ## Sobre o fecho do curso
 

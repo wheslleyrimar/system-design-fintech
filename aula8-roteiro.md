@@ -64,7 +64,7 @@ title: "Aula 8 — Roteiro (fonte)"
 **Parte A — a conta [34–44]**
 
 - **Faça a conta no Excalidraw, passo a passo:**
-  1. Taxa de erro normal do TechPix: 0,1% (1 em 1.000).
+  1. Taxa de erro normal da TechPix: 0,1% (1 em 1.000).
   2. Canary em 1% de 900 TPS = 9 transações/s.
   3. Em 5 minutos: ~2.700 transações → **2 a 3 erros esperados**.
 - **Pergunte:** "Vocês observam **5** erros em vez de 3. A nova versão está pior?"
@@ -86,7 +86,7 @@ title: "Aula 8 — Roteiro (fonte)"
 
 ## Bloco 5 · [54–64] · O que faz um bom guardrail
 
-Percorra as 4 propriedades, com exemplo do TechPix em cada:
+Percorra as 4 propriedades, com exemplo da TechPix em cada:
 
 1. **Rápido de detectar** — favorece métrica de alta frequência (latência) sobre métrica rara.
 2. **Baixo falso positivo** — "guardrail que ninguém respeita é pior que nenhum, porque cria ilusão de proteção."

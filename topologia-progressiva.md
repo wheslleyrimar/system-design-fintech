@@ -1,16 +1,16 @@
 ---
 layout: default
-title: "A topologia progressiva do TechPix"
+title: "A topologia progressiva da TechPix"
 ---
 
-# A topologia progressiva do TechPix
+# A topologia progressiva da TechPix
 *Companion de System Design — o desenho que você constrói ao vivo, camada por camada, ao longo do curso*
 
 ---
 
 ## Como usar este documento
 
-Este é o artefato central de System Design do curso. Enquanto os outros arquivos explicam **conceitos**, este mostra **o desenho** — a arquitetura do TechPix sendo construída no Excalidraw, uma camada por vez, cada camada justificada por uma falha concreta que ela previne.
+Este é o artefato central de System Design do curso. Enquanto os outros arquivos explicam **conceitos**, este mostra **o desenho** — a arquitetura da TechPix sendo construída no Excalidraw, uma camada por vez, cada camada justificada por uma falha concreta que ela previne.
 
 A regra de condução é simples e vale para as quatro aulas: **nunca desenhe uma caixa antes de a turma sentir a dor que justifica ela.** Se você desenhar um load balancer no começo, é decoração — todo mundo já viu load balancer. Se você desenhar depois de mostrar que uma única instância cai e leva o Pix inteiro junto, aí a caixa significa algo.
 
@@ -46,7 +46,7 @@ A primeira pergunta é a mais óbvia de todas, e eu quero que alguém faça: *"o
 
 ## Camada 1 — A borda
 
-**Gatilho:** a API do guardanapo é uma caixa só. Se ela é um processo num servidor, então esse servidor é um ponto único de falha para o Pix inteiro do TechPix. Reinicialização, deploy, pico de tráfego, um cabo — qualquer coisa derruba tudo.
+**Gatilho:** a API do guardanapo é uma caixa só. Se ela é um processo num servidor, então esse servidor é um ponto único de falha para o Pix inteiro da TechPix. Reinicialização, deploy, pico de tráfego, um cabo — qualquer coisa derruba tudo.
 
 **O que entra no desenho, da ponta para dentro:**
 
@@ -59,13 +59,13 @@ A primeira pergunta é a mais óbvia de todas, e eu quero que alguém faça: *"o
 - Um balanceador **L4** opera na camada de transporte: ele olha IP e porta, e distribui conexões TCP sem abrir o conteúdo. É mais rápido, mais barato, e não sabe nada sobre HTTP — não consegue rotear por caminho de URL, nem repetir uma requisição que falhou.
 - Um balanceador **L7** opera na camada de aplicação: ele entende HTTP, então consegue rotear `/pix` para um conjunto de instâncias e `/extrato` para outro, fazer retry de uma requisição idempotente, e aplicar políticas por rota.
 
-Para o TechPix, o L7 é o que habilita algo que vai ser essencial na Aula 2: **rotear tráfego por caminho** é exatamente o mecanismo da fachada do Strangler Fig. Se vocês têm um L7 na borda, migrar uma rota do monólito para um serviço novo é uma mudança de configuração de roteamento, não uma reescrita.
+Para a TechPix, o L7 é o que habilita algo que vai ser essencial na Aula 2: **rotear tráfego por caminho** é exatamente o mecanismo da fachada do Strangler Fig. Se vocês têm um L7 na borda, migrar uma rota do monólito para um serviço novo é uma mudança de configuração de roteamento, não uma reescrita.
 
 **Terminação TLS.** Onde a conexão criptografada do cliente "termina" e vira tráfego interno. Se ela termina no balanceador, vocês ganham CPU nos serviços (a criptografia é feita uma vez, na borda) mas o tráfego entre balanceador e serviço passa a ser interno — e aí a pergunta séria numa fintech é: **esse tráfego interno é criptografado também?** Para dados financeiros, a resposta defensável é sim, e isso se chama criptografia em trânsito ponta a ponta, não só na borda. É um custo de CPU que vocês pagam de propósito.
 
 **Health check.** É o que faz o balanceador saber que uma instância morreu. E aqui tem uma armadilha que derruba sistema de verdade: um health check que só responde "o processo está vivo" é praticamente inútil. Se a instância está viva mas perdeu conexão com o banco, ela responde "estou saudável", continua recebendo tráfego, e falha toda requisição. O health check precisa checar as dependências críticas — mas **não todas**, senão vocês criam o efeito oposto: se o health check testa o DICT e o DICT fica lento, todas as suas instâncias se declaram doentes ao mesmo tempo e vocês tiram o sistema inteiro do ar por causa de uma dependência externa. A disciplina é: health check verifica o que a instância **precisa** para servir (banco próprio, sim), não o que ela **chama** (DICT, não).
 
-**Números:** com o pico estimado de 900 TPS na infra do TechPix (aquele 5% do pico nacional que a gente calculou na Aula 1), e supondo que cada instância de aplicação sustente confortavelmente 100 a 200 requisições por segundo, vocês precisam de algo entre 5 e 9 instâncias só para o caminho de pagamento no pico — e mais um tanto de folga para não operar no limite. Reparem que isso já responde "quantas caixas eu desenho": não é uma, e não é cinquenta.
+**Números:** com o pico estimado de 900 TPS na infra da TechPix (aquele 5% do pico nacional que a gente calculou na Aula 1), e supondo que cada instância de aplicação sustente confortavelmente 100 a 200 requisições por segundo, vocês precisam de algo entre 5 e 9 instâncias só para o caminho de pagamento no pico — e mais um tanto de folga para não operar no limite. Reparem que isso já responde "quantas caixas eu desenho": não é uma, e não é cinquenta.
 
 ---
 
@@ -77,7 +77,7 @@ Para o TechPix, o L7 é o que habilita algo que vai ser essencial na Aula 2: **r
 
 **Autenticação — e a distinção que muita gente confunde.** Autenticação é "quem é você"; autorização é "você pode fazer isso". O gateway é o lugar certo para a **autenticação** — validar o token, confirmar a identidade, rejeitar quem não se identificou. Mas a **autorização** de negócio precisa ficar no serviço de domínio, e não no gateway. Por que? Porque a pergunta "essa cliente pode transferir R$5.000 desta conta?" depende de saldo, de limite, de antifraude, de titularidade — tudo conhecimento do domínio de Pagamentos, que o gateway não tem e não deveria ter. Um gateway que tenta decidir autorização de negócio vira, inevitavelmente, um lugar onde regra de domínio vaza para a infraestrutura.
 
-**Rate limiting próprio.** Reparem que isso é diferente do rate limit do DICT que vimos na Aula 1 — aquele é imposto ao TechPix pelo BACEN; este é o TechPix se protegendo dos próprios clientes. A implementação clássica é a mesma família de algoritmo: **token bucket** ou **sliding window**. E aqui vai um detalhe de arquitetura distribuída que quase todo mundo erra na primeira tentativa: se vocês têm 9 instâncias de gateway e cada uma mantém seu próprio contador em memória, o limite efetivo é 9 vezes o que vocês configuraram. Rate limit distribuído precisa de estado compartilhado — tipicamente um Redis com operações atômicas de incremento — o que introduz uma dependência de rede no caminho crítico. O trade-off honesto: contador local é rápido e impreciso; contador centralizado é preciso e adiciona latência mais um ponto de falha.
+**Rate limiting próprio.** Reparem que isso é diferente do rate limit do DICT que vimos na Aula 1 — aquele é imposto à TechPix pelo BACEN; este é a TechPix se protegendo dos próprios clientes. A implementação clássica é a mesma família de algoritmo: **token bucket** ou **sliding window**. E aqui vai um detalhe de arquitetura distribuída que quase todo mundo erra na primeira tentativa: se vocês têm 9 instâncias de gateway e cada uma mantém seu próprio contador em memória, o limite efetivo é 9 vezes o que vocês configuraram. Rate limit distribuído precisa de estado compartilhado — tipicamente um Redis com operações atômicas de incremento — o que introduz uma dependência de rede no caminho crítico. O trade-off honesto: contador local é rápido e impreciso; contador centralizado é preciso e adiciona latência mais um ponto de falha.
 
 **Validação da chave de idempotência.** O gateway é o lugar natural para exigir que a requisição traga a chave (rejeitando com erro claro quem não trouxe), mas **não** para resolver a deduplicação — porque, como a gente viu na Aula 1, a deduplicação precisa ser atômica com a escrita no ledger, e o gateway não participa daquela transação. O gateway exige; o domínio deduplica.
 
@@ -109,7 +109,7 @@ E o alerta que vale dar: autoscaling tem **latência de reação**. Uma nova ins
 
 **A rede é dedicada, não a internet pública.** A comunicação com o SPI e o DICT acontece pela **RSFN**, a Rede do Sistema Financeiro Nacional. Isso muda a topologia de forma concreta: não é um serviço seu chamando uma API pública; é uma conectividade dedicada, com requisitos de rede específicos, e tipicamente redundante — porque se essa conectividade cai, vocês param de transacionar Pix, ponto.
 
-**Certificados digitais e mTLS.** A comunicação é autenticada por **certificado digital** em ambas as direções — o que se chama **mTLS**, ou TLS mútuo: não é só o cliente verificando que o servidor é quem diz ser (o TLS comum de qualquer site), é também o servidor verificando o cliente pelo certificado dele. Na prática, isso significa que o TechPix se identifica ao BACEN criptograficamente, e vice-versa.
+**Certificados digitais e mTLS.** A comunicação é autenticada por **certificado digital** em ambas as direções — o que se chama **mTLS**, ou TLS mútuo: não é só o cliente verificando que o servidor é quem diz ser (o TLS comum de qualquer site), é também o servidor verificando o cliente pelo certificado dele. Na prática, isso significa que a TechPix se identifica ao BACEN criptograficamente, e vice-versa.
 
 E aqui há uma consequência operacional que ninguém lembra até doer: **certificado expira.** Um certificado vencido derruba a integração com a mesma eficiência de um cabo cortado — e a falha é especialmente cruel porque acontece num instante previsível que ninguém previu. As decisões de arquitetura que caem disso: onde os certificados são armazenados (nunca no repositório de código, nunca em imagem de container — em um gerenciador de secrets dedicado), quem tem acesso a eles, como a rotação é feita **antes** do vencimento, e que alarme dispara com semanas de antecedência.
 
@@ -117,7 +117,7 @@ E aqui há uma consequência operacional que ninguém lembra até doer: **certif
 
 **A camada anticorrupção, agora como topologia.** Na Aula 3 a gente vai chamar isso de ACL e tratar como conceito de DDD. Na topologia, ela é um componente real e desenhável: o adaptador que fala ISO 20022 (`pacs.008`, `pacs.002`, `pacs.004`) para fora, e eventos de domínio para dentro. Colocá-la como componente separado tem três benefícios concretos: o formato de mensagem do BACEN nunca vaza para dentro dos seus serviços; quando o BACEN muda o formato — e ele muda, como vimos com o Pix Automático — só esse componente muda; e o pool de conexões dele fica **isolado** do resto do sistema, o que é literalmente o bulkhead da Aula 2 desenhado na topologia.
 
-**Idempotência, de novo, e por que aqui é diferente.** A idempotência da Aula 1 protegia vocês do cliente que toca três vezes. Esta protege vocês de vocês mesmos: quando o TechPix envia uma ordem ao SPI e a resposta não volta, vocês não sabem se o SPI liquidou. Reenviar sem cuidado pode duplicar uma liquidação real. É por isso que o E2E ID viaja na mensagem — ele é a chave que permite ao SPI reconhecer o reenvio. E a consequência de topologia: vocês precisam de um mecanismo de **reconciliação**, um processo que compara o que vocês registraram contra o que o BACEN registrou, e resolve divergências. Isso não é um serviço opcional de "nice to have"; é o que impede que uma incerteza de rede vire dinheiro divergente.
+**Idempotência, de novo, e por que aqui é diferente.** A idempotência da Aula 1 protegia vocês do cliente que toca três vezes. Esta protege vocês de vocês mesmos: quando a TechPix envia uma ordem ao SPI e a resposta não volta, vocês não sabem se o SPI liquidou. Reenviar sem cuidado pode duplicar uma liquidação real. É por isso que o E2E ID viaja na mensagem — ele é a chave que permite ao SPI reconhecer o reenvio. E a consequência de topologia: vocês precisam de um mecanismo de **reconciliação**, um processo que compara o que vocês registraram contra o que o BACEN registrou, e resolve divergências. Isso não é um serviço opcional de "nice to have"; é o que impede que uma incerteza de rede vire dinheiro divergente.
 
 ---
 
@@ -166,7 +166,7 @@ Isso é uma lição de System Design que vale além do Pix: em domínios regulad
 - Um **log distribuído** (Kafka é o exemplo dominante) guarda os eventos como um log ordenado e retido por tempo, e os consumidores leem em seu próprio ritmo, mantendo sua própria posição. Isso te dá reprocessamento — se um consumidor tinha bug, você corrige e reprocessa desde o começo, porque os eventos ainda estão lá. Para um sistema financeiro, essa propriedade é ouro: ela é a mesma ideia do ledger append-only, aplicada à integração.
 - Uma **fila tradicional** (RabbitMQ, SQS) entrega e remove a mensagem. É mais simples de operar, tem roteamento mais flexível, mas você perde o histórico — mensagem consumida não volta.
 
-Para o núcleo transacional do TechPix, o log distribuído se alinha melhor com a natureza append-only do domínio.
+Para o núcleo transacional da TechPix, o log distribuído se alinha melhor com a natureza append-only do domínio.
 
 **Ordenação — e a nuance que quase todo mundo erra.** Um log distribuído garante ordem **dentro de uma partição**, não globalmente. Isso significa que a escolha da **chave de partição** é uma decisão de correção, não de performance: se vocês particionam os eventos por `conta_id`, todos os eventos da mesma conta caem na mesma partição e são processados em ordem — o que importa muito, porque processar "conta encerrada" antes de "crédito recebido" produz resultado errado. Se vocês particionam aleatoriamente para distribuir melhor a carga, ganham paralelismo e perdem a garantia de ordem por conta. Ordem por entidade quase sempre vence.
 
@@ -187,7 +187,7 @@ O trade-off honesto: comecem com o poller (é mais simples e resolve), migrem pa
 
 ## Camada 8 — Continuidade
 
-**Gatilho:** tudo que a gente desenhou até aqui está, implicitamente, num único datacenter. Se aquele datacenter tem um problema, o TechPix para — e "parar" para um PSP não é só perda de receita, é descumprimento de índice de disponibilidade regulado, com consequência formal.
+**Gatilho:** tudo que a gente desenhou até aqui está, implicitamente, num único datacenter. Se aquele datacenter tem um problema, a TechPix para — e "parar" para um PSP não é só perda de receita, é descumprimento de índice de disponibilidade regulado, com consequência formal.
 
 **Multi-AZ como padrão mínimo.** Uma zona de disponibilidade é um domínio de falha isolado — energia, rede e refrigeração independentes — dentro de uma mesma região geográfica. Distribuir as instâncias de aplicação por múltiplas zonas é o padrão mínimo, e é relativamente barato: as zonas de uma mesma região têm latência entre si de poucos milissegundos, então a replicação **síncrona** do banco entre zonas é viável. Isso é o que permite um failover sem perda de dado.
 

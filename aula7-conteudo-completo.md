@@ -10,7 +10,7 @@ title: "Aula 7 — Observabilidade e Operação Inteligente"
 
 Deixa eu começar essa aula de um jeito que nenhuma das anteriores começou: sem incidente.
 
-É 5 de dezembro de 2025. Dia 5 — e vocês já sabem o que essa data significa nesse curso: foi num dia 5 que o TechPix afundou na areia, lá na Aula 2, com o pool de conexões esgotando e o retry storm comendo o sistema por dentro. Pois bem: o 5 de dezembro de 2025 entrou para a história do Pix por outro motivo — foi o dia do recorde nacional, **313,3 milhões de transações em 24 horas**, a primeira vez que o país passou de 300 milhões num único dia. É exatamente o número que hoje está registrado no material da Aula 1, na conta de guardanapo — o professor que esteve aqui antes de mim o manteve atualizado. E quando esse dia chegou, o TechPix estava rodando como microsserviços, com canary, com feature flags — tudo que a gente montou na Aula 6.
+É 5 de dezembro de 2025. Dia 5 — e vocês já sabem o que essa data significa nesse curso: foi num dia 5 que a TechPix afundou na areia, lá na Aula 2, com o pool de conexões esgotando e o retry storm comendo o sistema por dentro. Pois bem: o 5 de dezembro de 2025 entrou para a história do Pix por outro motivo — foi o dia do recorde nacional, **313,3 milhões de transações em 24 horas**, a primeira vez que o país passou de 300 milhões num único dia. É exatamente o número que hoje está registrado no material da Aula 1, na conta de guardanapo — o professor que esteve aqui antes de mim o manteve atualizado. E quando esse dia chegou, a TechPix estava rodando como microsserviços, com canary, com feature flags — tudo que a gente montou na Aula 6.
 
 E aí eu quero contar como foi esse dia do lado de dentro. O Rafael — o engenheiro de plantão, o on-call daquela sexta-feira — passou o dia olhando para um painel. O tráfego subiu a manhã inteira, bateu o pico projetado na hora do almoço — **900 transações por segundo, cravado no número que a Lei de Little da Aula 1 tinha previsto** —, a utilização do caminho crítico encostou em 65% e parou ali, abaixo da regra dos 70% da Aula 2. Nenhuma página. Nenhum alerta. O extrato atrasava seus 100 a 300 milissegundos de sempre, o circuit breaker do DICT não abriu nem uma vez, o canary de uma mudança pequena do time de Devoluções progrediu de 1% para 100% no meio da tarde como se fosse um dia qualquer.
 
@@ -89,7 +89,7 @@ Nenhum dos três substitui os outros. A métrica disse "o dia está saudável" �
 
 ### 2.1 RED para serviços, USE para recursos
 
-Depois da Aula 6, o TechPix tem serviços de verdade: Antifraude e Limites rodando fora, Pagamentos rodando fora, o monólito com Contas e Ledger dentro. Cada um deles precisa responder três perguntas o tempo todo, e essas três perguntas têm um acrônimo consagrado: **RED**.
+Depois da Aula 6, a TechPix tem serviços de verdade: Antifraude e Limites rodando fora, Pagamentos rodando fora, o monólito com Contas e Ledger dentro. Cada um deles precisa responder três perguntas o tempo todo, e essas três perguntas têm um acrônimo consagrado: **RED**.
 
 - **R**ate — quantas requisições por segundo esse serviço está recebendo?
 - **E**rrors — quantas estão falhando?
@@ -99,7 +99,7 @@ Só com RED por serviço, vocês reconstroem a saúde do sistema inteiro de rela
 
 Para **recursos** — CPU, memória, disco, pool de conexões, a GPU do Antifraude que a gente provisionou na Aula 5 —, o acrônimo irmão é **USE**: **U**tilization (quão ocupado), **S**aturation (quanto trabalho esperando na fila) e **E**rrors. E reparem numa sutileza que vem direto da teoria de filas da Aula 2: **saturação avisa antes da utilização machucar**. A fila do pool de conexões começando a formar — saturação — aparece antes de o p99 estourar. O cotovelo da curva ρ/(1−ρ) que o outro professor desenhou para vocês é exatamente o ponto onde saturação vira dor; a métrica de saturação é o vigia desse cotovelo.
 
-Duas métricas do TechPix que eu faço questão de elevar a cidadãs de primeira classe, porque elas são as duas cicatrizes das aulas anteriores: o **consumer lag** de cada consumidor de eventos — a distância entre o que o Outbox publicou e o que o consumidor processou, que foi o vilão silencioso do extrato congelado na Aula 4 — e a **taxa de contenção de lock na escrita do ledger**, o tempo que as transações passam esperando o lock da conta `pix_a_liquidar`, a cicatriz original do dia 5. Guardem essa segunda métrica. Ela volta no fim da aula, e não vai ser para coisa boa.
+Duas métricas da TechPix que eu faço questão de elevar a cidadãs de primeira classe, porque elas são as duas cicatrizes das aulas anteriores: o **consumer lag** de cada consumidor de eventos — a distância entre o que o Outbox publicou e o que o consumidor processou, que foi o vilão silencioso do extrato congelado na Aula 4 — e a **taxa de contenção de lock na escrita do ledger**, o tempo que as transações passam esperando o lock da conta `pix_a_liquidar`, a cicatriz original do dia 5. Guardem essa segunda métrica. Ela volta no fim da aula, e não vai ser para coisa boa.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 430" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
@@ -184,7 +184,7 @@ Duas métricas do TechPix que eu faço questão de elevar a cidadãs de primeira
 
 O professor da Aula 1 avisou, na Seção 4.6 dele: **latência não é um número, é uma distribuição, e quem manda é a cauda.** Agora eu quero operacionalizar isso, porque tem uma pegadinha estatística que quase todo time comete no primeiro ano.
 
-O jeito certo de coletar latência é em **histograma**: uma série de baldes ("quantas requisições terminaram em até 50ms? até 100ms? até 250ms? até 1s? até 5s?") que permite calcular qualquer percentil depois, no servidor de métricas. O padrão de fato do mercado para isso é o **Prometheus** — modelo de dados de séries temporais, coleta por *pull*, histogramas nativos — e é o que o TechPix usa.
+O jeito certo de coletar latência é em **histograma**: uma série de baldes ("quantas requisições terminaram em até 50ms? até 100ms? até 250ms? até 1s? até 5s?") que permite calcular qualquer percentil depois, no servidor de métricas. O padrão de fato do mercado para isso é o **Prometheus** — modelo de dados de séries temporais, coleta por *pull*, histogramas nativos — e é o que a TechPix usa.
 
 A pegadinha: **percentil não se agrega por média.** Se a instância A de Pagamentos reporta p99 de 200ms e a instância B reporta p99 de 2 segundos, o p99 da frota **não é** 1,1 segundo — pode ser qualquer coisa, dependendo de quanto tráfego cada uma serviu. Média de percentis é um número que parece informação e não é. O jeito certo: agregar os **histogramas** (baldes se somam, matematicamente é honesto) e calcular o percentil sobre o histograma somado. Toda ferramenta séria faz isso — mas só se vocês coletarem histograma, e não o percentil já calculado na instância.
 
@@ -229,19 +229,19 @@ Reparem em dois campos desse exemplo, porque cada um carrega uma lição da aula
 
 Todo sistema distribuído maduro chega à mesma necessidade: um **ID de correlação** — um identificador único que nasce na entrada da requisição e viaja por todos os serviços que ela toca, carimbado em cada log, para que depois se possa juntar a história inteira com uma única busca.
 
-E aqui vem a jogada de mestre que eu quero que vocês apreciem: **o Pix já tem esse ID, por desenho regulatório.** O **EndToEndId** da Aula 1 — os 32 caracteres que nascem com a transação, atravessam o SPI, chegam ao Banco Beta do Bruno e voltam na `pacs.002` — é, dentro do TechPix, o ID de correlação natural de todo o fluxo de pagamento. A mesma chave que garante a idempotência da Ana e que reconcilia o ledger com o BACEN é a chave que costura os logs de Pagamentos, Antifraude, Ledger e do ACL do SPI numa narrativa única.
+E aqui vem a jogada de mestre que eu quero que vocês apreciem: **o Pix já tem esse ID, por desenho regulatório.** O **EndToEndId** da Aula 1 — os 32 caracteres que nascem com a transação, atravessam o SPI, chegam ao Banco Beta do Bruno e voltam na `pacs.002` — é, dentro da TechPix, o ID de correlação natural de todo o fluxo de pagamento. A mesma chave que garante a idempotência da Ana e que reconcilia o ledger com o BACEN é a chave que costura os logs de Pagamentos, Antifraude, Ledger e do ACL do SPI numa narrativa única.
 
-**O regulador obrigou o TechPix a ter rastreamento distribuído antes de a gente saber o nome disso.** Quando o Banco Central exigiu um identificador único ponta a ponta, ele estava — sem usar essas palavras — exigindo correlação de logs e trace distribuído. Cabe a vocês só não desperdiçar o presente: o `e2e_id` entra em **todo** log de **todo** serviço que toca a transação, sem exceção. Para fluxos que não são Pix — onboarding, consulta de extrato —, o TechPix gera um ID de correlação próprio na borda, com a mesma disciplina. A regra é uma só: **nenhum evento de log órfão de correlação.**
+**O regulador obrigou a TechPix a ter rastreamento distribuído antes de a gente saber o nome disso.** Quando o Banco Central exigiu um identificador único ponta a ponta, ele estava — sem usar essas palavras — exigindo correlação de logs e trace distribuído. Cabe a vocês só não desperdiçar o presente: o `e2e_id` entra em **todo** log de **todo** serviço que toca a transação, sem exceção. Para fluxos que não são Pix — onboarding, consulta de extrato —, a TechPix gera um ID de correlação próprio na borda, com a mesma disciplina. A regra é uma só: **nenhum evento de log órfão de correlação.**
 
 ### 3.3 O que nunca, jamais, entra num log
 
 Agora o campo `"chave_pix": "[MASCARADO]"`. Numa fintech, o log é um risco de compliance andando. A chave Pix pode ser um CPF, um telefone, um e-mail — **dado pessoal sob LGPD**, como o professor da Aula 1 explicou quando mostrou por que o DICT tem anti-scraping. Logar chave Pix em texto claro é criar um segundo DICT, sem controle de acesso, espalhado por sistemas de log que metade da empresa consegue ler, com retenção de anos por exigência de auditoria.
 
-A disciplina do TechPix: dado pessoal e credencial **nunca** entram em log — nem "só em DEBUG", porque DEBUG vaza para produção no primeiro incidente. O que entra é o dado mascarado ou um identificador interno opaco (`conta_tipo`, `cliente_ref` interno). O mascaramento acontece na **biblioteca de log**, centralizada, não na boa vontade de cada desenvolvedor — é uma fitness function, no sentido da Aula 2: um teste no CI varre os campos logados contra uma lista de proibidos, e PR que loga campo sensível não passa. Auditabilidade e privacidade, as duas exigências do regulador, na mesma decisão de engenharia.
+A disciplina da TechPix: dado pessoal e credencial **nunca** entram em log — nem "só em DEBUG", porque DEBUG vaza para produção no primeiro incidente. O que entra é o dado mascarado ou um identificador interno opaco (`conta_tipo`, `cliente_ref` interno). O mascaramento acontece na **biblioteca de log**, centralizada, não na boa vontade de cada desenvolvedor — é uma fitness function, no sentido da Aula 2: um teste no CI varre os campos logados contra uma lista de proibidos, e PR que loga campo sensível não passa. Auditabilidade e privacidade, as duas exigências do regulador, na mesma decisão de engenharia.
 
 ### 3.4 Sampling: nem todo log merece viver
 
-A 900 TPS, com cada transação gerando dezenas de eventos de log pelos serviços, o TechPix produz da ordem de dezenas de milhares de linhas por segundo. Guardar tudo, indexado, por anos? A conta de armazenamento passa a competir com a conta de infraestrutura do sistema que ele observa.
+A 900 TPS, com cada transação gerando dezenas de eventos de log pelos serviços, a TechPix produz da ordem de dezenas de milhares de linhas por segundo. Guardar tudo, indexado, por anos? A conta de armazenamento passa a competir com a conta de infraestrutura do sistema que ele observa.
 
 A resposta é **amostragem com viés inteligente**: eventos de erro e de warning, 100% — são raros e valiosos. Eventos de sucesso do caminho feliz, uma amostra — 1%, 10%, conforme o fluxo. E uma regra de ouro que antecipa a Seção 4: **se a transação foi amostrada para tracing, todos os logs dela são retidos** — trace sem log é um mapa sem legenda. O log de auditoria contábil — o ledger em si — está fora dessa conversa, claro: aquilo não é log operacional, é a fonte da verdade da Aula 1, com retenção regulatória integral. **Log operacional se amostra; registro contábil, jamais.**
 
@@ -251,13 +251,13 @@ A resposta é **amostragem com viés inteligente**: eventos de erro e de warning
 
 ### 4.1 Spans, contexto, e a carona no deadline
 
-Chegou a hora de achar o Pix da Ana. A ferramenta é o **tracing distribuído**, e o padrão aberto que o mercado consolidou — e que o TechPix usa — é o **OpenTelemetry**: uma especificação e um conjunto de bibliotecas, mantidos pela comunidade, para gerar e propagar telemetria de forma neutra de fornecedor.
+Chegou a hora de achar o Pix da Ana. A ferramenta é o **tracing distribuído**, e o padrão aberto que o mercado consolidou — e que a TechPix usa — é o **OpenTelemetry**: uma especificação e um conjunto de bibliotecas, mantidos pela comunidade, para gerar e propagar telemetria de forma neutra de fornecedor.
 
 O modelo mental é simples. Um **trace** é a história completa de uma requisição. Ele é composto de **spans** — segmentos nomeados, cada um com início, fim, duração e atributos, aninhados uns nos outros como uma pilha de chamadas distribuída: o span "processar Pix" de Pagamentos contém o span "consultar DICT", o span "avaliar risco" (que vive no serviço de Antifraude, em outro processo, em outra máquina), o span "reservar fundos" (no monólito), o span "enviar pacs.008".
 
 Como o span do Antifraude sabe que pertence ao trace que começou em Pagamentos? **Propagação de contexto**: um cabeçalho padronizado (o `traceparent` do W3C) viaja em cada chamada gRPC e em cada evento publicado, carregando o ID do trace e do span pai. E aqui eu cobro o que ensinei na Aula 4: o **deadline propagation** que a gente instalou lá — aquele orçamento de tempo que viaja com a requisição — usa exatamente o mesmo mecanismo de metadados. O contexto de trace pega **carona na mesma infraestrutura**. Quem fez o dever de casa da Aula 4 ganhou o da Aula 7 quase de graça; é por isso que a ordem das aulas é essa.
 
-Tracing custa caro — cada span é dado gerado, transmitido, armazenado — então se amostra, tipicamente 1 a 10% do tráfego. E aqui, uma decisão de projeto que vai salvar a investigação de hoje: amostragem **na cabeça** (decidir no início da requisição) é barata mas cega — ela não sabe, ao decidir, se a requisição vai ser interessante. Amostragem **na cauda** (*tail-based*: coletar tudo, decidir reter *depois* de ver como terminou) permite a política que o TechPix adotou: **reter 100% dos traces lentos ou com erro, e 1% do caminho feliz.** O Pix da Ana levou 9 segundos — lento — logo, o trace dele foi retido. A agulha já estava separada do palheiro no momento em que caiu.
+Tracing custa caro — cada span é dado gerado, transmitido, armazenado — então se amostra, tipicamente 1 a 10% do tráfego. E aqui, uma decisão de projeto que vai salvar a investigação de hoje: amostragem **na cabeça** (decidir no início da requisição) é barata mas cega — ela não sabe, ao decidir, se a requisição vai ser interessante. Amostragem **na cauda** (*tail-based*: coletar tudo, decidir reter *depois* de ver como terminou) permite a política que a TechPix adotou: **reter 100% dos traces lentos ou com erro, e 1% do caminho feliz.** O Pix da Ana levou 9 segundos — lento — logo, o trace dele foi retido. A agulha já estava separada do palheiro no momento em que caiu.
 
 Antes de abrir o trace da Ana, deixa eu desenhar num quadro só **onde toda essa telemetria mora** — porque até agora eu falei dos três pilares um por um, e em produção eles são um encanamento único, com stack de verdade em cada estágio:
 
@@ -347,7 +347,7 @@ Antes de abrir o trace da Ana, deixa eu desenhar num quadro só **onde toda essa
 
   <text x="442" y="380" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">Instrumentar uma vez (OTel), exportar para onde quiser — o Collector desacopla o código dos backends</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O encanamento de observabilidade do TechPix, com a stack nomeada: OTel SDK → Collector → Prometheus / logs / traces → Grafana.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O encanamento de observabilidade da TechPix, com a stack nomeada: OTel SDK → Collector → Prometheus / logs / traces → Grafana.</p>
 </div>
 
 ### 4.2 O trace da Ana, span a span
@@ -485,7 +485,7 @@ Agora respondam vocês: por que os painéis estavam verdes? Porque contas recém
 <p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A média mente, o p99 esconde, o trace confessa: o agregado protege o sistema, não cada cliente.</p>
 </div>
 
-A ponte de volta para as métricas tem nome: **exemplar**. Um exemplar é uma referência de trace anexada a um balde do histograma — "este balde de 5-10 segundos contém, entre outros, o trace tal". No dashboard, o balde alto da cauda vira um link clicável: da métrica agregada para a jornada individual em um clique. Depois do postmortem — já chego lá —, o TechPix também criou a métrica que faltava: `feature_store_cold_start` com etiqueta `conta_tipo="recem_criada"` — cardinalidade 2, dentro da regra da Seção 2.3. A pergunta que era *unknown unknown* no dia 5 virou *known* no dia 6. **É assim que observabilidade funciona: cada investigação transforma uma pergunta nova em um medidor permanente.**
+A ponte de volta para as métricas tem nome: **exemplar**. Um exemplar é uma referência de trace anexada a um balde do histograma — "este balde de 5-10 segundos contém, entre outros, o trace tal". No dashboard, o balde alto da cauda vira um link clicável: da métrica agregada para a jornada individual em um clique. Depois do postmortem — já chego lá —, a TechPix também criou a métrica que faltava: `feature_store_cold_start` com etiqueta `conta_tipo="recem_criada"` — cardinalidade 2, dentro da regra da Seção 2.3. A pergunta que era *unknown unknown* no dia 5 virou *known* no dia 6. **É assim que observabilidade funciona: cada investigação transforma uma pergunta nova em um medidor permanente.**
 
 ---
 
@@ -502,7 +502,7 @@ O nome disso é **drift** — deriva. Eu semeei essa palavra na Aula 5; agora el
 
 ### 5.2 O exame de sangue do modelo
 
-Como se detecta apodrecimento sem esperar o prejuízo? **A métrica é o exame de sangue: você não espera o infarto para medir a pressão.** O painel de inferência do TechPix, que o Diego olha toda manhã, tem quatro famílias:
+Como se detecta apodrecimento sem esperar o prejuízo? **A métrica é o exame de sangue: você não espera o infarto para medir a pressão.** O painel de inferência da TechPix, que o Diego olha toda manhã, tem quatro famílias:
 
 | O que | Como | O que denuncia |
 |---|---|---|
@@ -525,7 +525,7 @@ Vocês já viram SLA nesse curso desde a Aula 1 — o do DICT, p99 ≤ 1 segundo
 - **SLO** — *Service Level Objective*: a **meta interna** sobre o SLI. "99,95% dos Pix dentro desse tempo."
 - **SLA** — *Service Level Agreement*: a **promessa externa com consequência** — contrato, multa, regulador.
 
-A regra de sanidade: **o SLO interno é sempre mais apertado que o SLA externo.** O TechPix herda do BACEN o índice de disponibilidade da Aula 1 — meta 100%, valores de referência por categoria — e o teto de 40 segundos do Pix. Se a promessa externa é essa, o objetivo interno tem que soar o alarme muito antes: SLO de disponibilidade do fluxo Pix em 99,95%, SLO de latência em 3,5 segundos — margem larga para o teto normativo, coerente com a experiência-alvo de poucos segundos que o SPI real (p50 2,8s, p99 4,6s) permite.
+A regra de sanidade: **o SLO interno é sempre mais apertado que o SLA externo.** A TechPix herda do BACEN o índice de disponibilidade da Aula 1 — meta 100%, valores de referência por categoria — e o teto de 40 segundos do Pix. Se a promessa externa é essa, o objetivo interno tem que soar o alarme muito antes: SLO de disponibilidade do fluxo Pix em 99,95%, SLO de latência em 3,5 segundos — margem larga para o teto normativo, coerente com a experiência-alvo de poucos segundos que o SPI real (p50 2,8s, p99 4,6s) permite.
 
 ### 6.2 Error budget: transformar meta em moeda
 
@@ -589,7 +589,7 @@ Gastou pouco este mês? O time tem lastro para ousar: extrair o próximo serviç
 
 Última disciplina dessa seção, e a mais contraintuitiva para quem vem de operação tradicional: **alerta bom acorda gente por sintoma, não por causa.** CPU a 90% não é sintoma — é causa *possível* de um sintoma que talvez nem exista; a CPU do serviço de inferência vive alta por desenho, e está tudo bem. Alertar em CPU produz o pior dos mundos: páginas às 3h da manhã sem cliente sofrendo — e a fadiga de alerta que faz o Rafael ignorar a página verdadeira no mês seguinte.
 
-O alerta de primeira classe do TechPix é o de **burn rate**: a velocidade de queima do error budget. Queimando na taxa "normal", o budget de 21,6 minutos dura o mês — ninguém acorda. Um alerta de queima rápida dispara quando a taxa recente, medida numa janela curta, consumiria uma fração relevante do budget mensal em poucas horas — aí sim, é incêndio, e acordar alguém se justifica *matematicamente*. Queima lenta — algo consumindo o budget aos poucos, dia após dia — vira ticket de horário comercial, não página. **Cada alerta noturno deve carregar a prova de que valia uma noite de sono.** Causas — CPU, fila, lag — continuam nos dashboards, como *diagnóstico* para quando o sintoma chamar. Alerta é para sofrimento real ou iminente de cliente; dashboard é para investigação.
+O alerta de primeira classe da TechPix é o de **burn rate**: a velocidade de queima do error budget. Queimando na taxa "normal", o budget de 21,6 minutos dura o mês — ninguém acorda. Um alerta de queima rápida dispara quando a taxa recente, medida numa janela curta, consumiria uma fração relevante do budget mensal em poucas horas — aí sim, é incêndio, e acordar alguém se justifica *matematicamente*. Queima lenta — algo consumindo o budget aos poucos, dia após dia — vira ticket de horário comercial, não página. **Cada alerta noturno deve carregar a prova de que valia uma noite de sono.** Causas — CPU, fila, lag — continuam nos dashboards, como *diagnóstico* para quando o sintoma chamar. Alerta é para sofrimento real ou iminente de cliente; dashboard é para investigação.
 
 ---
 
@@ -599,7 +599,7 @@ O alerta de primeira classe do TechPix é o de **burn rate**: a velocidade de qu
 
 De volta ao dia 5, uma última vez. O caso da Ana não disparou alerta — e, pelo desenho da Seção 6, *não deveria*: 0,002% do tráfego não queima budget. Ele chegou pelo canal que pega o que os números não pegam: um ticket, uma cliente, uma reclamação real. Sistemas maduros tratam esses dois canais — o alerta quantitativo e a voz do cliente — como igualmente legítimos para abrir investigação.
 
-O TechPix classifica incidentes por severidade — SEV1, dinheiro errado ou indisponibilidade do fluxo Pix, guerra declarada, todo mundo na sala; SEV2, degradação com cliente sofrendo; SEV3, o caso da Ana: dano individual, sem alastramento. Cada severidade tem um **runbook** — o passo a passo de diagnóstico escrito *antes*, de cabeça fria, porque às 3h da manhã ninguém raciocina bem — e papéis definidos: quem investiga, quem comunica, quem decide desligar o quê. O kill switch da Aula 6 é uma das armas do runbook: metade do valor do flag operacional é o on-call poder desarmar uma feature sem chamar ninguém.
+A TechPix classifica incidentes por severidade — SEV1, dinheiro errado ou indisponibilidade do fluxo Pix, guerra declarada, todo mundo na sala; SEV2, degradação com cliente sofrendo; SEV3, o caso da Ana: dano individual, sem alastramento. Cada severidade tem um **runbook** — o passo a passo de diagnóstico escrito *antes*, de cabeça fria, porque às 3h da manhã ninguém raciocina bem — e papéis definidos: quem investiga, quem comunica, quem decide desligar o quê. O kill switch da Aula 6 é uma das armas do runbook: metade do valor do flag operacional é o on-call poder desarmar uma feature sem chamar ninguém.
 
 ### 7.2 Blameless: o postmortem é o ADR do incidente
 
@@ -615,7 +615,7 @@ A filosofia por trás, que eu quero deixar explícita: num sistema distribuído 
 
 ### 8.1 O Catálogo de SLOs
 
-Como as aulas anteriores, essa termina com um artefato — e seguindo a tradição da casa desde a Aula 3, ele é da família da spec, não um ADR: **o Catálogo de SLOs do TechPix**, o documento vivo que registra, para cada fluxo e serviço, o que se mede, qual a meta, quanto custa errar, e quem é o dono:
+Como as aulas anteriores, essa termina com um artefato — e seguindo a tradição da casa desde a Aula 3, ele é da família da spec, não um ADR: **o Catálogo de SLOs da TechPix**, o documento vivo que registra, para cada fluxo e serviço, o que se mede, qual a meta, quanto custa errar, e quem é o dono:
 
 ```
 CATÁLOGO DE SLOs · TechPix                        vigência: dez/2025 · revisão: trimestral
@@ -713,7 +713,7 @@ E o último retrato de plantão da minha parte no curso. Reparem no que esta aul
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 880 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
-  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 7</text>
+  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">A TechPix ao fim da Aula 7</text>
 
   <text x="20" y="44" font-family="sans-serif" font-size="10" font-weight="bold" fill="#a8a29e">JÁ EXISTIA — AULAS 1 A 6</text>
   <g font-family="sans-serif">
@@ -763,10 +763,10 @@ E o último retrato de plantão da minha parte no curso. Reparem no que esta aul
 
   <text x="440" y="316" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula · âmbar = sinal anotado, herdado pela Aula 8</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução do TechPix: a Aula 7 não processa nada novo — ela dá olhos ao sistema. E deixa, de propósito, um sinal sem leitor.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução da TechPix: a Aula 7 não processa nada novo — ela dá olhos ao sistema. E deixa, de propósito, um sinal sem leitor.</p>
 </div>
 
-Essa aula encerra a minha parte no curso. Em quatro aulas, o TechPix saiu de um monólito com fronteiras bem desenhadas para um sistema distribuído com contratos explícitos, um modelo de risco servindo no caminho crítico, entrega progressiva com rede de validação, e — a partir de hoje — olhos para se ver por inteiro. Foi uma honra ser o professor da fase em que o sistema foi para a rua. Na próxima aula, vocês voltam para as mãos de quem começou tudo isso — e ele vai fechar o círculo que abriu na Aula 1: *da fé para a evidência*. O sistema agora produz evidência de sobra; a série histórica do ledger está lá, subindo devagarinho, esperando. O que falta é o leitor. Até lá.
+Essa aula encerra a minha parte no curso. Em quatro aulas, a TechPix saiu de um monólito com fronteiras bem desenhadas para um sistema distribuído com contratos explícitos, um modelo de risco servindo no caminho crítico, entrega progressiva com rede de validação, e — a partir de hoje — olhos para se ver por inteiro. Foi uma honra ser o professor da fase em que o sistema foi para a rua. Na próxima aula, vocês voltam para as mãos de quem começou tudo isso — e ele vai fechar o círculo que abriu na Aula 1: *da fé para a evidência*. O sistema agora produz evidência de sobra; a série histórica do ledger está lá, subindo devagarinho, esperando. O que falta é o leitor. Até lá.
 
 ---
 

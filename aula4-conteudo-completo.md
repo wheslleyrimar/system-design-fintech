@@ -86,11 +86,11 @@ Hoje a gente vai transformar o mapa de contexto que vocês desenharam na Aula 3 
 
 ## 1. O mapa vira malha: cada aresta é uma decisão
 
-O professor anterior encerrou a Aula 3 com o context map do TechPix: Identidade e Onboarding, Contas e Ledger, Pagamentos, Antifraude e Limites, Devoluções e Disputas, Cartões. E ele disse uma coisa que eu quero retomar com todo o peso: bounded context é decisão de modelagem; microsserviço é decisão de topologia. Hoje o TechPix ainda é um monólito modular — os contextos moram no mesmo processo. Mas a comunicação entre eles **já é real**: o módulo de Pagamentos já chama o de Antifraude, o Ledger já publica eventos pelo Outbox, o ACL já traduz `pacs.008` para o dialeto interno. A pergunta desta seção é: **para cada aresta desse mapa, qual é o estilo certo de conversa?**
+O professor anterior encerrou a Aula 3 com o context map da TechPix: Identidade e Onboarding, Contas e Ledger, Pagamentos, Antifraude e Limites, Devoluções e Disputas, Cartões. E ele disse uma coisa que eu quero retomar com todo o peso: bounded context é decisão de modelagem; microsserviço é decisão de topologia. Hoje a TechPix ainda é um monólito modular — os contextos moram no mesmo processo. Mas a comunicação entre eles **já é real**: o módulo de Pagamentos já chama o de Antifraude, o Ledger já publica eventos pelo Outbox, o ACL já traduz `pacs.008` para o dialeto interno. A pergunta desta seção é: **para cada aresta desse mapa, qual é o estilo certo de conversa?**
 
 E a resposta nunca é "síncrono" ou "assíncrono" no atacado. É aresta por aresta, com critério. O critério que eu uso há dez anos cabe numa pergunta: **quem chama consegue continuar seu trabalho sem a resposta?** Se a resposta é necessária para decidir o próximo passo — validar antes de reservar, resolver a chave antes de enviar —, a conversa é síncrona, e vocês pagam o preço em acoplamento de disponibilidade. Se a resposta pode chegar depois — atualizar extrato, recalcular limite, notificar —, a conversa é assíncrona, e vocês pagam o preço em atraso e em complexidade de entendimento.
 
-Vejam o mapa do TechPix com esse critério aplicado:
+Vejam o mapa da TechPix com esse critério aplicado:
 
 | Aresta | Estilo | Por quê | Orçamento / SLA |
 |---|---|---|---|
@@ -194,15 +194,15 @@ Vamos primeiro arrumar as arestas síncronas. Quatro disciplinas.
 
 ### 2.1 REST na borda, gRPC no miolo
 
-O aplicativo da Ana fala com o TechPix por uma API REST/JSON — e deve continuar assim: REST é a língua franca da borda, legível, depurável, cacheável. Mas **entre contextos internos**, quando a gente extrair serviços (Aula 6), a conversa vai ser gRPC, e eu quero justificar essa escolha com critério, não com moda.
+O aplicativo da Ana fala com a TechPix por uma API REST/JSON — e deve continuar assim: REST é a língua franca da borda, legível, depurável, cacheável. Mas **entre contextos internos**, quando a gente extrair serviços (Aula 6), a conversa vai ser gRPC, e eu quero justificar essa escolha com critério, não com moda.
 
-Primeiro, o contrato: gRPC nasce de um arquivo `.proto` — a definição da interface é um artefato versionado, compilado, que gera cliente e servidor. Não existe "eu achava que esse campo era string". O contrato é código, e código entra em CI — vocês já estão vendo onde isso vai dar quando a gente chegar na Seção 4. Segundo, o custo: serialização binária e multiplexação sobre HTTP/2 importam quando o TechPix opera a 900 transações por segundo no pico e cada transação atravessa três ou quatro contextos — a diferença entre 5 ms e 0,5 ms de overhead por chamada, multiplicada pela cadeia, é uma fatia real do orçamento. Terceiro — e para mim o argumento decisivo — o **deadline propagation**, que merece a subseção própria.
+Primeiro, o contrato: gRPC nasce de um arquivo `.proto` — a definição da interface é um artefato versionado, compilado, que gera cliente e servidor. Não existe "eu achava que esse campo era string". O contrato é código, e código entra em CI — vocês já estão vendo onde isso vai dar quando a gente chegar na Seção 4. Segundo, o custo: serialização binária e multiplexação sobre HTTP/2 importam quando a TechPix opera a 900 transações por segundo no pico e cada transação atravessa três ou quatro contextos — a diferença entre 5 ms e 0,5 ms de overhead por chamada, multiplicada pela cadeia, é uma fatia real do orçamento. Terceiro — e para mim o argumento decisivo — o **deadline propagation**, que merece a subseção própria.
 
 Antes disso, um parêntese que plantão me ensinou a nunca pular: quando eu falo "gRPC sobre HTTP/2", "TCP", "TLS na RSFN", eu estou andando por camadas diferentes de uma mesma pilha — o **modelo OSI**. E saber em qual camada cada coisa vive não é teoria de prova de certificação: é o que diz **qual ferramenta enxerga o quê**. Um firewall olha endereço e porta; ele não faz ideia do que é um retry. Um circuit breaker olha respostas de aplicação; ele não sabe o que é um pacote. Quem confunde as camadas compra defesa no andar errado.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 880 470" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
-  <text x="20" y="26" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333">O modelo OSI, com o TechPix morando dentro dele</text>
+  <text x="20" y="26" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333">O modelo OSI, com a TechPix morando dentro dele</text>
   <!-- Layer bars -->
   <g font-family="sans-serif">
     <rect x="20" y="42" width="440" height="50" rx="7" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
@@ -231,7 +231,7 @@ Antes disso, um parêntese que plantão me ensinou a nunca pular: quando eu falo
 
     <rect x="20" y="342" width="440" height="38" rx="7" fill="#fff" stroke="#a8a29e" stroke-width="1.5"/>
     <text x="35" y="359" font-size="12" font-weight="bold" fill="#57534e">L1 · Física</text>
-    <text x="35" y="374" font-size="10.5" fill="#78716c">fibra óptica — a RSFN que liga o TechPix ao BACEN é, no fim, isto</text>
+    <text x="35" y="374" font-size="10.5" fill="#78716c">fibra óptica — a RSFN que liga a TechPix ao BACEN é, no fim, isto</text>
   </g>
   <!-- Right: where each defense lives -->
   <g font-family="sans-serif">
@@ -253,7 +253,7 @@ Antes disso, um parêntese que plantão me ensinou a nunca pular: quando eu falo
   <text x="440" y="420" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#3730a3">Guardem o L4 × L7: é o LB L7 — que lê rota e header — que vai fatiar o tráfego do canary na Aula 6. O L4 não saberia nem por onde começar.</text>
   <text x="440" y="456" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">Defesa comprada no andar errado é defesa que não dispara: firewall não vê retry storm; circuit breaker não vê pacote perdido.</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O modelo OSI aplicado ao TechPix: cada defesa da Aula 2 e desta aula vive numa camada — e só enxerga o que a camada dela mostra.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O modelo OSI aplicado à TechPix: cada defesa da Aula 2 e desta aula vive numa camada — e só enxerga o que a camada dela mostra.</p>
 </div>
 
 ### 2.2 Deadline propagation: o orçamento viaja com a requisição
@@ -318,7 +318,7 @@ A disciplina certa se chama propagação de deadline: quem inicia a requisição
 
 ### 2.3 Timeout é derivado, não chutado
 
-Com deadline na mão, o timeout de cada aresta vira uma conta, não um chute. A chamada ao DICT tem SLA regulatório de p99 ≤ 1 segundo — então o timeout interno do TechPix para essa chamada é da ordem de 1 segundo e pouco, não os "30 segundos default do framework" que eu já encontrei em produção mais vezes do que gostaria. A chamada ao Antifraude tem orçamento de ~100 ms — porque ela acontece **antes** da reserva no ledger e do envio ao SPI, e a experiência-alvo do Pix inteiro é de poucos segundos; se a validação de risco comer meio segundo, ela sozinha dobra a latência percebida. Escrevam isso como regra: **timeout default de framework é uma decisão de arquitetura tomada por quem nunca viu o seu sistema.** Toda aresta síncrona do mapa recebe timeout derivado do orçamento, documentado, revisado.
+Com deadline na mão, o timeout de cada aresta vira uma conta, não um chute. A chamada ao DICT tem SLA regulatório de p99 ≤ 1 segundo — então o timeout interno da TechPix para essa chamada é da ordem de 1 segundo e pouco, não os "30 segundos default do framework" que eu já encontrei em produção mais vezes do que gostaria. A chamada ao Antifraude tem orçamento de ~100 ms — porque ela acontece **antes** da reserva no ledger e do envio ao SPI, e a experiência-alvo do Pix inteiro é de poucos segundos; se a validação de risco comer meio segundo, ela sozinha dobra a latência percebida. Escrevam isso como regra: **timeout default de framework é uma decisão de arquitetura tomada por quem nunca viu o seu sistema.** Toda aresta síncrona do mapa recebe timeout derivado do orçamento, documentado, revisado.
 
 E esse número de 100 ms para o Antifraude — segurem ele com carinho. Na próxima aula, a gente vai tentar enfiar um modelo de machine learning **dentro** desses 100 milissegundos, e vocês vão ver que esse orçamento apertado dita metade da arquitetura de inferência.
 
@@ -336,11 +336,11 @@ Agora as arestas assíncronas — e aqui eu falo com a autoridade de quem já dr
 
 ### 3.1 O consumidor idempotente: exactly-once é responsabilidade de quem lê
 
-A Aula 1 cravou: entrega exactly-once é impossível; o que existe é **efeito** exactly-once, construído sobre entrega at-least-once. Na época, o palco era a API de pagamento. Agora reparem que a mesma lei vale do lado do consumidor de eventos: o broker vai, sim, entregar `PixLiquidado` duas vezes — no rebalanceamento de partições, na retomada pós-crash, no retry do relay do Outbox. Se o projetor de extrato somar o mesmo evento duas vezes, a Ana vê dois pagamentos na tela onde houve um. O antídoto tem os mesmos dois sabores de sempre: **deduplicação explícita** — o consumidor registra os IDs de evento já processados (o EndToEndId mais o tipo do evento servem lindamente) e ignora repetidos — ou **escrita naturalmente idempotente** — a projeção é um *upsert* por chave ("o status do Pix E2E-tal é liquidado"), que aplicado duas vezes produz o mesmo estado. Regra da casa: todo consumidor novo no TechPix responde por escrito à pergunta "o que acontece se você receber essa mensagem duas vezes?" antes de ir para produção.
+A Aula 1 cravou: entrega exactly-once é impossível; o que existe é **efeito** exactly-once, construído sobre entrega at-least-once. Na época, o palco era a API de pagamento. Agora reparem que a mesma lei vale do lado do consumidor de eventos: o broker vai, sim, entregar `PixLiquidado` duas vezes — no rebalanceamento de partições, na retomada pós-crash, no retry do relay do Outbox. Se o projetor de extrato somar o mesmo evento duas vezes, a Ana vê dois pagamentos na tela onde houve um. O antídoto tem os mesmos dois sabores de sempre: **deduplicação explícita** — o consumidor registra os IDs de evento já processados (o EndToEndId mais o tipo do evento servem lindamente) e ignora repetidos — ou **escrita naturalmente idempotente** — a projeção é um *upsert* por chave ("o status do Pix E2E-tal é liquidado"), que aplicado duas vezes produz o mesmo estado. Regra da casa: todo consumidor novo na TechPix responde por escrito à pergunta "o que acontece se você receber essa mensagem duas vezes?" antes de ir para produção.
 
 ### 3.2 Ordem: por chave, nunca global
 
-Segunda pergunta obrigatória: "e se as mensagens chegarem fora de ordem?". A resposta arquitetural do TechPix: o tópico de eventos é particionado por `conta_id` — a mesma chave de particionamento que vocês conhecem desde a Aula 1 —, o que garante ordem **dentro de cada conta** e nenhuma garantia entre contas. E isso basta: para montar o extrato da Ana, importa que `FundosReservados` da Ana venha antes de `PixLiquidado` da Ana; não importa nada a ordem entre o Pix da Ana e o do Bruno. Ordem global exigiria serializar o mundo inteiro num ponto só — vocês já sabem, da Aula 2, o nome disso: ponto quente. **Quem pede ordem global está pedindo um gargalo com outras palavras.**
+Segunda pergunta obrigatória: "e se as mensagens chegarem fora de ordem?". A resposta arquitetural da TechPix: o tópico de eventos é particionado por `conta_id` — a mesma chave de particionamento que vocês conhecem desde a Aula 1 —, o que garante ordem **dentro de cada conta** e nenhuma garantia entre contas. E isso basta: para montar o extrato da Ana, importa que `FundosReservados` da Ana venha antes de `PixLiquidado` da Ana; não importa nada a ordem entre o Pix da Ana e o do Bruno. Ordem global exigiria serializar o mundo inteiro num ponto só — vocês já sabem, da Aula 2, o nome disso: ponto quente. **Quem pede ordem global está pedindo um gargalo com outras palavras.**
 
 ### 3.3 Consumer lag: a métrica que faltou na sexta-feira
 
@@ -558,7 +558,7 @@ O efeito de segunda ordem é quase mais valioso que o teste: o provedor ganha, d
 
 ### 4.4 E o mundo que vocês não controlam
 
-Uma nota de realismo antes de seguir: tudo isso vale para contratos **internos**. O contrato com o BACEN — `pacs.008`, `pacs.002`, `pacs.004`, a API do DICT — evolui no ritmo do regulador, com manuais versionados e datas de vigência, como vocês viram na Aula 1 com o Pix Automático e o MED. O TechPix não negocia esse contrato; ele **se adapta**. E é por isso que a camada anticorrupção da Aula 3 é tão preciosa: quando o BACEN muda uma mensagem, a mudança bate no ACL e para nele — o dialeto interno, `PixIniciado`, `PixLiquidado`, fica intacto, e o resto do sistema nem fica sabendo. ACL não é burocracia de tradução; é **amortecedor de mudança alheia**.
+Uma nota de realismo antes de seguir: tudo isso vale para contratos **internos**. O contrato com o BACEN — `pacs.008`, `pacs.002`, `pacs.004`, a API do DICT — evolui no ritmo do regulador, com manuais versionados e datas de vigência, como vocês viram na Aula 1 com o Pix Automático e o MED. A TechPix não negocia esse contrato; ele **se adapta**. E é por isso que a camada anticorrupção da Aula 3 é tão preciosa: quando o BACEN muda uma mensagem, a mudança bate no ACL e para nele — o dialeto interno, `PixIniciado`, `PixLiquidado`, fica intacto, e o resto do sistema nem fica sabendo. ACL não é burocracia de tradução; é **amortecedor de mudança alheia**.
 
 ---
 
@@ -566,7 +566,7 @@ Uma nota de realismo antes de seguir: tudo isso vale para contratos **internos**
 
 A Aula 2 apresentou o arsenal — timeout, retry com backoff e jitter, retry budget, circuit breaker, bulkhead, load shedding — no calor do incidente do dia 5. O que eu quero acrescentar é a mudança de postura que separa um sistema que *tem* esses padrões de um sistema *operável*: sair de "cada desenvolvedor aplica o padrão que lembrar, onde lembrar" para **política declarada por aresta** — escrita, versionada, revisada como código.
 
-A tabela de políticas do caminho crítico do TechPix, hoje:
+A tabela de políticas do caminho crítico da TechPix, hoje:
 
 | Aresta | Timeout | Retry | Circuit breaker | Bulkhead | Fallback |
 |---|---|---|---|---|---|
@@ -588,7 +588,7 @@ Três comentários que a tabela sozinha não faz.
 
 Agora a linha mais interessante da tabela: o que fazer quando o **Antifraude não responde** — timeout estourado, circuito aberto — e há um Pix na mão esperando veredito?
 
-Duas respostas possíveis, ambas defensáveis, ambas caras. **Fail-closed:** na dúvida, recusa. Nenhuma fraude passa; em compensação, durante os minutos de uma degradação do Antifraude, o TechPix recusa 100% dos Pix — clientes legítimos barrados, receita perdida, reputação arranhada, e possivelmente uma menção desagradável no índice de disponibilidade que o BACEN monitora. **Fail-open:** na dúvida, deixa passar. Disponibilidade preservada; em compensação, a janela de degradação vira temporada de caça aberta para exatamente o tipo de adversário que monitora fintechs esperando esses momentos.
+Duas respostas possíveis, ambas defensáveis, ambas caras. **Fail-closed:** na dúvida, recusa. Nenhuma fraude passa; em compensação, durante os minutos de uma degradação do Antifraude, a TechPix recusa 100% dos Pix — clientes legítimos barrados, receita perdida, reputação arranhada, e possivelmente uma menção desagradável no índice de disponibilidade que o BACEN monitora. **Fail-open:** na dúvida, deixa passar. Disponibilidade preservada; em compensação, a janela de degradação vira temporada de caça aberta para exatamente o tipo de adversário que monitora fintechs esperando esses momentos.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 860 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
@@ -680,7 +680,7 @@ Donos           Provedor: Antifraude e Limites (Diego). Consumidor: Pagamentos
 Observação      Lag e taxa de fallback são métricas de primeira classe (Aula 7).
 ```
 
-Reparem no que esse documento **não** é: não é um ADR. E não por acaso — deixa eu ser explícito, porque sei que a pergunta vem. O ADR registra uma decisão pontual e imutável; o contrato de integração é um **documento vivo**, versionado, que muda toda vez que a aresta muda — mais parecido com a spec da Aula 3 do que com o ADR-001. A numeração dos ADRs do TechPix parou no 002, aquele do Outbox, com a linha de revisão dele ainda em aberto — "se a contenção persistir, reparticionar a própria escrita do ledger". Eu li essa linha quando assumi a turma, e vou dizer o que eu disse para o time: **o próximo ADR numerado, o 003, só nasce quando alguém decidir mexer na escrita do ledger — e hoje não é esse dia.** A conta `pix_a_liquidar` segue lá, única, aguentando o tranco. Anotem que eu falei isso; essa linha em aberto ainda vai dar história nesse curso.
+Reparem no que esse documento **não** é: não é um ADR. E não por acaso — deixa eu ser explícito, porque sei que a pergunta vem. O ADR registra uma decisão pontual e imutável; o contrato de integração é um **documento vivo**, versionado, que muda toda vez que a aresta muda — mais parecido com a spec da Aula 3 do que com o ADR-001. A numeração dos ADRs da TechPix parou no 002, aquele do Outbox, com a linha de revisão dele ainda em aberto — "se a contenção persistir, reparticionar a própria escrita do ledger". Eu li essa linha quando assumi a turma, e vou dizer o que eu disse para o time: **o próximo ADR numerado, o 003, só nasce quando alguém decidir mexer na escrita do ledger — e hoje não é esse dia.** A conta `pix_a_liquidar` segue lá, única, aguentando o tranco. Anotem que eu falei isso; essa linha em aberto ainda vai dar história nesse curso.
 
 E uma última honestidade sobre documento vivo, porque eu sei o destino de 90% deles: wiki esquecida. O contrato de integração só fica vivo se estiver **amarrado a coisas que executam**: o schema aponta para o registry (que valida no CI), os consumidores apontam para o broker de Pact (que roda no CI), as métricas apontam para dashboards (que alertam). Documento que nada executa é obituário antecipado. Documento que o CI lê é lei.
 
@@ -698,11 +698,11 @@ Terceiro: **resiliência é política declarada, não heroísmo de plantão.** T
 
 E a promessa: na tabela de políticas, a aresta Pagamentos → Antifraude ficou com o orçamento mais apertado do sistema — 100 milissegundos para decidir se um Pix é honesto. Hoje, atrás dessa aresta, moram regras: limiares, listas, heurísticas que o Diego mantém. Na próxima aula, a gente vai descobrir por que as regras não bastam — vai ser numa madrugada de outubro, com um golpe que nenhuma regra pegou — e vai colocar um **modelo de machine learning dentro desses 100 milissegundos**: feature store, inferência em tempo real, modelo aberto rodando na casa, e a pergunta que define IA em fintech: quando o modelo diz "talvez", quem decide? Tragam a tabela de políticas. Ela vai ganhar uma linha que pensa.
 
-E uma última coisa, que eu vou repetir no fim de todas as minhas aulas, porque plantão me ensinou a nunca perder de vista o estado da obra: o retrato do TechPix como ele fica hoje. Cinza é o que a gente herdou; verde é o que foi parafusado nesta aula.
+E uma última coisa, que eu vou repetir no fim de todas as minhas aulas, porque plantão me ensinou a nunca perder de vista o estado da obra: o retrato da TechPix como ela fica hoje. Cinza é o que a gente herdou; verde é o que foi parafusado nesta aula.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 880 290" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
-  <text x="440" y="26" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 4</text>
+  <text x="440" y="26" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">A TechPix ao fim da Aula 4</text>
   <!-- Já existia (cinza) -->
   <g font-family="sans-serif">
     <rect x="20" y="48" width="200" height="48" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
@@ -741,7 +741,7 @@ E uma última coisa, que eu vou repetir no fim de todas as minhas aulas, porque 
   </g>
   <text x="440" y="288" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#999">cinza = já existia · verde = construído nesta aula</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A construção incremental do TechPix: a Aula 4 não adicionou caixas novas — ela transformou cada seta em contrato.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A construção incremental da TechPix: a Aula 4 não adicionou caixas novas — ela transformou cada seta em contrato.</p>
 </div>
 
 ---
@@ -767,7 +767,7 @@ E uma última coisa, que eu vou repetir no fim de todas as minhas aulas, porque 
 | **Contrato de Integração** | Artefato vivo, irmão da spec da Aula 3: uma entrada por aresta com estilo, contrato, orçamento, políticas, fallback e donos — amarrado a registry, Pact e dashboards para não virar wiki morta. |
 | **Saga** | Transação distribuída como sequência de transações locais costuradas por eventos, com ação compensatória escrita para cada passo — a devolução do MED (`pacs.004`/MD06) é uma saga regulatória. Padrão do catálogo microservices.io (Chris Richardson). |
 | **Two-phase commit (2PC)** | Protocolo de atomicidade forte entre participantes (prepare → vote → commit); se um trava no meio, todos ficam bloqueados esperando — inviável entre instituições independentes, por isso o BACEN escolheu saga. |
-| **Modelo OSI** | As 7 camadas da comunicação em rede; no TechPix: TLS/RSFN na apresentação, HTTP/2+gRPC em L7, TCP em L4 — timeout e circuit breaker enxergam L7; firewall enxerga L3/L4. Semente do L4×L7 que a Aula 6 usa no canary. |
+| **Modelo OSI** | As 7 camadas da comunicação em rede; na TechPix: TLS/RSFN na apresentação, HTTP/2+gRPC em L7, TCP em L4 — timeout e circuit breaker enxergam L7; firewall enxerga L3/L4. Semente do L4×L7 que a Aula 6 usa no canary. |
 | **microservices.io** | Catálogo de padrões de microsserviços de Chris Richardson — referência dos padrões usados no curso: Transactional Outbox, Saga, CQRS, Event Sourcing, Circuit Breaker, Database per Service, Strangler Fig. |
 
 ---

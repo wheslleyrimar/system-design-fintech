@@ -191,7 +191,7 @@ Deixa eu colocar as duas alternativas lado a lado, porque esse é o desenho que 
 
 ### 2.4 Um Pix de R$100, contado como movimento
 
-Vamos ver como isso fica na prática. A Ana, no nosso TechPix, manda R$100 para o Bruno, que tem conta no Banco Beta. No nosso ledger, esse pagamento **não é** "saldo -= 100". São fatos encadeados:
+Vamos ver como isso fica na prática. A Ana, na nossa TechPix, manda R$100 para o Bruno, que tem conta no Banco Beta. No nosso ledger, esse pagamento **não é** "saldo -= 100". São fatos encadeados:
 
 ```
 Fato 1 (reserva):   DÉBITO carteira_ana 100  |  CRÉDITO pix_a_liquidar 100   (Σ=Σ ✓)
@@ -258,7 +258,7 @@ Sexto passo, armazenamento: cada lançamento é imutável e precisa ficar retido
 
 Sétimo passo — e esse é o que eu mais gosto de ensinar, porque é a ferramenta de capacidade mais subestimada em System Design: **a Lei de Little.** Ela diz o seguinte, de forma quase chocante de simples: **L = λ × W** — a concorrência média num sistema (L, quantas requisições estão "dentro" dele ao mesmo tempo) é igual à taxa de chegada (λ, o TPS) multiplicada pelo tempo médio que cada uma passa lá dentro (W, a latência). Essa lei vale para qualquer sistema em estado estacionário, não importa a distribuição de chegada — e ela é o jeito certo de responder "quantas conexões simultâneas de banco eu preciso?", em vez de chutar um número redondo.
 
-Apliquem comigo ao caminho de escrita do ledger: se o pico nacional é ~18 mil TPS, e a fatia que cai na infraestrutura de vocês — digamos, um TechPix com 5% de participação de mercado — é ~900 TPS, e cada escrita no ledger, do início da transação até o commit, leva em média 50 milissegundos (aquisição de lock, gravação, confirmação), então: **L = 900 × 0,05 = 45 conexões simultâneas** precisam estar ativas, em média, só para sustentar a escrita no pico. Isso parece pouco — e é exatamente por isso que a Lei de Little é tão útil: ela mostra que o número de conexões necessário é muito menor do que o TPS bruto sugere, **contanto que a latência por operação se mantenha baixa**. E aqui mora o perigo, ligando direto com a Aula 2: se a latência por operação **sobe** — porque o lock está sob contenção e a transação espera na fila —, a concorrência necessária sobe na mesma proporção. Se aquela mesma operação passa a levar 500 ms em vez de 50 ms (10× mais lenta, por causa da fila do lock), a concorrência necessária pula para 450 conexões simultâneas. Se o pool de conexões do sistema foi dimensionado para 100, ele esgota, e é isso — exatamente isso, com números — que causa o esgotamento de pool que a Aula 2 investiga. A Lei de Little transforma "a fila cresceu" de observação vaga em número que vocês calculam antes do incidente acontecer.
+Apliquem comigo ao caminho de escrita do ledger: se o pico nacional é ~18 mil TPS, e a fatia que cai na infraestrutura de vocês — digamos, uma TechPix com 5% de participação de mercado — é ~900 TPS, e cada escrita no ledger, do início da transação até o commit, leva em média 50 milissegundos (aquisição de lock, gravação, confirmação), então: **L = 900 × 0,05 = 45 conexões simultâneas** precisam estar ativas, em média, só para sustentar a escrita no pico. Isso parece pouco — e é exatamente por isso que a Lei de Little é tão útil: ela mostra que o número de conexões necessário é muito menor do que o TPS bruto sugere, **contanto que a latência por operação se mantenha baixa**. E aqui mora o perigo, ligando direto com a Aula 2: se a latência por operação **sobe** — porque o lock está sob contenção e a transação espera na fila —, a concorrência necessária sobe na mesma proporção. Se aquela mesma operação passa a levar 500 ms em vez de 50 ms (10× mais lenta, por causa da fila do lock), a concorrência necessária pula para 450 conexões simultâneas. Se o pool de conexões do sistema foi dimensionado para 100, ele esgota, e é isso — exatamente isso, com números — que causa o esgotamento de pool que a Aula 2 investiga. A Lei de Little transforma "a fila cresceu" de observação vaga em número que vocês calculam antes do incidente acontecer.
 
 Oitavo passo, uma checagem rápida de onde o gargalo realmente mora: 900 TPS de escrita, com 3 lançamentos por transação, dá 2.700 escritas por segundo no ledger. Um SSD NVMe moderno sustenta, sozinho, algo como 500 mil a 1 milhão de IOPS (operações de entrada/saída por segundo). Ou seja: **o disco não é o gargalo** — 2.700 escritas por segundo é uma fração pequena da capacidade de um único disco moderno. O gargalo real, quase sempre, é a **coordenação** — o lock, o consenso entre partições, a espera na fila —, não a capacidade bruta de gravação. Essa é uma das lições mais contraintuitivas de System Design: o hardware raramente é o limite; a forma como vocês coordenam acesso concorrente é.
 
@@ -491,7 +491,7 @@ Para isso não ficar abstrato, olhem como sistemas reais se posicionaram nesse e
 
 A lição aqui não é "qual banco é melhor". É: **qual trade-off este pedaço específico do meu sistema exige.**
 
-### 4.5 Aplicando isso ao TechPix — a decisão que resolve 80% do problema
+### 4.5 Aplicando isso à TechPix — a decisão que resolve 80% do problema
 
 No nosso sistema, a decisão fica assim:
 
@@ -566,11 +566,11 @@ E o DICT não para na consulta: ele também gerencia a **reivindicação de poss
 
 ### 5.5 A anatomia de um Pix, passo a passo
 
-Agora deixa eu traçar com vocês o caminho completo de um Pix, usando o nosso exemplo: Ana, no TechPix, mandando dinheiro para Bruno, no Banco Beta. Esse é, para mim, o fluxo mais importante da aula inteira.
+Agora deixa eu traçar com vocês o caminho completo de um Pix, usando o nosso exemplo: Ana, na TechPix, mandando dinheiro para Bruno, no Banco Beta. Esse é, para mim, o fluxo mais importante da aula inteira.
 
-Primeiro, o app da Ana manda para o TechPix a ordem: chave e valor. Segundo, o TechPix consulta o **DICT** com a chave do Bruno, e recebe de volta a instituição, a conta e o titular — gastando parte do orçamento de latência, e sujeito ao rate limit que a gente acabou de ver. Terceiro, o TechPix faz as validações locais: saldo, limites — inclusive o limite noturno —, antifraude, e **PLD-FT**, que significa Prevenção à Lavagem de Dinheiro e ao Financiamento do Terrorismo. Na dúvida, a regra é falhar fechado.
+Primeiro, o app da Ana manda para a TechPix a ordem: chave e valor. Segundo, a TechPix consulta o **DICT** com a chave do Bruno, e recebe de volta a instituição, a conta e o titular — gastando parte do orçamento de latência, e sujeito ao rate limit que a gente acabou de ver. Terceiro, a TechPix faz as validações locais: saldo, limites — inclusive o limite noturno —, antifraude, e **PLD-FT**, que significa Prevenção à Lavagem de Dinheiro e ao Financiamento do Terrorismo. Na dúvida, a regra é falhar fechado.
 
-Quarto, o TechPix reserva no ledger: débito na carteira da Ana, crédito numa conta de "a liquidar", com idempotência garantida pelo E2E ID que a gente já viu. Quinto, o TechPix envia ao **SPI** a mensagem `pacs.008` — a instrução de pagamento, no padrão ISO 20022 —, carregando esse mesmo E2E ID. Sexto, o SPI debita a Conta PI do TechPix e credita a Conta PI do Banco Beta, em moeda de banco central, de forma final e irrevogável. Sétimo, o SPI responde com a mensagem `pacs.002`, confirmando que liquidou; o TechPix reconcilia o próprio ledger, e o Banco Beta credita o Bruno. E, na borda, de forma assíncrona, saem as notificações, o extrato é atualizado, o feed é atualizado.
+Quarto, a TechPix reserva no ledger: débito na carteira da Ana, crédito numa conta de "a liquidar", com idempotência garantida pelo E2E ID que a gente já viu. Quinto, a TechPix envia ao **SPI** a mensagem `pacs.008` — a instrução de pagamento, no padrão ISO 20022 —, carregando esse mesmo E2E ID. Sexto, o SPI debita a Conta PI da TechPix e credita a Conta PI do Banco Beta, em moeda de banco central, de forma final e irrevogável. Sétimo, o SPI responde com a mensagem `pacs.002`, confirmando que liquidou; a TechPix reconcilia o próprio ledger, e o Banco Beta credita o Bruno. E, na borda, de forma assíncrona, saem as notificações, o extrato é atualizado, o feed é atualizado.
 
 E se alguma coisa der errado — falha ou fraude —, entra em cena a mensagem `pacs.004`, de devolução, e possivelmente o trilho do MED.
 
@@ -828,7 +828,7 @@ Historicamente, arquitetar seguia essa sequência: pensar, decidir, documentar �
 
 A ideia central do **SDD**, Spec-Driven Development, é: a especificação, e as decisões que ela registra, são o artefato que manda; o código é derivado dela. Em vez do fluxo antigo — escrevo a spec, depois codo, e a spec apodrece — o fluxo vira: especificação, plano, tarefas, implementação assistida por um agente, com a especificação permanecendo viva o tempo todo.
 
-E por que isso é System Design, e não só uma ferramenta bonitinha? Porque uma boa especificação **codifica as invariantes do domínio** — "Σ débitos igual Σ créditos", "saldo nunca fica negativo", "o E2E ID é único", "a resolução de chave respeita o rate limit do DICT". Essas invariantes, uma vez escritas na especificação, viram **testes automáticos** — as mesmas fitness functions que eu expliquei lá atrás. Ou seja: no mundo do SDD, **escrever a arquitetura com clareza É programar o sistema — e é, ao mesmo tempo, gerar o próprio aparato de validação dele.** A habilidade central do arquiteto passa a ser a precisão da especificação. Já existem ferramentas que materializam isso: o **GitHub Spec Kit**, um kit de código aberto para SDD que estrutura exatamente esse fluxo como comandos dentro do agente de código — uma constituição de princípios inegociáveis, e depois especificar, clarificar, planejar, quebrar em tarefas e implementar, cada passo gerando um artefato versionado no repositório (a Aula 3 roda esse fluxo na prática, sobre o nosso TechPix); o Kiro, uma IDE de IA da AWS orientada a spec; e o próprio Claude. O nosso ADR-001, que eu vou escrever com vocês daqui a pouco, é o primeiro artefato de SDD desse curso.
+E por que isso é System Design, e não só uma ferramenta bonitinha? Porque uma boa especificação **codifica as invariantes do domínio** — "Σ débitos igual Σ créditos", "saldo nunca fica negativo", "o E2E ID é único", "a resolução de chave respeita o rate limit do DICT". Essas invariantes, uma vez escritas na especificação, viram **testes automáticos** — as mesmas fitness functions que eu expliquei lá atrás. Ou seja: no mundo do SDD, **escrever a arquitetura com clareza É programar o sistema — e é, ao mesmo tempo, gerar o próprio aparato de validação dele.** A habilidade central do arquiteto passa a ser a precisão da especificação. Já existem ferramentas que materializam isso: o **GitHub Spec Kit**, um kit de código aberto para SDD que estrutura exatamente esse fluxo como comandos dentro do agente de código — uma constituição de princípios inegociáveis, e depois especificar, clarificar, planejar, quebrar em tarefas e implementar, cada passo gerando um artefato versionado no repositório (a Aula 3 roda esse fluxo na prática, sobre a nossa TechPix); o Kiro, uma IDE de IA da AWS orientada a spec; e o próprio Claude. O nosso ADR-001, que eu vou escrever com vocês daqui a pouco, é o primeiro artefato de SDD desse curso.
 
 ### 6.3 Context Engineering — projetando o que o agente sabe
 
@@ -873,7 +873,7 @@ Juntando essas seis ideias: com IA no jogo, o arquiteto passa a escrever especif
 
 Tudo que a gente viu até agora converge para um único artefato. Um **ADR**, Architecture Decision Record — um formato criado por Michael Nygard, um engenheiro de software que popularizou esse conceito em 2011 — é um documento objetivo, datado, e **imutável**, que registra uma única decisão: o contexto, a decisão em si, as consequências — de forma honesta, incluindo o custo —, as alternativas que foram descartadas, e um status, que vai de proposto, para aceito, até eventualmente substituído. Vocês nunca editam um ADR antigo; escrevem um novo, que o substitui. Assim, a história do pensamento arquitetural fica preservada — e um agente, lendo essa sequência de ADRs, entende *como o sistema pensou*, não só como ele está hoje.
 
-Vamos escrever juntos o primeiro ADR do TechPix:
+Vamos escrever juntos o primeiro ADR da TechPix:
 
 ```
 ADR-001 · Consistência forte no ledger do core          Status: Aceito (2026-07-30)
@@ -977,11 +977,11 @@ Segundo: **idempotência é correção sob incerteza.** A rede é ambígua por n
 
 Terceiro: **trade-off explícito é o ofício do arquiteto.** CAP e PACELC, orçamento de latência, forte no núcleo e eventual na borda — e tudo isso registrado formalmente num ADR.
 
-E antes do gancho final, deixa eu inaugurar um ritual que vai se repetir no fim de cada aula desse curso: uma foto do TechPix como ele está **hoje**. A gente vai construir essa fintech peça por peça, aula a aula — e essa régua é como vocês vão ver o sistema crescer. Hoje ela está inteira verde, porque tudo nasceu agora:
+E antes do gancho final, deixa eu inaugurar um ritual que vai se repetir no fim de cada aula desse curso: uma foto da TechPix como ela está **hoje**. A gente vai construir essa fintech peça por peça, aula a aula — e essa régua é como vocês vão ver o sistema crescer. Hoje ela está inteira verde, porque tudo nasceu agora:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 210" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
-  <text x="450" y="26" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 1</text>
+  <text x="450" y="26" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">A TechPix ao fim da Aula 1</text>
 
   <rect x="20" y="50" width="160" height="80" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
   <text x="100" y="78" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Monólito TechPix</text>
@@ -1011,7 +1011,7 @@ E antes do gancho final, deixa eu inaugurar um ritual que vai se repetir no fim 
   <rect x="20" y="150" width="860" height="34" rx="8" fill="#fff" stroke="#ccc" stroke-width="1"/>
   <text x="450" y="171" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula — hoje é tudo verde: o alicerce da fintech nasceu aqui</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução do TechPix: a cada aula, uma foto do que existe — e do que acabou de nascer.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução da TechPix: a cada aula, uma foto do que existe — e do que acabou de nascer.</p>
 </div>
 
 E aqui está a moldura que abriu essa aula inteira: **hoje, a gente decidiu na fé** — sem dados de produção, apoiados em princípios, no que o Banco Central exige, e na experiência. E isso foi o certo a se fazer. Mas guardem o ADR-001, porque um dia a produção — e um agente, operando sob guardrails, via MCP — vão ter opinião sobre ele. A Aula 8 troca fé por evidência, e fecha esse loop.
@@ -1113,7 +1113,7 @@ Isso fecha a aula de hoje. Deixo abaixo alguns glossários de apoio — consulte
 - **Banco Central (fontes verificadas nesta versão):** *Manual de Tempos do Pix* v7.0 (SLAs de SPI, DICT e Recuperação de Valores por fraude/falha operacional); *Regulamento do Pix* (Resolução BCB nº 195, de 3/3/2022); Instrução Normativa BCB nº 243, de 16/3/2022; *Manual de Fluxos do Processo de Efetivação do Pix*; *Manual Operacional do DICT* e documentação da API do DICT (rate limiting / anti-scraping por token bucket); *Guia de Implementação dos Procedimentos de Devolução no Pix, com ênfase no MED*, v4.3 (grafo de rastreamento, bloqueio cautelar, código MD06 — v4.4 já publicada, vigência a partir de set/out de 2026); Resolução BCB nº 493, de 28/8/2025 (MED 2.0 — rastreamento em 5 camadas, bloqueio cautelar de 72h, obrigatório desde 2/2/2026); catálogo de mensagens ISO 20022 (pacs.008 / pacs.002 / pacs.004); Estatísticas do Pix do Portal de Dados Abertos do BACEN (volume e TPS médio, jan-mai/2026).
 - **Nota de manutenção:** os números de volume/TPS e as versões de manuais citados aqui foram verificados nesta atualização; como o Pix e seus manuais operacionais mudam com frequência, revalide antes de reusar esses números em uma turma futura.
 - Michael Nygard, "Documenting Architecture Decisions" (origem do ADR).
-- Chris Richardson, catálogo de padrões de microsserviços — microservices.io/patterns (Event Sourcing, Transactional Outbox, Saga, CQRS, Circuit Breaker — padrões que o TechPix aplica ao longo do curso).
+- Chris Richardson, catálogo de padrões de microsserviços — microservices.io/patterns (Event Sourcing, Transactional Outbox, Saga, CQRS, Circuit Breaker — padrões que a TechPix aplica ao longo do curso).
 - Anthropic: documentação do Model Context Protocol; materiais sobre engenharia de contexto e agentes. GitHub Spec Kit (SDD) — repositório oficial: github.com/github/spec-kit (fluxo `/speckit.constitution → specify → clarify → plan → tasks → analyze → implement`, aplicado na Aula 3).
 
 </details>

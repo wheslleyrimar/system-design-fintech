@@ -87,7 +87,7 @@ title: "Aula 5 — Roteiro (fonte)"
 
 **Objetivo:** onde o peso mora se decide por sensibilidade do dado, não por moda.
 
-- **Contextualize:** o score é modelo pequeno treinado em casa — a questão aberto×API nasce quando o TechPix quer linguagem (dossiês, PLD-FT, copiloto).
+- **Contextualize:** o score é modelo pequeno treinado em casa — a questão aberto×API nasce quando a TechPix quer linguagem (dossiês, PLD-FT, copiloto).
 - **Desenhe a tabela de trade-offs:** LGPD / latência / custo em escala / capacidade / operação.
 - **Fala-âncora:** "**Núcleo com dado sensível → modelo aberto, dentro de casa. Borda sem dado sensível → API pode.** É o 'forte no núcleo, eventual na borda' da Aula 1, transplantado."
 - **Nomeie:** quantização e destilação — os dois botões que fazem modelo aberto caber no orçamento (sem entrar em como treinar).
@@ -141,7 +141,7 @@ title: "Aula 5 — Roteiro (fonte)"
 
 - Exercício rápido: dar 3 transações fictícias (valores/horários/idades de conta) + a tabela da política, e pedir a ação de cada uma — inclusive uma com score indisponível (testa se fixaram as linhas de fallback).
 - Discussão: "que feature vocês proporiam para o modelo — e qual vocês teriam vergonha de defender diante do regulador?" (aquece governança de features).
-- Voltar ao quadrante de divergências da sombra e perguntar qual dos dois lados (modelo mais rígido × regra mais rígida) custa mais caro para o TechPix — e por quê a resposta muda com o valor da transação.
+- Voltar ao quadrante de divergências da sombra e perguntar qual dos dois lados (modelo mais rígido × regra mais rígida) custa mais caro para a TechPix — e por quê a resposta muda com o valor da transação.
 
 ## Diagramas desta aula (HTML a produzir)
 

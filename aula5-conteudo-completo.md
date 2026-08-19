@@ -68,7 +68,7 @@ O fraudador não quebrou nenhuma regra. **Ele explorou o espaço entre as regras
 
 O prejuízo foi contido: o MED — o trilho de devolução que vocês conhecem desde a Aula 1, com a Recuperação de Valores rastreando o grafo de contas — recuperou boa parte, e o bloqueio cautelar de 72 horas congelou o resto antes do saque completo. Mas o recado ficou na parede da sala do time, escrito pelo Diego, do Antifraude, no dia seguinte: **"regra pega o golpe de ontem; padrão pega o golpe de hoje."**
 
-Essa frase é o tema da aula. Hoje a gente coloca um modelo de machine learning no núcleo do TechPix — dentro do caminho crítico do Pix, dentro daquele orçamento de 100 milissegundos — sem abrir mão de nada do que esse curso construiu até aqui: correção acima de disponibilidade, auditabilidade, falhar fechado. E no fim, eu vou mostrar como a mesma tecnologia entra do outro lado do balcão: não decidindo sobre transações, mas ajudando um humano a decidir melhor.
+Essa frase é o tema da aula. Hoje a gente coloca um modelo de machine learning no núcleo da TechPix — dentro do caminho crítico do Pix, dentro daquele orçamento de 100 milissegundos — sem abrir mão de nada do que esse curso construiu até aqui: correção acima de disponibilidade, auditabilidade, falhar fechado. E no fim, eu vou mostrar como a mesma tecnologia entra do outro lado do balcão: não decidindo sobre transações, mas ajudando um humano a decidir melhor.
 
 ---
 
@@ -101,7 +101,7 @@ E aqui entra o motivo regulatório, que em fintech nunca é rodapé: a LGPD dá 
 
 ### 1.3 Regra e modelo: camadas, não rivais
 
-Fica a pergunta: então jogamos as regras fora? Não — e essa é a segunda coisa para guardar. O Antifraude do TechPix depois desta aula tem **três camadas**, na ordem em que uma transação as atravessa:
+Fica a pergunta: então jogamos as regras fora? Não — e essa é a segunda coisa para guardar. O Antifraude da TechPix depois desta aula tem **três camadas**, na ordem em que uma transação as atravessa:
 
 1. **Regras duras** (microssegundos): lista de bloqueio, conta encerrada, limite regulatório estourado. Coisas que são proibidas por definição, onde não existe "score" — existe não. Rodam primeiro justamente porque são baratas: transação barrada aqui nem chega ao modelo.
 2. **Modelo** (dezenas de milissegundos): o score de risco sobre tudo que passou pelas regras duras.
@@ -181,7 +181,7 @@ Orçamento p99 da aresta Pagamentos → Antifraude ≈ 100 ms
   └─ folga para p99 (GC, fila, azar)       ~60 ms
 ```
 
-Duas observações de quem já carregou pager. Primeira: a folga não é gordura — é o que separa o p50 do p99. Um sistema que gasta 40 ms no caso típico estoura 100 ms no p99 com facilidade assustadora: uma pausa de garbage collector, um pico de fila, um cache frio. Se o seu caso típico já come 80 do orçamento de 100, o seu p99 mora em violação. Segunda: reparem que **a inferência não é a fatia maior**. O modelo de score de fraude do TechPix não é um modelo de linguagem gigante — é um classificador especializado (pensem numa floresta de árvores de decisão turbinada, ou numa rede pequena), treinado em casa, que roda em 10–20 ms numa CPU ou numa GPU modesta. A fatia perigosa é a de cima: **as features**.
+Duas observações de quem já carregou pager. Primeira: a folga não é gordura — é o que separa o p50 do p99. Um sistema que gasta 40 ms no caso típico estoura 100 ms no p99 com facilidade assustadora: uma pausa de garbage collector, um pico de fila, um cache frio. Se o seu caso típico já come 80 do orçamento de 100, o seu p99 mora em violação. Segunda: reparem que **a inferência não é a fatia maior**. O modelo de score de fraude da TechPix não é um modelo de linguagem gigante — é um classificador especializado (pensem numa floresta de árvores de decisão turbinada, ou numa rede pequena), treinado em casa, que roda em 10–20 ms numa CPU ou numa GPU modesta. A fatia perigosa é a de cima: **as features**.
 
 ### 2.2 Feature store: o rio de eventos vira alimento do modelo
 
@@ -292,7 +292,7 @@ E um aviso de arquiteto: essa separação é o motivo pelo qual o Antifraude est
 
 ## 3. Modelos abertos vs. API: onde o peso mora importa
 
-Até aqui, o modelo de score é pequeno, especializado, treinado em casa — essa questão nem se coloca. Mas o TechPix quer mais: resumir o histórico de um caso de fraude em linguagem natural, analisar a narrativa de uma comunicação de PLD-FT, montar dossiês. Isso pede modelo de linguagem — e aí surge a pergunta que hoje toda fintech enfrenta: **usar um modelo por API (pesos na nuvem de terceiro) ou rodar um modelo aberto (pesos na sua infra)?**
+Até aqui, o modelo de score é pequeno, especializado, treinado em casa — essa questão nem se coloca. Mas a TechPix quer mais: resumir o histórico de um caso de fraude em linguagem natural, analisar a narrativa de uma comunicação de PLD-FT, montar dossiês. Isso pede modelo de linguagem — e aí surge a pergunta que hoje toda fintech enfrenta: **usar um modelo por API (pesos na nuvem de terceiro) ou rodar um modelo aberto (pesos na sua infra)?**
 
 "Modelo aberto" — ou de **pesos abertos** — é um modelo cujos pesos você baixa e executa onde quiser: a família Llama e afins. A decisão entre ele e uma API não é ideológica; é uma tabela de trade-offs, e como sempre nesse curso, a resposta depende de *qual pedaço do sistema* está perguntando:
 
@@ -304,7 +304,7 @@ Até aqui, o modelo de score é pequeno, especializado, treinado em casa — ess
 | **Capacidade bruta** | Menor que os melhores modelos de fronteira | Estado da arte |
 | **Operação** | Sua: deploy, monitoramento, atualização de versão | Deles: você herda as mudanças, inclusive as que não pediu |
 
-A política do TechPix, que eu recomendo como padrão de mercado para fintech: **núcleo com dado sensível → modelo aberto, dentro de casa; borda sem dado sensível → API pode.** O copiloto que resume casos de fraude lê CPF, chave, extrato — roda dentro. Um assistente que reescreve texto de notificação genérica — pode ser API. É a mesma lógica de "forte no núcleo, eventual na borda" da Aula 1, transplantada: a fronteira não é técnica, é de *sensibilidade do dado e criticidade da decisão*.
+A política da TechPix, que eu recomendo como padrão de mercado para fintech: **núcleo com dado sensível → modelo aberto, dentro de casa; borda sem dado sensível → API pode.** O copiloto que resume casos de fraude lê CPF, chave, extrato — roda dentro. Um assistente que reescreve texto de notificação genérica — pode ser API. É a mesma lógica de "forte no núcleo, eventual na borda" da Aula 1, transplantada: a fronteira não é técnica, é de *sensibilidade do dado e criticidade da decisão*.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 880 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
@@ -351,7 +351,7 @@ A política do TechPix, que eu recomendo como padrão de mercado para fintech: *
   </g>
   <!-- regra -->
   <rect x="20" y="280" width="840" height="34" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
-  <text x="440" y="302" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#3730a3">A política do TechPix: núcleo com dado sensível → modelo aberto, dentro de casa · borda sem dado sensível → API pode. "Forte no núcleo, eventual na borda", transplantado.</text>
+  <text x="440" y="302" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#3730a3">A política da TechPix: núcleo com dado sensível → modelo aberto, dentro de casa · borda sem dado sensível → API pode. "Forte no núcleo, eventual na borda", transplantado.</text>
 </svg>
 <p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Onde o peso mora importa: a fronteira se decide pela sensibilidade do dado e pela criticidade da decisão, não pela moda.</p>
 </div>
@@ -429,7 +429,7 @@ E aqui a história fecha o círculo com uma ironia que eu fiz questão de trazer
 
 Reparem no desenho geral, porque ele vai reaparecer: rodar a mudança nova **ao lado** da antiga, com tráfego real, comparando resultados, antes de dar a ela o poder de decidir. Semana que vem, quando a gente for extrair serviços do monólito e falar de canary — a mudança nova recebendo primeiro 1% do tráfego, depois 5%, depois mais — vocês vão reconhecer o parentesco na hora. Shadow mode é o canary do componente não-determinístico: como não dá para ler o código do modelo num code review, a única revisão possível é **comportamental** — observar o que ele faz com a realidade, em volume, antes de deixá-lo tocar a realidade. Eu chamo isso de pagar o aluguel da confiança: modelo não entra no caminho crítico por ter métricas bonitas em laboratório; entra por ter semanas de comportamento observado em produção.
 
-A transição final no TechPix foi gradual até o fim: o modelo começou decidindo só a faixa de valores baixos (onde errar é barato), depois foi subindo, com as regras duras sempre na frente e a política sempre no comando. Em nenhum momento existiu um dia "liguem o modelo". Existiu um processo de semanas em que a confiança migrou, medida a medida.
+A transição final na TechPix foi gradual até o fim: o modelo começou decidindo só a faixa de valores baixos (onde errar é barato), depois foi subindo, com as regras duras sempre na frente e a política sempre no comando. Em nenhum momento existiu um dia "liguem o modelo". Existiu um processo de semanas em que a confiança migrou, medida a medida.
 
 E fica uma pergunta armada para daqui a duas aulas: em sombra, comparando com as regras, a gente sabia se o modelo estava bom. E *depois*, quando ele é quem decide e as semanas passam e o mundo muda — o fraudador se adapta, o perfil de cliente muda, chega o 13º salário — **como saber se o modelo continua bom?** Um modelo não quebra com stack trace. Guardem essa inquietação; ela tem nome, e a Aula 7 vai dar o nome e o instrumento.
 
@@ -439,13 +439,13 @@ E fica uma pergunta armada para daqui a duas aulas: em sombra, comparando com as
 
 ### 5.1 A manhã da Carla
 
-Até aqui, IA decidindo *sob* uma política, em milissegundos, sobre transações. Agora deixa eu apresentar a **Carla**, analista sênior de fraude do TechPix, porque o dia dela mostra o outro lugar — talvez o mais imediatamente valioso — onde essa tecnologia entra numa fintech.
+Até aqui, IA decidindo *sob* uma política, em milissegundos, sobre transações. Agora deixa eu apresentar a **Carla**, analista sênior de fraude da TechPix, porque o dia dela mostra o outro lugar — talvez o mais imediatamente valioso — onde essa tecnologia entra numa fintech.
 
 Quando o modelo (ou uma regra, ou o MED) abre um caso, é a Carla quem decide: bloqueia a conta? Devolve o dinheiro? Reporta às autoridades? E para decidir *um* caso, a Carla de setembro abria seis telas: o histórico de transações da conta, o cadastro no Identidade e Onboarding, o grafo de contas relacionadas (quem mandou para quem — o mesmo grafo da Recuperação de Valores da Aula 1), os casos anteriores parecidos, a fila do MED, a tela de marcações do DICT. Vinte minutos juntando contexto, cinco decidindo. A Carla não tem um problema de julgamento — tem um problema de *montagem de contexto*. E montagem de contexto é exatamente o que um modelo de linguagem com acesso a ferramentas faz bem.
 
 ### 5.2 O copiloto, e por que o MCP importa aqui
 
-O TechPix montou para a Carla um **copiloto**: um assistente baseado num modelo de linguagem (aberto, rodando dentro de casa — seção 3 aplicada) que, quando um caso abre, consulta os sistemas, monta o dossiê — "conta aberta há 23 dias, recebeu 340 Pix de R$ 49,90 entre 2h31 e 2h58, padrão compatível com os 3 casos do lote de outubro, grafo liga a 2 contas já marcadas no DICT" — e **sugere** uma classificação, com as evidências citadas uma a uma.
+A TechPix montou para a Carla um **copiloto**: um assistente baseado num modelo de linguagem (aberto, rodando dentro de casa — seção 3 aplicada) que, quando um caso abre, consulta os sistemas, monta o dossiê — "conta aberta há 23 dias, recebeu 340 Pix de R$ 49,90 entre 2h31 e 2h58, padrão compatível com os 3 casos do lote de outubro, grafo liga a 2 contas já marcadas no DICT" — e **sugere** uma classificação, com as evidências citadas uma a uma.
 
 Como o copiloto se conecta aos sistemas? Aqui volta uma sigla que o professor da Aula 1 plantou: **MCP, o Model Context Protocol** — o protocolo aberto, criado pela Anthropic, que padroniza como um modelo acessa ferramentas e dados. Em vez de N integrações artesanais entre o copiloto e cada sistema interno, cada contexto expõe um servidor MCP com ferramentas nomeadas: o Contas e Ledger expõe `consultar_historico`, o Antifraude expõe `casos_similares` e `grafo_de_contas`, o Devoluções e Disputas expõe `status_med`. O copiloto enxerga um cardápio de ferramentas tipadas — e o cardápio é a fronteira.
 
@@ -569,7 +569,7 @@ E antes do gancho, o retrato de plantão que eu tiro no fim de todo turno: o que
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 880 280" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
-  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 5</text>
+  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">A TechPix ao fim da Aula 5</text>
 
   <text x="20" y="44" font-family="sans-serif" font-size="10" font-weight="bold" fill="#a8a29e">JÁ EXISTIA — AULAS 1 A 4</text>
   <g font-family="sans-serif">
@@ -615,7 +615,7 @@ E antes do gancho, o retrato de plantão que eu tiro no fim de todo turno: o que
 
   <text x="440" y="266" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução do TechPix: a Aula 5 coloca inteligência dentro do orçamento de latência — sem tocar no ledger, sem tirar o humano do comando.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução da TechPix: a Aula 5 coloca inteligência dentro do orçamento de latência — sem tocar no ledger, sem tirar o humano do comando.</p>
 </div>
 
 E o gancho, porque este curso não anda sem: o Antifraude agora tem GPU, retreino mensal, perfil de tráfego próprio, um contrato de integração maduro na frente e um time dono. Ele não cabe mais confortavelmente dentro do monólito — os critérios de extração que o professor da Aula 3 listou estão, um a um, ficando verdes. Na próxima aula, a gente tira ele de lá. Ao vivo, com rede embaixo: canary, feature flag, rollback automático. E eu já aviso: a primeira tentativa vai dar errado — e vai dar errado *do jeito certo*.

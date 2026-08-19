@@ -15,7 +15,7 @@ title: "Aula 7 — Roteiro (fonte)"
 
 | Bloco | Tempo | Título | O que construir no Excalidraw |
 |---|---|---|---|
-| 1 | 0–8 | O dia 5 que não doeu | Linha do tempo do 5/12/2025: 313,3 mi nacional, 900 TPS no TechPix, painel verde |
+| 1 | 0–8 | O dia 5 que não doeu | Linha do tempo do 5/12/2025: 313,3 mi nacional, 900 TPS na TechPix, painel verde |
 | 2 | 8–18 | A reclamação da Ana: 9 segundos verdes | Média 1,9s · p99 3,4s · e um ponto vermelho fora de tudo |
 | 3 | 18–30 | Monitorar vs observar + os três pilares | Tabela das 3 perguntas: quanto? / o quê? / por onde? |
 | 4 | 30–44 | Métricas: RED, USE, percentis, cardinalidade | RED por serviço + a conta dos 100 milhões de séries |
@@ -33,7 +33,7 @@ title: "Aula 7 — Roteiro (fonte)"
 **Objetivo:** abrir com um anti-incidente — o contraste entre o dia 5 da Aula 2 e o 5/12/2025 é o argumento de venda da aula inteira.
 
 - **Fala-chave:** "Deixa eu começar de um jeito que nenhuma aula desse curso começou: sem incidente."
-- **Desenhe o Diagrama 1:** linha do tempo do dia do recorde — 313,3 milhões de transações no país (o número da Aula 1!), pico de 900 TPS no TechPix (a previsão da Lei de Little, cravada), utilização parando em 65%, abaixo da regra dos 70%.
+- **Desenhe o Diagrama 1:** linha do tempo do dia do recorde — 313,3 milhões de transações no país (o número da Aula 1!), pico de 900 TPS na TechPix (a previsão da Lei de Little, cravada), utilização parando em 65%, abaixo da regra dos 70%.
 - **Conecte:** Rafael, o on-call, passou o dia sem uma página. Canary de Devoluções progrediu 1%→100% no meio do pico como rotina.
 - **Fala-âncora:** "A diferença entre aquele dia 5 e este não é sorte — é que agora a gente enxerga."
 - **Armadilha:** não deixe virar autoelogio de ferramenta; o ponto é que enxergar tem disciplina e custo, e a aula ensina os dois.
@@ -63,7 +63,7 @@ title: "Aula 7 — Roteiro (fonte)"
 **Objetivo:** o essencial de métricas com as três pegadinhas que derrubam times no primeiro ano.
 
 - **Conduza — Parte A [30–36]:** RED por serviço (Rate, Errors, Duration) sobre a malha pós-Aula 6; USE por recurso. Conecte à Aula 2: saturação é o vigia do cotovelo ρ/(1−ρ) — fila avisa antes da utilização machucar.
-- **Nomeie:** duas métricas de primeira classe do TechPix: consumer lag (cicatriz da Aula 4) e contenção de lock em `pix_a_liquidar` (cicatriz da Aula 2). "Guardem a segunda — ela volta no fim da aula."
+- **Nomeie:** duas métricas de primeira classe da TechPix: consumer lag (cicatriz da Aula 4) e contenção de lock em `pix_a_liquidar` (cicatriz da Aula 2). "Guardem a segunda — ela volta no fim da aula."
 - **Conduza — Parte B [36–44]:** percentis: coleta em histograma; **percentil não se agrega por média** (p99 de 200ms + p99 de 2s ≠ 1,1s); a 900 TPS, 1% além do p99 = 540 transações/minuto invisíveis.
 - **Desenhe o Diagrama 4:** a conta da cardinalidade: 10 endpoints × 5 códigos = 50 séries; + `conta_id` (2 mi contas) = 100 milhões de séries. O Prometheus não morre de tráfego; morre de cardinalidade.
 - **Regra prática:** métrica é para agregado; identificador é para log e trace. "Essa pergunta se responde com outro pilar."
@@ -74,7 +74,7 @@ title: "Aula 7 — Roteiro (fonte)"
 **Objetivo:** log como evento de máquina, correlação obrigatória, e a revelação do E2E ID.
 
 - **Desenhe o Diagrama 5:** o JSON de log do retry da feature store (mostrar campos: `e2e_id`, `tentativa`, `timeout_ms`, `chave_pix: [MASCARADO]`).
-- **Fala-âncora:** "O regulador obrigou o TechPix a ter rastreamento distribuído antes de a gente saber o nome disso." O EndToEndId da Aula 1 — o mesmo da idempotência e da reconciliação — é o ID de correlação natural de todo o fluxo Pix.
+- **Fala-âncora:** "O regulador obrigou a TechPix a ter rastreamento distribuído antes de a gente saber o nome disso." O EndToEndId da Aula 1 — o mesmo da idempotência e da reconciliação — é o ID de correlação natural de todo o fluxo Pix.
 - **Pergunte:** "O que NUNCA entra num log de fintech?" (chave Pix, CPF, credencial — LGPD; mascaramento na biblioteca central, verificado por fitness function no CI, no espírito da Aula 2).
 - **Conduza:** sampling com viés — 100% de erros/warnings, fração do caminho feliz; trace amostrado retém seus logs. Distinga: log operacional se amostra; ledger (registro contábil) jamais.
 - **Armadilha:** alguém vai propor "logar tudo em DEBUG e filtrar depois". Resposta: DEBUG vaza para produção no primeiro incidente, e a fatura de armazenamento chega antes.
@@ -129,7 +129,7 @@ title: "Aula 7 — Roteiro (fonte)"
 
 **Objetivo:** escrever o artefato da aula ao vivo e armar o gancho final do curso.
 
-- **Escreva ao vivo (Diagrama 10a):** o Catálogo de SLOs do TechPix — por linha: SLI, SLO, budget, dono (Pix ponta a ponta 99,95%/3,5s; ledger p99 ≤ 80ms; lag do extrato ≤ 300ms; antifraude ≤ 100ms + fallback ≤ 0,5%; DICT herdado ≤ 1s). Frise: artefato da família da spec — "o próximo ADR numerado, o 003, só nasce quando alguém decidir mexer na escrita do ledger — e hoje não é esse dia."
+- **Escreva ao vivo (Diagrama 10a):** o Catálogo de SLOs da TechPix — por linha: SLI, SLO, budget, dono (Pix ponta a ponta 99,95%/3,5s; ledger p99 ≤ 80ms; lag do extrato ≤ 300ms; antifraude ≤ 100ms + fallback ≤ 0,5%; DICT herdado ≤ 1s). Frise: artefato da família da spec — "o próximo ADR numerado, o 003, só nasce quando alguém decidir mexer na escrita do ledger — e hoje não é esse dia."
 - **Desenhe o Diagrama 10b — o final:** a série de 5 meses: p99 de escrita do ledger 42→45→49→54→58ms; contenção do lock 3,1%→7,2%; TPS 410→700. Tudo verde. Tudo subindo.
 - **Fala-âncora:** "Isso não é um incidente. Não viola SLO. Não acorda o Rafael. É uma tendência lenta que um dia cruza um limiar — e a linha 'Revisão' do ADR-002 está persistindo nos meus dashboards, não mais como hipótese."
 - **Pergunte (e deixe no ar):** "Quem lê esse sinal? Um humano esquece, um alerta não dispara para tendência, uma reunião trimestral olha para trás." (não responda — É o gancho.)

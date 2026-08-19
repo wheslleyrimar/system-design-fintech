@@ -8,11 +8,11 @@ title: "Aula 8 — Arquitetura Evolutiva com IA, Agentes e Feedback Contínuo"
 
 > **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · **Aula 8 (você está aqui)**
 
-Faz um tempo que a gente não se via. Deixa eu recapitular rapidinho o que aconteceu com o TechPix nesse meio-tempo, porque isso importa para o que eu vou mostrar hoje.
+Faz um tempo que a gente não se via. Deixa eu recapitular rapidinho o que aconteceu com a TechPix nesse meio-tempo, porque isso importa para o que eu vou mostrar hoje.
 
 Na Aula 1, a gente decidiu, na fé, que o ledger seria forte, síncrono, ACID — o ADR-001. Eu deixei uma linha em aberto naquele registro: "a consequência de latência será medida em produção; se o p99 ameaçar o SLA, reavaliar em novo ADR." Na Aula 2, a produção já tinha opinião: um pico de tráfego expôs um ponto quente no ledger e a chamada síncrona ao DICT esgotando o pool de conexões. A gente respondeu com o ADR-002 — outbox, CQRS, leitura desacoplada da escrita — e deixei outra linha em aberto: "se a contenção persistir, o próximo passo é reparticionar a própria escrita do ledger." Na Aula 3, a gente aprendeu a desenhar fronteiras de verdade, por event storming, e formalizou o contexto de Pagamentos com uma spec executável.
 
-Depois disso, outros professores pegaram o TechPix e continuaram a obra: quebraram o monólito em serviços, guiados exatamente pelos bounded contexts que a gente desenhou juntos; colocaram tudo para rodar com deploy contínuo via ArgoCD, com canary e feature flags; construíram comunicação resiliente entre esses serviços; e instrumentaram observabilidade de ponta a ponta — métricas, logs, tracing. O TechPix que existe hoje, no dia em que essa aula acontece, é um sistema maduro, em produção, com meses de dados reais de comportamento sob carga.
+Depois disso, outros professores pegaram a TechPix e continuaram a obra: quebraram o monólito em serviços, guiados exatamente pelos bounded contexts que a gente desenhou juntos; colocaram tudo para rodar com deploy contínuo via ArgoCD, com canary e feature flags; construíram comunicação resiliente entre esses serviços; e instrumentaram observabilidade de ponta a ponta — métricas, logs, tracing. A TechPix que existe hoje, no dia em que essa aula acontece, é um sistema maduro, em produção, com meses de dados reais de comportamento sob carga.
 
 E aquela segunda linha em aberto, do ADR-002 — "se a contenção persistir" —, continua lá, sem resposta. Até hoje.
 
@@ -22,7 +22,7 @@ Essa é a aula que fecha o círculo. Na Aula 1 eu disse: "hoje vocês decidiram 
 
 ## 1. Arquitetura evolutiva, agora madura
 
-Lembram da Aula 2, quando eu disse "arquitetura é filme, não foto"? Naquela altura, isso ainda era uma virada de postura — uma forma de vocês pensarem sobre o sistema. Hoje, com o TechPix maduro, essa ideia virou **mecanismo**, não só metáfora. As fitness functions que eu apresentei lá não são mais testes isolados que alguém roda de vez em quando — elas viraram um tecido contínuo de validação, rodando o tempo inteiro, gerando sinal em tempo real sobre a saúde de cada característica arquitetural que importa. E o próximo passo natural, que é o assunto de hoje, é perguntar: **quem lê esse sinal, e o que essa entidade pode fazer com ele?**
+Lembram da Aula 2, quando eu disse "arquitetura é filme, não foto"? Naquela altura, isso ainda era uma virada de postura — uma forma de vocês pensarem sobre o sistema. Hoje, com a TechPix maduro, essa ideia virou **mecanismo**, não só metáfora. As fitness functions que eu apresentei lá não são mais testes isolados que alguém roda de vez em quando — elas viraram um tecido contínuo de validação, rodando o tempo inteiro, gerando sinal em tempo real sobre a saúde de cada característica arquitetural que importa. E o próximo passo natural, que é o assunto de hoje, é perguntar: **quem lê esse sinal, e o que essa entidade pode fazer com ele?**
 
 A resposta que a maioria dos times dava até pouco tempo atrás era: um humano lê um dashboard, de vez em quando, e decide. Isso funciona, mas tem um limite físico óbvio — humano não olha dashboard 24 horas por dia, e a maioria dos sinais interessantes aparece exatamente nos momentos em que ninguém está olhando. A resposta que eu quero apresentar hoje é: **um agente pode ler esse sinal continuamente, e propor mudanças — sob um conjunto de restrições que tornam isso seguro até para uma fintech.** É disso que essa aula inteira trata.
 
@@ -52,7 +52,7 @@ Esse último ponto merece destaque. Um Harness de verdade não depende de um hum
 
 Agora eu preciso ser desconfortável com vocês, porque aqui mora o erro mais comum — e mais silencioso — de todo processo de entrega progressiva. A pergunta é: **quando você olha o painel do canary e ele "parece bom", o que exatamente isso significa?**
 
-Vamos fazer a conta. Suponham que o TechPix tem uma taxa de erro normal de 0,1% — um erro a cada mil transações. Vocês colocam um canary em 1% do tráfego. No pico de 900 transações por segundo, 1% dá 9 transações por segundo no canary. Em cinco minutos, são cerca de 2.700 transações — e, na taxa normal, isso significa **entre 2 e 3 erros esperados**.
+Vamos fazer a conta. Suponham que a TechPix tem uma taxa de erro normal de 0,1% — um erro a cada mil transações. Vocês colocam um canary em 1% do tráfego. No pico de 900 transações por segundo, 1% dá 9 transações por segundo no canary. Em cinco minutos, são cerca de 2.700 transações — e, na taxa normal, isso significa **entre 2 e 3 erros esperados**.
 
 Agora a pergunta séria: se vocês observam **5 erros** em vez de 3, a nova versão está pior? Ou vocês só tiveram azar?
 
@@ -179,21 +179,21 @@ Voltando à definição que eu dei lá atrás: o Harness é composto pelas invar
 
 ## 3. As quatro disciplinas, agora em produção de verdade
 
-Eu apresentei quatro disciplinas na Aula 1, ainda como sementes conceituais. Hoje, com o TechPix maduro e um agente de verdade participando do loop, eu quero mostrar cada uma delas operando com dados reais.
+Eu apresentei quatro disciplinas na Aula 1, ainda como sementes conceituais. Hoje, com a TechPix maduro e um agente de verdade participando do loop, eu quero mostrar cada uma delas operando com dados reais.
 
 ### 3.1 Spec-Driven Development, pagando o que prometeu
 
-Lembram que eu disse, na Aula 1: "no mundo do SDD, escrever a arquitetura com clareza é programar o sistema — e é, ao mesmo tempo, gerar o próprio aparato de validação"? Hoje isso deixa de ser afirmação e vira demonstração. A spec do contexto de Pagamentos, que a gente escreveu na Aula 3 — com a invariante "todo pagamento tem EndToEndId único", com a regra "nunca envia ao SPI sem FundosReservados confirmado" — não é um documento arquivado. Ela é o que torna possível um agente propor uma mudança na implementação do TechPix **sem que um humano precise reler o sistema inteiro do zero para verificar se a proposta é segura.** A spec já diz, de forma executável, o que não pode ser violado.
+Lembram que eu disse, na Aula 1: "no mundo do SDD, escrever a arquitetura com clareza é programar o sistema — e é, ao mesmo tempo, gerar o próprio aparato de validação"? Hoje isso deixa de ser afirmação e vira demonstração. A spec do contexto de Pagamentos, que a gente escreveu na Aula 3 — com a invariante "todo pagamento tem EndToEndId único", com a regra "nunca envia ao SPI sem FundosReservados confirmado" — não é um documento arquivado. Ela é o que torna possível um agente propor uma mudança na implementação da TechPix **sem que um humano precise reler o sistema inteiro do zero para verificar se a proposta é segura.** A spec já diz, de forma executável, o que não pode ser violado.
 
 ### 3.2 Context Engineering, com um bounded context de verdade dentro da janela
 
-Na Aula 3, eu fechei uma ideia que ficou abstrata até então: "o bounded context de vocês é, literalmente, a unidade de contexto que um agente deveria receber." Hoje eu quero mostrar isso em ação, concretamente, com o TechPix real.
+Na Aula 3, eu fechei uma ideia que ficou abstrata até então: "o bounded context de vocês é, literalmente, a unidade de contexto que um agente deveria receber." Hoje eu quero mostrar isso em ação, concretamente, com a TechPix real.
 
 Quando o agente de que eu vou falar daqui a pouco investiga o ponto quente do ledger, o que entra na janela de contexto dele é, exatamente: a spec do contexto de Contas e Ledger, com suas invariantes; o ADR-001 e o ADR-002, com o histórico de decisões e o porquê de cada uma; as métricas de produção relevantes — p99 de escrita, taxa de contenção de lock, volume de transações por segundo; e o glossário da linguagem ubíqua daquele contexto, para o agente nunca confundir "conta" no sentido do Ledger com "conta" no sentido de Identidade, o mesmo erro que o Diego e a Marina cometeram na Aula 3. O que **não** entra na janela dele: os detalhes internos do contexto de Antifraude, os modelos de risco, qualquer coisa que não faça parte do contrato publicado entre contextos. Essa disciplina de exclusão é tão importante quanto a de inclusão — um agente com contexto demais raciocina pior, não melhor, exatamente como eu expliquei na Aula 1 sobre o fenômeno chamado "context rot".
 
 **Orçamento de contexto — a mesma disciplina do orçamento de latência.** E aqui vale fazer uma conta, porque o paralelo com a Aula 1 é bonito. A janela de contexto de um agente é finita — grande nos modelos atuais, mas finita — e cada coisa que vocês colocam nela compete com as outras. Isso é, estruturalmente, **o mesmo problema do orçamento de 40 segundos do Pix**: um recurso fixo, disputado por vários consumidores, onde a disciplina é decidir explicitamente quem ganha qual fatia.
 
-Pensem no orçamento do agente do TechPix: a spec do contexto é conteúdo denso e indispensável — ela fica. Os ADRs relevantes, idem. As métricas de produção são o dado fresco que justifica a investigação — ficam, mas em forma **agregada**, não bruta: não faz sentido despejar milhões de linhas de log quando o que importa é a série temporal do p99. E o histórico da própria conversa do agente cresce a cada iteração do loop — e é justamente ele que precisa de **compactação**: resumir o que já foi decidido, descartar o caminho de raciocínio que não levou a nada.
+Pensem no orçamento do agente da TechPix: a spec do contexto é conteúdo denso e indispensável — ela fica. Os ADRs relevantes, idem. As métricas de produção são o dado fresco que justifica a investigação — ficam, mas em forma **agregada**, não bruta: não faz sentido despejar milhões de linhas de log quando o que importa é a série temporal do p99. E o histórico da própria conversa do agente cresce a cada iteração do loop — e é justamente ele que precisa de **compactação**: resumir o que já foi decidido, descartar o caminho de raciocínio que não levou a nada.
 
 A decisão de arquitetura, aqui, é a **estratégia de recuperação**: em vez de colocar toda a documentação do sistema na janela "por precaução", vocês dão ao agente uma **ferramenta de busca** e deixam ele puxar o que precisa, quando precisa. É a diferença entre entregar a biblioteca inteira e entregar um cartão da biblioteca. E reparem que essa decisão tem exatamente o mesmo formato do trade-off cache vs. banco da topologia: manter perto o que é sempre usado, buscar sob demanda o que é raramente usado.
 
@@ -334,7 +334,7 @@ Agora deixa eu contar, passo a passo, o que aconteceu quando finalmente alguém 
 
 **Orientar.** O agente recupera, do servidor de specs e ADRs, o ADR-001 e o ADR-002 inteiros — não resumos, os documentos completos, com contexto, decisão e a linha de revisão em aberto. Ele também recupera a spec do contexto de Contas e Ledger, com a invariante Σ débitos igual Σ créditos. Ele correlaciona: o padrão de contenção bate exatamente com o que o ADR-002 previu como possível — a escrita continua concentrada, mesmo com a leitura já desacoplada.
 
-**Decidir.** O agente propõe um rascunho de ADR-003: reparticionar a escrita do ledger, distribuindo os lançamentos por uma chave de partição derivada da conta do cliente, em vez de concentrar tudo na mesma conta única de liquidação que a gente usou como exemplo simplificado desde a Aula 1. A reconciliação com o Banco Central passaria a agregar entre partições periodicamente, em vez de depender de uma escrita sequencial única. O agente gera, junto com a proposta, a spec atualizada e os testes derivados das invariantes — o mesmo mecanismo de SDD que a gente viu na Aula 1 e na Aula 3, só que agora gerado automaticamente a partir da spec existente. Na prática, isso nasce como um novo diretório em `specs/` no Spec Kit do TechPix — `spec.md` e `plan.md` da mudança proposta, verificados pelo `/speckit.analyze` contra a constituição que a Aula 3 escreveu: a proposta do agente entra pelo mesmo fluxo, e pelas mesmas regras, que uma proposta humana entraria.
+**Decidir.** O agente propõe um rascunho de ADR-003: reparticionar a escrita do ledger, distribuindo os lançamentos por uma chave de partição derivada da conta do cliente, em vez de concentrar tudo na mesma conta única de liquidação que a gente usou como exemplo simplificado desde a Aula 1. A reconciliação com o Banco Central passaria a agregar entre partições periodicamente, em vez de depender de uma escrita sequencial única. O agente gera, junto com a proposta, a spec atualizada e os testes derivados das invariantes — o mesmo mecanismo de SDD que a gente viu na Aula 1 e na Aula 3, só que agora gerado automaticamente a partir da spec existente. Na prática, isso nasce como um novo diretório em `specs/` no Spec Kit da TechPix — `spec.md` e `plan.md` da mudança proposta, verificados pelo `/speckit.analyze` contra a constituição que a Aula 3 escreveu: a proposta do agente entra pelo mesmo fluxo, e pelas mesmas regras, que uma proposta humana entraria.
 
 **Agir — mas sob o Harness.** A proposta não vai direto para produção. Ela é aberta como um rascunho de ADR, com status "proposto", esperando revisão humana. Um arquiteto humano lê o ADR-003, os testes gerados, e aprova. Só depois disso o rollout começa: a nova partição de escrita entra atrás de uma feature flag, com canary em 1% do tráfego, com guardrails explícitos — a invariante do ledger batendo na reconciliação, o p99 não passando de um limite pré-definido, a taxa de erro não subindo. Se qualquer guardrail falhar, o rollback é automático e imediato.
 
@@ -485,7 +485,7 @@ Guardem essa frase, porque é o resumo do curso inteiro: hoje vocês decidiram n
 <p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O arco do curso: cada decisão deixou uma pergunta em aberto, e a produção — lida por um agente, sob o Harness — respondeu.</p>
 </div>
 
-E para fechar de verdade, deixa eu desenhar o TechPix inteiro — não como ele nasceu, mas como ele está hoje, com cada peça carregando a etiqueta da aula em que foi construída. Reparem: nenhuma dessas caixas entrou por moda. Cada uma nasceu de uma dor concreta — um pagamento duplicado, um dia 5, um substantivo ambíguo, um extrato congelado, um golpe de madrugada, um pool mal dimensionado, um Pix de 9 segundos — e é por isso que o desenho se sustenta.
+E para fechar de verdade, deixa eu desenhar a TechPix inteira — não como ela nasceu, mas como ela está hoje, com cada peça carregando a etiqueta da aula em que foi construída. Reparem: nenhuma dessas caixas entrou por moda. Cada uma nasceu de uma dor concreta — um pagamento duplicado, um dia 5, um substantivo ambíguo, um extrato congelado, um golpe de madrugada, um pool mal dimensionado, um Pix de 9 segundos — e é por isso que o desenho se sustenta.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 660" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
@@ -500,7 +500,7 @@ E para fechar de verdade, deixa eu desenhar o TechPix inteiro — não como ele 
       <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
     </marker>
   </defs>
-  <text x="450" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#1a1a1a">O TechPix completo — construído aula a aula</text>
+  <text x="450" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#1a1a1a">A TechPix completa — construída aula a aula</text>
 
   <!-- Clientes -->
   <rect x="40" y="40" width="180" height="48" rx="9" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
@@ -597,7 +597,7 @@ E para fechar de verdade, deixa eu desenhar o TechPix inteiro — não como ele 
 
   <text x="450" y="646" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">Oito aulas, um sistema — cada caixa nasceu de uma dor concreta.</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O fechamento da construção: a arquitetura completa do TechPix, com a stack real e a aula em que cada componente entrou — [A1] ledger e BACEN, [A2] Outbox/Kafka/CQRS, [A3] fronteiras, [A4] contratos e resiliência, [A5] IA no núcleo, [A6] serviços e entrega, [A7] observabilidade, [A8] o agente sob o Harness.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O fechamento da construção: a arquitetura completa da TechPix, com a stack real e a aula em que cada componente entrou — [A1] ledger e BACEN, [A2] Outbox/Kafka/CQRS, [A3] fronteiras, [A4] contratos e resiliência, [A5] IA no núcleo, [A6] serviços e entrega, [A7] observabilidade, [A8] o agente sob o Harness.</p>
 </div>
 
 ---

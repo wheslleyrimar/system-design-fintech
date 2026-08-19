@@ -8,11 +8,11 @@ title: "Aula 3 — Modelagem de Domínio e Decisões Arquiteturais"
 
 > **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · **Aula 3 (você está aqui)** · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
 
-Eu terminei a última aula com uma confissão: desenhei as fronteiras do monólito do TechPix meio no olho. "Tem um módulo de Contas, tem um de Pagamentos, tem um de Antifraude" — e apontei essas divisões como se fossem óbvias. Hoje eu quero mostrar por que isso é perigoso, e dar para vocês uma técnica sistemática para nunca mais precisarem confiar só no palpite.
+Eu terminei a última aula com uma confissão: desenhei as fronteiras do monólito da TechPix meio no olho. "Tem um módulo de Contas, tem um de Pagamentos, tem um de Antifraude" — e apontei essas divisões como se fossem óbvias. Hoje eu quero mostrar por que isso é perigoso, e dar para vocês uma técnica sistemática para nunca mais precisarem confiar só no palpite.
 
 Deixa eu contar uma história — dessa vez, não é um pico de tráfego. É pior, porque é mais silenciosa.
 
-No TechPix, o time de Antifraude construiu uma regra de limite diário: nenhuma conta pode movimentar mais que um certo valor por dia, sem passar por verificação extra. O Diego, que trabalhava nesse time, implementou a regra olhando para o que ele chamava de "conta" — no vocabulário dele, isso significava a identidade do cliente, o cadastro, o CPF verificado no onboarding. Enquanto isso, do outro lado do prédio, a Marina, no time de Pagamentos, também usava a palavra "conta" — só que para ela, "conta" significava uma sub-carteira dentro do ledger, porque o TechPix permitia que um mesmo cliente tivesse mais de uma carteira interna, uma para uso pessoal e outra para um pequeno negócio.
+No TechPix, o time de Antifraude construiu uma regra de limite diário: nenhuma conta pode movimentar mais que um certo valor por dia, sem passar por verificação extra. O Diego, que trabalhava nesse time, implementou a regra olhando para o que ele chamava de "conta" — no vocabulário dele, isso significava a identidade do cliente, o cadastro, o CPF verificado no onboarding. Enquanto isso, do outro lado do prédio, a Marina, no time de Pagamentos, também usava a palavra "conta" — só que para ela, "conta" significava uma sub-carteira dentro do ledger, porque a TechPix permitia que um mesmo cliente tivesse mais de uma carteira interna, uma para uso pessoal e outra para um pequeno negócio.
 
 Ninguém mentiu. Ninguém foi descuidado. Os dois times escreveram código correto, testado, revisado — cada um dentro da sua própria definição de "conta". Só que um cliente esperto, com duas carteiras, conseguia dobrar o limite diário sem disparar nenhum alerta, porque a regra do Diego olhava a identidade (uma só), e o sistema de Pagamentos da Marina operava por carteira (duas). O bug não morava em nenhuma linha de código. Ele morava **entre** os dois times, no espaço onde a mesma palavra significava duas coisas diferentes, e ninguém tinha percebido.
 
@@ -70,7 +70,7 @@ A disciplina que dá nome a esse problema, e ferramentas para resolvê-lo, chama
 
 A primeira ideia é a **linguagem ubíqua**: dentro de um contexto específico — e "contexto" aqui já é o segundo conceito, eu chego lá — todo mundo, do engenheiro ao especialista de negócio, usa exatamente as mesmas palavras, com exatamente o mesmo significado, para as mesmas coisas. Se o time de negócio chama uma coisa de "transferência" e o código chama a mesma coisa de "transfer_operation", vocês já perderam a linguagem ubíqua — e cada tradução mental que alguém precisa fazer entre "o que o negócio fala" e "o que o código diz" é um lugar onde um bug se esconde.
 
-Mas reparem numa nuance importante, porque é exatamente o que pegou o Diego e a Marina: a linguagem ubíqua **não é global**. Ela vale dentro de um contexto. Fora dele, a mesma palavra pode — e frequentemente deve — significar outra coisa. O erro do TechPix não foi ter duas definições de "conta". O erro foi não saber que existiam duas definições, e não ter uma fronteira nomeada e explícita separando as duas.
+Mas reparem numa nuance importante, porque é exatamente o que pegou o Diego e a Marina: a linguagem ubíqua **não é global**. Ela vale dentro de um contexto. Fora dele, a mesma palavra pode — e frequentemente deve — significar outra coisa. O erro da TechPix não foi ter duas definições de "conta". O erro foi não saber que existiam duas definições, e não ter uma fronteira nomeada e explícita separando as duas.
 
 ### 1.2 Bounded context
 
@@ -205,7 +205,7 @@ Reparem que eu não impus essa divisão no início da aula. Ela **emergiu** dos 
   <text x="590" y="246" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7f1d1d">PixDevolvido</text>
   <text x="790" y="246" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#57534e">MED, reclamações, disputas</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Os 5 bounded contexts do TechPix emergindo do agrupamento dos eventos — de baixo para cima, não por palpite.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Os 5 bounded contexts da TechPix emergindo do agrupamento dos eventos — de baixo para cima, não por palpite.</p>
 </div>
 
 E aqui está o ponto que eu quero que vocês levem: se o Diego e a Marina tivessem feito esse exercício juntos, na mesma sala, com os post-its na mesma mesa, o momento em que "conta" aparecesse duas vezes, com dois significados, teria sido visível na hora — porque um post-it do contexto de Identidade e um post-it do contexto de Ledger, os dois dizendo "conta", ficariam lado a lado, forçando a pergunta: "espera, essa é a mesma conta?"
@@ -222,13 +222,13 @@ A relação mais comum é **upstream/downstream**: um contexto upstream toma dec
 
 ### 3.2 A camada anticorrupção — o ACL
 
-E aqui está a relação mais importante para uma fintech: o **ACL**, a Anti-Corruption Layer, a camada anticorrupção. Ela existe quando o contexto de vocês precisa conversar com um sistema externo — cuja linguagem vocês não controlam — sem deixar essa linguagem externa **vazar** para dentro do domínio de vocês. E o TechPix já tem um ACL, desde a Aula 1, só que sem esse nome: é exatamente a camada que traduz a mensagem `pacs.008` do padrão ISO 20022, do jeito que o Banco Central define, para o evento de domínio "PixIniciado", do jeito que o TechPix entende. Se amanhã o Banco Central mudar o formato de uma mensagem — coisa que acontece, como vimos com o Pix Automático na Aula 1 —, o ACL absorve essa mudança sozinho, e o resto do domínio de vocês nem precisa saber que algo mudou do lado de fora.
+E aqui está a relação mais importante para uma fintech: o **ACL**, a Anti-Corruption Layer, a camada anticorrupção. Ela existe quando o contexto de vocês precisa conversar com um sistema externo — cuja linguagem vocês não controlam — sem deixar essa linguagem externa **vazar** para dentro do domínio de vocês. E a TechPix já tem um ACL, desde a Aula 1, só que sem esse nome: é exatamente a camada que traduz a mensagem `pacs.008` do padrão ISO 20022, do jeito que o Banco Central define, para o evento de domínio "PixIniciado", do jeito que a TechPix entende. Se amanhã o Banco Central mudar o formato de uma mensagem — coisa que acontece, como vimos com o Pix Automático na Aula 1 —, o ACL absorve essa mudança sozinho, e o resto do domínio de vocês nem precisa saber que algo mudou do lado de fora.
 
 ### 3.3 Outras relações do vocabulário
 
 Vale conhecer mais duas: o **conformista** — quando um contexto simplesmente aceita o modelo de outro, sem tradução nenhuma, porque não vale a pena o esforço de traduzir (às vezes o time de Cartões simplesmente aceita o vocabulário do Ledger tal como é, sem um ACL) — e o **shared kernel**, o núcleo compartilhado — quando dois contextos deliberadamente compartilham uma fatia pequena e bem definida de modelo, porque separar completamente custaria mais do que vale a pena (talvez o conceito de "moeda" e "valor monetário" seja um shared kernel entre Ledger e Pagamentos, porque seria estranho cada um ter sua própria definição de como representar um valor em reais).
 
-### 3.4 O context map do TechPix
+### 3.4 O context map da TechPix
 
 Juntando tudo: no centro, o contexto de **Contas e Ledger**, upstream de quase tudo. Ao lado, **Pagamentos**, que orquestra o Pix e fala com o mundo externo através de um **ACL** — e é exatamente aqui, nessa fronteira, que moram as mensagens `pacs.008`, `pacs.002`, `pacs.004`, e a consulta ao DICT. **Antifraude** conversa com Pagamentos de forma síncrona, no meio do fluxo, mas tem sua própria linguagem e seus próprios modelos de risco. **Identidade** é upstream de todo mundo que precisa saber quem é o cliente. E **Devoluções** cuida do que acontece quando o MED entra em cena, conversando tanto com Pagamentos quanto, de novo, com um ACL para o próprio DICT — porque o relato de infração, como vimos na Aula 1, também passa por lá.
 
@@ -299,11 +299,11 @@ Juntando tudo: no centro, o contexto de **Contas e Ledger**, upstream de quase t
   <!-- BACEN -->
   <rect x="390" y="400" width="360" height="44" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
   <text x="570" y="419" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Mundo externo: BACEN — DICT · SPI (ISO 20022)</text>
-  <text x="570" y="436" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#8a6d1a">linguagem que o TechPix NÃO controla — só entra traduzida pelo ACL</text>
+  <text x="570" y="436" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#8a6d1a">linguagem que a TechPix NÃO controla — só entra traduzida pelo ACL</text>
   <line x1="180" y1="380" x2="390" y2="415" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
   <line x1="330" y1="380" x2="395" y2="405" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O context map do TechPix: upstream/downstream, a conversa síncrona Pagamentos↔Antifraude, o conformista, o shared kernel — e os ACLs blindando o domínio da linguagem do BACEN.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O context map da TechPix: upstream/downstream, a conversa síncrona Pagamentos↔Antifraude, o conformista, o shared kernel — e os ACLs blindando o domínio da linguagem do BACEN.</p>
 </div>
 
 ---
@@ -376,7 +376,7 @@ Reparem no que acabou de acontecer: as regras 2 e 4 estão em **tensão direta**
 - **Agregado grande:** mais coisas protegidas transacionalmente, mais fácil de garantir invariantes complexas — mas **mais contenção**, porque tudo compete pelo mesmo lock.
 - **Agregado pequeno:** menos contenção, escala muito melhor — mas **mais consistência eventual** para gerenciar, mais eventos, mais compensação, mais complexidade de raciocínio sobre estados intermediários.
 
-E agora conectem com a Aula 2: **o ponto quente do ledger, que derrubou o TechPix no dia 5, era um problema de agregado grande demais.** A conta de liquidação `pix_a_liquidar` estava, efetivamente, dentro da fronteira transacional de todas as transações do sistema ao mesmo tempo. Não era um problema de banco de dados; era um problema de **modelagem de domínio** que se manifestou como problema de banco de dados.
+E agora conectem com a Aula 2: **o ponto quente do ledger, que derrubou a TechPix no dia 5, era um problema de agregado grande demais.** A conta de liquidação `pix_a_liquidar` estava, efetivamente, dentro da fronteira transacional de todas as transações do sistema ao mesmo tempo. Não era um problema de banco de dados; era um problema de **modelagem de domínio** que se manifestou como problema de banco de dados.
 
 Deixem isso decantar, porque a implicação é forte: quando a gente falou de "reparticionar a escrita do ledger" na Aula 2, a gente estava falando, em vocabulário de DDD, de **redesenhar a fronteira do agregado**. O `hash(conta_id) mod N` da Aula 1 e a decisão de "que dados vivem dentro deste agregado" são a mesma decisão, vista de dois ângulos — um de infraestrutura, um de domínio.
 
@@ -384,7 +384,7 @@ E é por isso que eu insisto que essas três aulas são uma só: a contenção q
 
 ### 4.3 O problema do agregado grande na prática do Pix
 
-Vamos aterrissar isso no TechPix com um exemplo concreto e discutível — do tipo que dá boa discussão em sala.
+Vamos aterrissar isso na TechPix com um exemplo concreto e discutível — do tipo que dá boa discussão em sala.
 
 Pergunta: **o limite diário de transferência do cliente pertence ao agregado da Conta?**
 
@@ -463,9 +463,9 @@ techpix/
 └── (o código, derivado de tudo isso)
 ```
 
-E o fluxo é uma sequência de comandos de barra, cada um produzindo um artefato que alimenta o próximo. Deixa eu passar por eles mapeando no nosso TechPix, porque é aqui que a aula inteira se encaixa na ferramenta:
+E o fluxo é uma sequência de comandos de barra, cada um produzindo um artefato que alimenta o próximo. Deixa eu passar por eles mapeando na nossa TechPix, porque é aqui que a aula inteira se encaixa na ferramenta:
 
-**`/speckit.constitution`** — estabelece os princípios inegociáveis do projeto, em `.specify/memory/constitution.md`. E reparem no encaixe: a constituição do TechPix já está escrita, a gente só não sabia o nome. São as invariantes que atravessam o curso desde a Aula 1 — Σ débitos = Σ créditos, todo pagamento tem EndToEndId único, saldo nunca fica negativo, consistência forte no núcleo e eventual na borda, na dúvida falhar fechado, respeitar o rate limit do DICT e o teto de 40 segundos. O ADR registra a decisão e o porquê dela; a constituição **destila o que ficou decidido** em regra que o agente consulta a cada feature nova. São artefatos irmãos: o ADR é a jurisprudência, a constituição é a lei consolidada.
+**`/speckit.constitution`** — estabelece os princípios inegociáveis do projeto, em `.specify/memory/constitution.md`. E reparem no encaixe: a constituição da TechPix já está escrita, a gente só não sabia o nome. São as invariantes que atravessam o curso desde a Aula 1 — Σ débitos = Σ créditos, todo pagamento tem EndToEndId único, saldo nunca fica negativo, consistência forte no núcleo e eventual na borda, na dúvida falhar fechado, respeitar o rate limit do DICT e o teto de 40 segundos. O ADR registra a decisão e o porquê dela; a constituição **destila o que ficou decidido** em regra que o agente consulta a cada feature nova. São artefatos irmãos: o ADR é a jurisprudência, a constituição é a lei consolidada.
 
 **`/speckit.specify`** — transforma a intenção em `spec.md`, dentro de `specs/001-iniciacao-pagamento/`: o **quê**, sem tecnologia. É exatamente aqui que mora a spec do contexto Pagamentos que a gente escreveu — a linguagem ("Pagamento" ≠ "Transferência"), as invariantes, os eventos emitidos e consumidos, as dependências declaradas. Reparem no detalhe de organização: a spec é **por feature**, dentro do bounded context; a constituição é **global**. A fronteira da Aula 3 diz onde cada uma mora.
 
@@ -537,7 +537,7 @@ E o fluxo é uma sequência de comandos de barra, cada um produzindo um artefato
 
   <text x="440" y="300" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">A constituição paira sobre todos os passos: cada artefato é verificado contra ela — e o clarify mata o bug Diego-e-Marina antes do código nascer</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O fluxo do Spec Kit aplicado ao TechPix: constituição global, spec por feature, verificação cruzada antes da implementação.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O fluxo do Spec Kit aplicado à TechPix: constituição global, spec por feature, verificação cruzada antes da implementação.</p>
 </div>
 
 Para fechar, a tabela que amarra o vocabulário do curso ao artefato da ferramenta:
@@ -611,7 +611,7 @@ Reparem que isso é exatamente a recomendação da Aula 2, agora com vocabulári
 
 E quais são esses critérios? Extrair um contexto para serviço próprio se justifica quando pelo menos um destes for verdadeiro:
 
-- O contexto precisa **escalar de forma diferente** do resto. O Antifraude do TechPix, por exemplo, pode precisar de máquinas com muito mais CPU (ou GPU, se usar modelo de risco) do que o resto do sistema. Escalar junto significa pagar por capacidade que só uma parte precisa.
+- O contexto precisa **escalar de forma diferente** do resto. O Antifraude da TechPix, por exemplo, pode precisar de máquinas com muito mais CPU (ou GPU, se usar modelo de risco) do que o resto do sistema. Escalar junto significa pagar por capacidade que só uma parte precisa.
 - O contexto tem um **ciclo de vida de deploy diferente** — muda várias vezes por dia enquanto o resto muda por semana, ou o contrário.
 - O contexto pertence a um **time diferente**, e o acoplamento de deploy está causando fila de espera entre times. (Este é, na prática, o motivo mais comum e mais legítimo.)
 - O contexto tem **requisito de disponibilidade ou de isolamento de falha** distinto — e aí é o bulkhead da Aula 2, aplicado no nível de serviço.
@@ -632,7 +632,7 @@ Segundo: **bounded contexts emergem dos eventos do domínio**, de baixo para cim
 
 Terceiro: **a fronteira de consistência transacional é a fronteira do agregado**, e ela geralmente coincide com o núcleo do bounded context — é isso que separa o que precisa ser forte na hora do que pode esperar um instante.
 
-Quarto: **a camada anticorrupção protege a linguagem de vocês do mundo externo** — é o que já estava acontecendo, sem nome, toda vez que o TechPix traduzia uma mensagem do BACEN para um evento de domínio.
+Quarto: **a camada anticorrupção protege a linguagem de vocês do mundo externo** — é o que já estava acontecendo, sem nome, toda vez que a TechPix traduzia uma mensagem do BACEN para um evento de domínio.
 
 E quinto — o fio que amarra tudo com o eixo de inteligência artificial: **a spec de um bounded context é executável, e é, ao mesmo tempo, a unidade certa de contexto para um agente trabalhar com segurança.**
 
@@ -640,7 +640,7 @@ E antes de eu passar o bastão, deixa eu fazer o que eu sempre peço a vocês: p
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 880 268" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
-  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 3</text>
+  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">A TechPix ao fim da Aula 3</text>
 
   <text x="20" y="44" font-family="sans-serif" font-size="10" font-weight="bold" fill="#a8a29e">JÁ EXISTIA — AULAS 1 E 2</text>
   <g font-family="sans-serif">
@@ -692,7 +692,7 @@ E antes de eu passar o bastão, deixa eu fazer o que eu sempre peço a vocês: p
 
   <text x="440" y="256" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução do TechPix: a Aula 3 não sobe infraestrutura — ela dá nome, fronteira e contrato ao que as Aulas 1 e 2 construíram.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução da TechPix: a Aula 3 não sobe infraestrutura — ela dá nome, fronteira e contrato ao que as Aulas 1 e 2 construíram.</p>
 </div>
 
 Eu não vou mais lecionar as próximas aulas com vocês — quem assume daqui é outro professor, que vai construir comunicação entre esses contextos, extrair alguns deles para microsserviços de verdade, e colocar tudo isso para rodar com observabilidade e deploy contínuo. Mas eu volto na Aula 8, no fim do curso, para fechar o círculo que a gente abriu junto: nessa altura, o sistema já vai estar em produção, com dados reais — e um agente, olhando exatamente para os contextos e as specs que a gente desenhou hoje, vai propor a próxima evolução da arquitetura. Da fé, na Aula 1, para a evidência, na Aula 8 — e a linguagem que vocês vão desenhar hoje é o que vai tornar essa evolução segura de fazer, com humano ou com agente.

@@ -43,8 +43,8 @@ title: "Aula 2 — Roteiro (fonte)"
 **Objetivo:** desfazer o mito "monólito = ruim"; monólito modular como decisão defensável.
 
 - **Fala-chave:** "O vilão não é monólito. É Big Ball of Mud — zero fronteira interna."
-- **Desenhe o Diagrama 1:** módulos do TechPix dentro de UM deployable.
-- **Desenhe o Diagrama 1b (a travessia):** um Pix atravessando os 6 módulos, passos numerados 1–8, com a linha dentro/fora (TechPix | DICT/SPI). É o desenho clássico de payment system aplicado ao TechPix. Termine apontando o passo 8: "extrato e notificação no mesmo processo — guardem."
+- **Desenhe o Diagrama 1:** módulos da TechPix dentro de UM deployable.
+- **Desenhe o Diagrama 1b (a travessia):** um Pix atravessando os 6 módulos, passos numerados 1–8, com a linha dentro/fora (TechPix | DICT/SPI). É o desenho clássico de payment system aplicado à TechPix. Termine apontando o passo 8: "extrato e notificação no mesmo processo — guardem."
 - **Preencha a tabela de módulos:** responsabilidade · dados que possui · quem chama · comunicação. "Seis módulos" só vira arquitetura quando cada linha está preenchida.
 - **Sobre Cartões:** seja honesto — é fronteira reservada, não funcionalidade. O trilho de cartões (PSP, bandeiras, settlement D+n) está fora do escopo do curso.
 - **Pergunte:** "Se Cartões faz um JOIN direto na tabela do Ledger porque 'é mais rápido', isso ainda é monólito modular?" (não — é bola de lama com nome bonito).
@@ -59,7 +59,7 @@ title: "Aula 2 — Roteiro (fonte)"
 
 - **Desenhe o Diagrama 2:** loop `proposta → fitness function → gate → produção`.
 - **Explique os 4 tipos:** atômica vs holística; disparada (CI) vs contínua (produção).
-- **Dê os 3 exemplos do TechPix:** teste de dependência de arquitetura, monitor de p99, game day de carga.
+- **Dê os 3 exemplos da TechPix:** teste de dependência de arquitetura, monitor de p99, game day de carga.
 - **Semente de IA (uma frase, não um desvio):** "Uma fitness function que barra um deploy tem o mesmo formato de um eval que barra a proposta de um agente. Vocês já estão construindo o Harness."
 - **Armadilha:** não aprofunde IA aqui.
 
@@ -141,7 +141,7 @@ title: "Aula 2 — Roteiro (fonte)"
 **Objetivo:** desfazer a expectativa de ganho linear. Este bloco evita uma decepção caríssima em projeto real.
 
 - **Pergunte primeiro:** "Se eu dividir a escrita em 8 partições, eu tenho 8× mais capacidade?" — deixe a turma dizer "sim" antes de você desmontar.
-- **Construa o contra-exemplo no Excalidraw:** o TechPix tem uma conta de marketplace com 15% de todo o volume. 7 partições ficam com ~12% cada; a partição do marketplace fica com ~27%.
+- **Construa o contra-exemplo no Excalidraw:** a TechPix tem uma conta de marketplace com 15% de todo o volume. 7 partições ficam com ~12% cada; a partição do marketplace fica com ~27%.
 - **Aplique a curva do Bloco 4:** "Se o sistema está a 60% de utilização média, aquela partição está perto de 100%. O sistema tem 8 partições, mas o gargalo é 1."
 - **Nomeie:** Lei de Amdahl — o ganho de paralelizar é limitado pela fração que não paraleliza. A conta quente é essa fração.
 - **Apresente as 3 saídas, com custo:** sub-particionar em baldes (escrita rápida, leitura mais caras), agregar antes de escrever (menos escritas, granularidade de 1s), isolar a conta quente (bulkhead aplicado a dados).
@@ -189,7 +189,7 @@ Percorra rápido, sem se alongar em nenhuma:
 
 ## Diagramas desta aula (ver aula2-roteiro.html)
 
-1. Monólito modular do TechPix.
+1. Monólito modular da TechPix.
 1b. **A travessia** — um Pix atravessando os 6 módulos, numerado 1–8, com a fronteira dentro/fora (BACEN).
 2. Loop de fitness function.
 3a. **A padaria em três linhas** (50/90/95%: linha do tempo do caixa + fila média + a conta).

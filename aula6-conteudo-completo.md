@@ -8,7 +8,7 @@ title: "Aula 6 — Evolução para Microsserviços com Validação"
 
 > **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · **Aula 6 (você está aqui)** · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
 
-Deixa eu contar sobre o dia 14 de novembro de 2025, uma sexta-feira, 9 horas da manhã. Foi o dia em que o TechPix desligou a rota antiga do Antifraude — o dia da primeira extração de verdade, quando um pedaço do monólito virou um serviço separado, com processo próprio, banco próprio, deploy próprio.
+Deixa eu contar sobre o dia 14 de novembro de 2025, uma sexta-feira, 9 horas da manhã. Foi o dia em que a TechPix desligou a rota antiga do Antifraude — o dia da primeira extração de verdade, quando um pedaço do monólito virou um serviço separado, com processo próprio, banco próprio, deploy próprio.
 
 E eu vou contar do jeito que aconteceu, não do jeito que fica bonito em palestra: **a primeira tentativa falhou.** Nove e dezessete da manhã, o canary estava com 5% do tráfego na rota nova, e o p99 da chamada de análise de risco saltou de 80 milissegundos para 2,4 segundos. Às 9h19, o sistema fez rollback sozinho — noventa segundos entre a violação da métrica de guarda e o último pacote voltando pela rota antiga. Nenhum Pix falhou. Nenhum cliente percebeu. Ninguém precisou acordar de madrugada, porque nem era madrugada, e mesmo se fosse, ninguém teria acordado: a máquina desfez o que a máquina tinha feito.
 
@@ -41,7 +41,7 @@ Reparem no padrão: **nenhum critério é "estamos com vontade".** Todos são ob
 
 ### 1.2 A ordem de extração — e o que NÃO sai
 
-A pergunta seguinte é: extrai o quê, em que ordem? A resposta do TechPix:
+A pergunta seguinte é: extrai o quê, em que ordem? A resposta da TechPix:
 
 **Primeiro, Antifraude e Limites.** Pelos quatro critérios acima, e por mais um, tático: a aresta dele já tem fallback definido. Se a extração der errado, o Contrato de Integração diz o que acontece — degrada com regra de negócio, não com estouro de pool. Extrair primeiro o serviço cuja falha já tem resposta escrita é extrair com a rede embaixo.
 
@@ -144,7 +144,7 @@ A resposta é a coreografia que a Aula 4 apresentou para contratos, aplicada ago
 
 **Contract.** Só então o tráfego migra (via canary, Seção 4), a escrita dupla é desligada, e — semanas depois, com tudo estável — as tabelas velhas do monólito são arquivadas e removidas. Contração é a última etapa, nunca a primeira. Pressa de apagar tabela velha já causou mais perda de dado que disco quebrado.
 
-E atravessando os quatro movimentos, uma disciplina que o TechPix já tinha no sangue: **reconciliação.** Na Aula 1, o professor mostrou que o ledger interno precisa bater com a Conta PI no Banco Central — bater o livro de vocês contra o livro do outro, continuamente, porque divergência silenciosa vira incidente regulatório. A migração de dados é a mesma disciplina, apontada para dentro: um job compara, todo dia, contagens e somas entre o banco velho e o novo, e qualquer diferença acorda alguém. **Migração sem reconciliação não é migração; é esperança com cronograma.**
+E atravessando os quatro movimentos, uma disciplina que a TechPix já tinha no sangue: **reconciliação.** Na Aula 1, o professor mostrou que o ledger interno precisa bater com a Conta PI no Banco Central — bater o livro de vocês contra o livro do outro, continuamente, porque divergência silenciosa vira incidente regulatório. A migração de dados é a mesma disciplina, apontada para dentro: um job compara, todo dia, contagens e somas entre o banco velho e o novo, e qualquer diferença acorda alguém. **Migração sem reconciliação não é migração; é esperança com cronograma.**
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 360" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
@@ -373,7 +373,7 @@ No modelo antigo, deploy e release eram o mesmo instante: o código novo sobe j�
 
 ### 4.1 Feature flags: o interruptor entre deploy e release
 
-O mecanismo mais simples dessa separação o TechPix adotou via **Unleash** (a Aula 2 já tinha apontado a ferramenta, prometendo que ela importaria "na Aula 8, porque é o mecanismo do canary" — pois é, o caminho até lá passa por aqui): a **feature flag**, um interruptor avaliado em tempo de execução que decide qual caminho de código uma requisição percorre, sem novo deploy.
+O mecanismo mais simples dessa separação a TechPix adotou via **Unleash** (a Aula 2 já tinha apontado a ferramenta, prometendo que ela importaria "na Aula 8, porque é o mecanismo do canary" — pois é, o caminho até lá passa por aqui): a **feature flag**, um interruptor avaliado em tempo de execução que decide qual caminho de código uma requisição percorre, sem novo deploy.
 
 Feature flag tem quatro usos clássicos, e eu vou ser honesto com vocês como esse curso sempre é: **os quatro usos, com o rigor de cada um, são assunto do professor da Aula 8.** Hoje a gente instala os dois operacionais, que a extração exige:
 
@@ -385,10 +385,10 @@ Feature flag tem quatro usos clássicos, e eu vou ser honesto com vocês como es
 Com a flag instalada, a release vira uma progressão: **1% → 5% → 25% → 100%** do tráfego na rota nova, cada fatia observada antes de avançar. É o canary — o nome vem do canário na mina de carvão, e o professor da Aula 8 vai contar essa história e fazer a matemática fina dela; o que a gente instala hoje é a mecânica:
 
 - **Métricas de guarda simples e pré-declaradas:** taxa de erro da rota nova acima do baseline de 0,1%, ou p99 da aresta acima do orçamento do Contrato de Integração (~100 ms para Pagamentos↔Antifraude). Os limites são escritos *antes* da release, no plano de canary — decidir o limite depois de ver o número é decidir com o dedo na balança.
-- **Juiz automático:** quem compara métrica com limite não é um humano olhando dashboard — é o próprio controlador de rollout (no TechPix, o Argo Rollouts, irmão do ArgoCD, consultando o Prometheus). Violou a guarda? **Rollback automático, primeiro; notificação ao humano, depois.** Nessa ordem. O humano acorda com o sistema já são, lendo o relatório do que a máquina desfez.
-- **Honestidade sobre o que falta:** quanto tempo em cada fatia? Cinco erros em 2.700 transações são "muitos"? 1% por cinco minutos prova alguma coisa? **Tem matemática séria nessas perguntas — amostra, significância, o perigo de espiar o resultado antes da hora — e é o professor da Aula 8 que vai fazer essa conta com vocês.** Hoje, o TechPix usa regras conservadoras e fixas: cada fatia segura no mínimo uma hora, e qualquer violação de guarda reverte. Grosseiro? É. Mas grosseiro *na direção segura* — e mecânica instalada é pré-requisito do rigor que vem depois.
+- **Juiz automático:** quem compara métrica com limite não é um humano olhando dashboard — é o próprio controlador de rollout (na TechPix, o Argo Rollouts, irmão do ArgoCD, consultando o Prometheus). Violou a guarda? **Rollback automático, primeiro; notificação ao humano, depois.** Nessa ordem. O humano acorda com o sistema já são, lendo o relatório do que a máquina desfez.
+- **Honestidade sobre o que falta:** quanto tempo em cada fatia? Cinco erros em 2.700 transações são "muitos"? 1% por cinco minutos prova alguma coisa? **Tem matemática séria nessas perguntas — amostra, significância, o perigo de espiar o resultado antes da hora — e é o professor da Aula 8 que vai fazer essa conta com vocês.** Hoje, a TechPix usa regras conservadoras e fixas: cada fatia segura no mínimo uma hora, e qualquer violação de guarda reverte. Grosseiro? É. Mas grosseiro *na direção segura* — e mecânica instalada é pré-requisito do rigor que vem depois.
 
-E uma pergunta de plantão que sempre aparece aqui, e que merece resposta de engenheiro: **quem, fisicamente, manda 5% do tráfego para um lado e 95% para o outro?** A resposta é uma questão de *camada* — camada 4 contra camada 7 do modelo OSI, aquela mesma distinção que apareceu na Aula 4. Um balanceador de camada 4 (o kube-proxy do Kubernetes, um NLB) enxerga TCP: IP, porta, conexão. Ele é rápido e barato, mas é **cego a HTTP** — não vê rota, não vê header, não sabe o que é "1% das requisições". O split do canary só existe na camada 7, onde vivem o NGINX, o ALB e — no coração da malha do TechPix — o **Envoy**, um sidecar ao lado de cada serviço, com o **Istio** como plano de controle. E reparem no reencontro: a fachada do Strangler Fig da Aula 2 **era** um balanceador L7. O Envoy é a mesma ideia, industrializada.
+E uma pergunta de plantão que sempre aparece aqui, e que merece resposta de engenheiro: **quem, fisicamente, manda 5% do tráfego para um lado e 95% para o outro?** A resposta é uma questão de *camada* — camada 4 contra camada 7 do modelo OSI, aquela mesma distinção que apareceu na Aula 4. Um balanceador de camada 4 (o kube-proxy do Kubernetes, um NLB) enxerga TCP: IP, porta, conexão. Ele é rápido e barato, mas é **cego a HTTP** — não vê rota, não vê header, não sabe o que é "1% das requisições". O split do canary só existe na camada 7, onde vivem o NGINX, o ALB e — no coração da malha da TechPix — o **Envoy**, um sidecar ao lado de cada serviço, com o **Istio** como plano de controle. E reparem no reencontro: a fachada do Strangler Fig da Aula 2 **era** um balanceador L7. O Envoy é a mesma ideia, industrializada.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 440" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
@@ -424,7 +424,7 @@ E uma pergunta de plantão que sempre aparece aqui, e que merece resposta de eng
   <text x="665" y="170" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">é aqui que o canary acontece</text>
 
   <!-- Mesh: canary split -->
-  <text x="450" y="212" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">A malha do TechPix durante o canary de 14/11</text>
+  <text x="450" y="212" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">A malha da TechPix durante o canary de 14/11</text>
   <rect x="40" y="230" width="150" height="56" rx="9" fill="#fff" stroke="#4338ca" stroke-width="2"/>
   <text x="115" y="253" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#26215C">Pagamentos</text>
   <text x="115" y="271" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">chama análise de risco</text>
@@ -556,7 +556,7 @@ Reparem na moral, porque ela é o coração da aula: **o erro da primeira tentat
 
 A Aula 2 apresentou fitness functions como testes de característica arquitetural — o ArchUnit travando um import proibido no CI, o monitor de p99 em produção. Naquela altura, elas eram verificações pontuais: rodavam quando alguém rodava. A extração muda a natureza delas: com dois (logo três) serviços evoluindo em paralelo, **a validação deixa de ser um evento e vira um tecido — algo que está sempre rodando, em todas as camadas, sem depender de alguém lembrar.**
 
-Olhem o caminho completo de uma mudança no TechPix de hoje, e onde cada verificação mora:
+Olhem o caminho completo de uma mudança na TechPix de hoje, e onde cada verificação mora:
 
 | Etapa | Verificação que roda | De qual aula ela veio |
 |---|---|---|
@@ -613,13 +613,13 @@ Reparem no espírito: quase todas as linhas desse runbook são cicatrizes. "W me
 
 E a prova de que ele funciona veio rápido: semanas depois, o time da Marina extraiu o **Pagamentos** — o orquestrador, com as ACLs de DICT e SPI, os timeouts herdados do teto de 40 segundos, o circuit breaker que a Aula 2 pediu e a Aula 4 formalizou. Uma extração objetivamente mais delicada que a do Antifraude. Sabem o que eu tenho para contar sobre ela? **Quase nada.** Seguiu o runbook, item por item. O dual-run pegou uma divergência pequena de arredondamento na conversão de valores da ACL (centavos, literalmente), corrigida antes de qualquer cliente existir na história. O canary subiu em um dia, sem uma violação de guarda. A extração mais arriscada do sistema rendeu três parágrafos de retrospectiva, e é assim que se mede maturidade: **drama tendendo a zero enquanto o risco intrínseco continua alto.**
 
-O TechPix de hoje, então: **Antifraude e Limites** como serviço (com GPU e modelo), **Pagamentos** como serviço (com as portas para o mundo), e o monólito remanescente segurando **Contas e Ledger** — a conta `pix_a_liquidar` no lugar onde sempre esteve —, além de Identidade, Devoluções e Cartões, cada um aguardando seus critérios maturarem. Ou não: **monólito remanescente não é fila de espera; é lar legítimo de quem não tem razão para sair.**
+A TechPix de hoje, então: **Antifraude e Limites** como serviço (com GPU e modelo), **Pagamentos** como serviço (com as portas para o mundo), e o monólito remanescente segurando **Contas e Ledger** — a conta `pix_a_liquidar` no lugar onde sempre esteve —, além de Identidade, Devoluções e Cartões, cada um aguardando seus critérios maturarem. Ou não: **monólito remanescente não é fila de espera; é lar legítimo de quem não tem razão para sair.**
 
-E antes de fechar, deixa eu fazer uma coisa que eu gosto de fazer no fim de toda migração: olhar para trás com o catálogo na mão. Todos esses padrões que a gente vem aplicando têm nome de prateleira — estão catalogados no **microservices.io**, do Chris Richardson, que é a referência que eu quero que vocês levem para a segunda-feira. E reparem no que o mapa revela: o TechPix não "adotou microsserviços" hoje. Ele vem acumulando os padrões do catálogo desde a Aula 1, **um por dor, nunca por moda** — hoje só entraram os dois últimos.
+E antes de fechar, deixa eu fazer uma coisa que eu gosto de fazer no fim de toda migração: olhar para trás com o catálogo na mão. Todos esses padrões que a gente vem aplicando têm nome de prateleira — estão catalogados no **microservices.io**, do Chris Richardson, que é a referência que eu quero que vocês levem para a segunda-feira. E reparem no que o mapa revela: a TechPix não "adotou microsserviços" hoje. Ele vem acumulando os padrões do catálogo desde a Aula 1, **um por dor, nunca por moda** — hoje só entraram os dois últimos.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 880 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
-  <text x="440" y="24" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">Os padrões de microservices.io aplicados ao TechPix — aula a aula</text>
+  <text x="440" y="24" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">Os padrões de microservices.io aplicados à TechPix — aula a aula</text>
 
   <g font-family="sans-serif">
     <rect x="20" y="48" width="204" height="72" rx="8" fill="#fff" stroke="#4338ca" stroke-width="1.5"/>
@@ -677,7 +677,7 @@ E antes de fechar, deixa eu fazer uma coisa que eu gosto de fazer no fim de toda
 
   <text x="440" y="308" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">catálogo completo: microservices.io/patterns (Chris Richardson) — padrão sem dor que o justifique é moda, não arquitetura</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O mapa integrador: oito padrões do catálogo microservices.io, cada um marcado com a aula — e a dor — em que entrou no TechPix.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O mapa integrador: oito padrões do catálogo microservices.io, cada um marcado com a aula — e a dor — em que entrou na TechPix.</p>
 </div>
 
 ---
@@ -686,7 +686,7 @@ E antes de fechar, deixa eu fazer uma coisa que eu gosto de fazer no fim de toda
 
 Primeiro: **extração é evidência, não estilo.** O Antifraude saiu porque quatro critérios observáveis mandaram — fronteira estável, escala diferente, time dono, contrato pronto. O Ledger ficou porque nenhuma evidência mandou ele sair. A pendência do ADR-002 segue aberta, e abrir mão de fechá-la sem dados foi a decisão mais arquitetural da aula.
 
-Segundo: **os dados são a extração de verdade.** Código se move num deploy; dados se movem com expand/contract, escrita dupla, backfill idempotente, dual-run com critério pré-declarado e reconciliação contínua — a disciplina que o TechPix aprendeu com o BACEN na Aula 1, apontada para dentro.
+Segundo: **os dados são a extração de verdade.** Código se move num deploy; dados se movem com expand/contract, escrita dupla, backfill idempotente, dual-run com critério pré-declarado e reconciliação contínua — a disciplina que a TechPix aprendeu com o BACEN na Aula 1, apontada para dentro.
 
 Terceiro: **deploy não é release, e a rede de validação é o que separa erro de incidente.** GitOps fez o deploy virar um log imutável reconciliado — o ledger operando infraestrutura. Flags e canary fizeram a release virar um dial com juiz automático. E o rollback das 9h19 provou o ponto da aula inteira: num sistema com rede, a primeira tentativa *pode* falhar — por isso mesmo ela pôde ser tentada numa sexta-feira de manhã.
 
@@ -696,7 +696,7 @@ E o retrato de fim de aula, na régua de sempre — olhem o quanto a fintech cre
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 880 342" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
-  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 6</text>
+  <text x="440" y="22" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">A TechPix ao fim da Aula 6</text>
 
   <text x="20" y="44" font-family="sans-serif" font-size="10" font-weight="bold" fill="#a8a29e">JÁ EXISTIA — AULAS 1 A 5</text>
   <g font-family="sans-serif">
@@ -746,7 +746,7 @@ E o retrato de fim de aula, na régua de sempre — olhem o quanto a fintech cre
 
   <text x="440" y="322" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula · âmbar = decisão explícita de NÃO mexer</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução do TechPix: a Aula 6 tirou dois contextos do monólito com rede de validação — e deixou o Ledger onde a evidência mandou deixar.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A régua de evolução da TechPix: a Aula 6 tirou dois contextos do monólito com rede de validação — e deixou o Ledger onde a evidência mandou deixar.</p>
 </div>
 
 ---
@@ -760,7 +760,7 @@ E o retrato de fim de aula, na régua de sempre — olhem o quanto a fintech cre
 | **Reconciliação contínua** | O loop comparar-convergir-comparar; a mesma estrutura ledger/projeção da Aula 1 aplicada a deploy. |
 | **Drift** | Divergência entre o que está rodando e o que o Git declara — detectada e, com selfHeal, desfeita. |
 | **Deploy vs release** | Deploy: código novo em produção. Release: tráfego em cima dele. Separá-los cria a zona de validação. |
-| **Feature flag de lançamento** | Interruptor que libera gradualmente uma rota nova sem novo deploy (Unleash no TechPix). |
+| **Feature flag de lançamento** | Interruptor que libera gradualmente uma rota nova sem novo deploy (Unleash na TechPix). |
 | **Kill switch** | Flag inversa: desliga um caminho instantaneamente; o freio de emergência do on-call, testado em game day. |
 | **Canary (mecânico)** | Release em fatias 1%→5%→25%→100% com métricas de guarda pré-declaradas e juiz automático (Argo Rollouts). A matemática fina fica com a Aula 8. |
 | **Rollback automático** | Violou guarda → reverte primeiro, notifica depois. Os 90 segundos da abertura. |
@@ -774,7 +774,7 @@ E o retrato de fim de aula, na régua de sempre — olhem o quanto a fintech cre
 | **Runbook de Extração** | O artefato da aula: checklist reutilizável que transforma extração de aventura em procedimento. Acumulado, não escrito. |
 | **Balanceador L4 vs L7** | L4 (kube-proxy, NLB) enxerga conexões TCP — rápido e cego a HTTP; L7 (NGINX, Envoy, ALB) enxerga rota, header e método — é quem consegue fazer o traffic-split percentual do canary. |
 | **Service mesh (Envoy/Istio)** | Malha de sidecars L7 entre serviços: o Envoy acompanha cada pod e o Istio orquestra — timeout, retry, mTLS e o split do canary saem do código e viram configuração da malha. |
-| **microservices.io** | Catálogo de padrões de microsserviços de Chris Richardson — a prateleira de onde o TechPix vem tirando um padrão por dor desde a Aula 1: Event Sourcing, Strangler Fig, Transactional Outbox, CQRS, Circuit Breaker, Saga, Database per Service. |
+| **microservices.io** | Catálogo de padrões de microsserviços de Chris Richardson — a prateleira de onde a TechPix vem tirando um padrão por dor desde a Aula 1: Event Sourcing, Strangler Fig, Transactional Outbox, CQRS, Circuit Breaker, Saga, Database per Service. |
 
 ---
 

@@ -8,21 +8,28 @@ title: "Aula 2 — Fundamentos da Evolução Arquitetural em Fintech"
 
 > **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · **Aula 2 (você está aqui)** · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
 
-Na aula passada, a gente decidiu, na fé, que o ledger do TechPix ia ter consistência forte — síncrono, ACID, linearizável. Eu disse uma coisa lá no final que eu quero que vocês lembrem: guardem o ADR-001, porque um dia a produção vai ter opinião sobre ele. Hoje é o dia em que a produção fala.
+Antes de entrar no conteúdo de hoje, eu quero começar retomando o **ADR-001** — o registro de decisão que a gente escreveu juntos no fim da aula passada. Quatro pontos dele importam para hoje:
+
+- **A decisão:** o ledger da TechPix tem **consistência forte** — escrita síncrona, ACID, lançamentos imutáveis em partida dobrada. Nenhum saldo é considerado alterado antes do commit.
+- **O porquê:** as invariantes do dinheiro — Σ débitos = Σ créditos, lançamento confirmado nunca se altera, correção só entra como lançamento novo. Correção acima de disponibilidade.
+- **O preço, já registrado nas consequências:** a escrita paga coordenação e latência, e **não escala na horizontal como a leitura** — e o próprio ADR avisa que a contenção em contas muito movimentadas pode exigir estratégia específica de particionamento.
+- **A linha de revisão:** a consequência de latência seria **medida em produção** — e, se o p99 do commit ameaçasse o SLA, a decisão voltaria à mesa.
+
+Eu disse uma coisa no fim daquela aula que eu quero que vocês lembrem: guardem o ADR-001, porque um dia a produção vai ter opinião sobre ele. Hoje é o dia em que a produção fala.
 
 Deixa eu contar o que aconteceu.
 
-O TechPix decolou. Cresceu rápido — desses crescimentos que todo fundador sonha e todo arquiteto teme. E chegou um dia comum, um dia 5 do mês, hora do almoço, quando salário cai na conta de meio Brasil e todo mundo decide pagar boleto, mandar dinheiro pro aluguel e comprar o almoço ao mesmo tempo. O tráfego do TechPix triplicou em vinte minutos. E o sistema, que vinha rodando liso havia meses, começou a devolver erro. Não caiu de vez — foi pior que isso: começou a ficar **lento**, cada vez mais lento, até parecer travado. Os pagamentos que ainda passavam demoravam segundos a mais para confirmar. Alguns clientes tocaram duas, três vezes — vocês já sabem o que isso significa, a gente resolveu isso na Aula 1. Mas o sintoma novo, o que ninguém tinha visto antes, foi esse: o sistema inteiro andando em câmera lenta, como se estivesse com os pés na areia.
+A TechPix decolou. Cresceu rápido — desses crescimentos que todo fundador sonha e todo arquiteto teme. E chegou um dia comum, um dia 5 do mês, hora do almoço, quando salário cai na conta de meio Brasil e todo mundo decide pagar boleto, mandar dinheiro pro aluguel e comprar o almoço ao mesmo tempo. O tráfego da TechPix triplicou em vinte minutos. E o sistema, que vinha rodando liso havia meses, começou a devolver erro. Não caiu de vez — foi pior que isso: começou a ficar **lento**, cada vez mais lento, até parecer travado. Os pagamentos que ainda passavam demoravam segundos a mais para confirmar. Alguns clientes tocaram duas, três vezes — vocês já sabem o que isso significa, a gente resolveu isso na Aula 1. Mas o sintoma novo, o que ninguém tinha visto antes, foi esse: o sistema inteiro andando em câmera lenta, como se estivesse com os pés na areia.
 
-Essa é a aula de hoje. Eu quero mostrar exatamente **onde** um sistema bem arquitetado — porque o TechPix, com o ADR-001, foi bem arquitetado — ainda assim racha quando a escala aperta. E, mais importante, quero te ensinar a pensar em arquitetura não como uma foto que você tira uma vez, mas como um filme que não para de rodar.
+Essa é a aula de hoje. Eu quero mostrar exatamente **onde** um sistema bem arquitetado — porque a TechPix, com o ADR-001, foi bem arquitetada — ainda assim racha quando a escala aperta. E, mais importante, quero te ensinar a pensar em arquitetura não como uma foto que você tira uma vez, mas como um filme que não para de rodar.
 
 ---
 
 ## 1. O monólito não é o vilão
 
-Antes de eu desenhar qualquer coisa, eu preciso desfazer um mito que atrapalha muita gente boa: **monólito não é sinônimo de sistema ruim.** O vilão de verdade tem nome, e é feio de propósito: **Big Ball of Mud**, a bola de lama grande — um sistema onde não existe fronteira nenhuma, onde qualquer módulo pode chamar qualquer tabela, onde ninguém sabe mais o que depende do quê. Isso, sim, é o inimigo. Um monólito bem estruturado é outra coisa completamente diferente, e é exatamente isso que o TechPix tinha até hoje de manhã.
+Antes de eu desenhar qualquer coisa, eu preciso desfazer um mito que atrapalha muita gente boa: **monólito não é sinônimo de sistema ruim.** O vilão de verdade tem nome, e é feio de propósito: **Big Ball of Mud**, a bola de lama grande — um sistema onde não existe fronteira nenhuma, onde qualquer módulo pode chamar qualquer tabela, onde ninguém sabe mais o que depende do quê. Isso, sim, é o inimigo. Um monólito bem estruturado é outra coisa completamente diferente, e é exatamente isso que a TechPix tinha até hoje de manhã.
 
-Deixa eu mostrar como era o TechPix: um único artefato de deploy — um monólito, sim — mas por dentro, organizado em módulos com fronteiras de verdade. Tinha um módulo de **Identidade e KYC/PLD**, cuidando de quem é o cliente e se ele pode operar. Tinha o módulo de **Contas**, o módulo do **Ledger** que a gente construiu na Aula 1, o módulo de **Pagamentos**, que orquestra o Pix, o módulo de **Cartões**, e o módulo de **Antifraude**. Cada um desses módulos tinha seu próprio espaço de tabelas, sua própria API interna, e a regra de ouro era clara: nenhum módulo lê a tabela de outro módulo direto — toda comunicação passa por uma interface explícita, mesmo que os dois módulos rodem no mesmo processo, no mesmo binário, no mesmo deploy.
+Deixa eu mostrar como era a TechPix: um único artefato de deploy — um monólito, sim — mas por dentro, organizado em módulos com fronteiras de verdade. Tinha um módulo de **Identidade e KYC/PLD**, cuidando de quem é o cliente e se ele pode operar. Tinha o módulo de **Contas**, o módulo do **Ledger** que a gente construiu na Aula 1, o módulo de **Pagamentos**, que orquestra o Pix, o módulo de **Cartões**, e o módulo de **Antifraude**. Cada um desses módulos tinha seu próprio espaço de tabelas, sua própria API interna, e a regra de ouro era clara: nenhum módulo lê a tabela de outro módulo direto — toda comunicação passa por uma interface explícita, mesmo que os dois módulos rodem no mesmo processo, no mesmo binário, no mesmo deploy.
 
 E por que eu insisto tanto nisso? Porque as fronteiras de um monólito modular bem-feito não são decoração. Elas são, literalmente, um **ensaio** para as fronteiras de serviço que talvez, um dia, vocês precisem extrair. Se o módulo de Cartões nunca vazou uma consulta direta na tabela do Ledger, então no dia que vocês decidirem tirar Cartões do monólito e colocar num serviço separado, a cirurgia é limpa — porque a fronteira já existia, só que dentro do mesmo processo. Se, ao contrário, o módulo de Cartões faz um `JOIN` direto na tabela de lançamentos do Ledger porque "era mais rápido assim", vocês não têm um monólito modular — vocês têm uma bola de lama com um nome bonito.
 
@@ -31,7 +38,7 @@ E existe uma segunda armadilha, mais sutil que o `JOIN` — e mais perigosa, por
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 860 320" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
   <!-- Monólito modular -->
-  <text x="255" y="30" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">Monólito modular do TechPix — um único deploy</text>
+  <text x="255" y="30" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">Monólito modular da TechPix — um único deploy</text>
   <rect x="20" y="42" width="470" height="215" rx="12" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
   <g font-family="sans-serif" font-size="12" fill="#333">
     <rect x="38" y="60" width="138" height="48" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
@@ -83,7 +90,7 @@ E existe uma segunda armadilha, mais sutil que o `JOIN` — e mais perigosa, por
 <p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Monólito não é o vilão: com fronteiras internas reais, ele é o ensaio das fronteiras de serviço. O vilão é a bola de lama.</p>
 </div>
 
-Só que caixas paradas não mostram um sistema — mostram um organograma. Para vocês **verem** o monólito funcionando, deixa eu fazer o que todo bom desenho de payment system faz: pegar **uma** transação e acompanhar ela atravessando o sistema, passo numerado por passo numerado, com a fronteira entre "o que é nosso" e "o que é do Banco Central" desenhada explicitamente. Este é o retrato do TechPix na manhã do dia 5 — antes de qualquer coisa quebrar:
+Só que caixas paradas não mostram um sistema — mostram um organograma. Para vocês **verem** o monólito funcionando, deixa eu fazer o que todo bom desenho de payment system faz: pegar **uma** transação e acompanhar ela atravessando o sistema, passo numerado por passo numerado, com a fronteira entre "o que é nosso" e "o que é do Banco Central" desenhada explicitamente. Este é o retrato da TechPix na manhã do dia 5 — antes de qualquer coisa quebrar:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 940 560" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
@@ -95,7 +102,7 @@ Só que caixas paradas não mostram um sistema — mostram um organograma. Para 
       <path d="M0,0 L10,5 L0,10 z" fill="#d4a017"/>
     </marker>
   </defs>
-  <text x="470" y="24" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">Um Pix atravessa o monólito — o TechPix na manhã do dia 5</text>
+  <text x="470" y="24" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">Um Pix atravessa o monólito — a TechPix na manhã do dia 5</text>
 
   <!-- fronteira dentro/fora -->
   <line x1="700" y1="34" x2="700" y2="505" stroke="#666" stroke-width="1.5" stroke-dasharray="8 5"/>
@@ -212,7 +219,7 @@ Sigam os números comigo, porque cada passo é uma decisão de design que a gent
 2. O Gateway entrega ao módulo de **Pagamentos** a **ordem de pagamento validada**: quem envia (a identidade da Ana, extraída do token de autenticação), a chave de destino, o valor e o E2E ID. Reparem no que ela já **não** carrega: as preocupações de transporte morreram no Gateway — a conexão foi desencriptada, o limite de taxa foi aplicado, a duplicata foi descartada. Pagamentos recebe uma requisição de domínio limpa: "a Ana, autenticada, quer enviar este valor para esta chave, e esta transação é inédita". E Pagamentos é a única porta de entrada do domínio: ninguém de fora fala com Ledger ou Contas diretamente.
 3. Pagamentos pergunta a **Identidade/KYC** (*Know Your Customer*, "conheça seu cliente" — o cadastro verificado que o regulador exige): esse cliente está ativo? Está dentro dos limites de **PLD** — Prevenção à Lavagem de Dinheiro, as regras que restringem, por exemplo, quanto uma conta pode movimentar por período? A chamada é **síncrona** — quem chama para e espera a resposta antes de continuar —, interna, via interface. Nunca via tabela.
 4. Pagamentos pergunta ao **Antifraude**: qual o **score** dessa transação — a nota de risco que decide se ela passa, é negada ou vai para análise humana? Orçamento de ~100 ms, síncrono também, porque a resposta bloqueia o fluxo: não dá para debitar antes de saber se é golpe.
-5. Pagamentos cruza a fronteira e consulta o **DICT**, lá fora — o diretório do Banco Central que traduz a chave Pix (o CPF, o e-mail, o celular) na conta de destino: quem é o dono dessa chave? Síncrono, **p99 de 1 segundo** — leia-se: 99% das consultas respondem em até 1 segundo, e 1% demora mais que isso. E reparem: é a primeira vez que o TechPix fica **esperando alguém que não controla**.
+5. Pagamentos cruza a fronteira e consulta o **DICT**, lá fora — o diretório do Banco Central que traduz a chave Pix (o CPF, o e-mail, o celular) na conta de destino: quem é o dono dessa chave? Síncrono, **p99 de 1 segundo** — leia-se: 99% das consultas respondem em até 1 segundo, e 1% demora mais que isso. E reparem: é a primeira vez que a TechPix fica **esperando alguém que não controla**.
 6. Com tudo aprovado, Pagamentos manda o **Ledger** reservar: débito na carteira da Ana, crédito em `pix_a_liquidar` — a conta-ponte que representa "o dinheiro já saiu da Ana, mas ainda não liquidou no Banco Central". Os dois lançamentos na mesma transação **ACID**: o pacote de garantias do banco de dados que assegura que ou os dois acontecem, ou nenhum acontece.
 7. Pagamentos envia a `pacs.008` ao **SPI** — o Sistema de Pagamentos Instantâneos, o motor do Banco Central que efetivamente move o dinheiro entre as instituições. `pacs.008` é o nome da mensagem de "ordem de pagamento" no padrão **ISO 20022**, a língua franca das mensagens financeiras — e ela carrega o mesmo E2E ID do passo 1. A resposta é a `pacs.002`: "liquidado, final, irrevogável" — e o Ledger registra.
 8. Por fim, Pagamentos pede a **Contas** para atualizar o extrato e disparar a notificação — hoje, no mesmo processo, competindo pelos mesmos **pools** da escrita (os estoques compartilhados de conexões de banco e threads que o sistema inteiro divide). Esse "por fim" inocente é uma das sementes do incidente de hoje.
@@ -228,7 +235,7 @@ E agora que vocês viram o fluxo, deixa eu preencher a planta do prédio — por
 | **Antifraude** | decisão por transação: aprova, nega, segura para análise | regras, histórico de decisões | Pagamentos (passo 4) | síncrona, ~100 ms de orçamento |
 | **Cartões** | *(roadmap)* emissão e adquirência, via PSP externo | — nada ainda | ninguém | — |
 
-Uma palavra honesta sobre essa última linha, porque ela vai aparecer em todo desenho do curso: **Cartões existe como fronteira reservada, não como funcionalidade.** O mundo de cartões — PSPs como Stripe e Adyen, as bandeiras, o settlement em D+n — é um trilho inteiro próprio, com diagramas clássicos próprios, e está fora do escopo deste curso, que segue o trilho do Pix. Mas a fronteira fica desenhada desde o dia 1 de propósito: quando (se) o TechPix entrar nesse mundo, o lugar dele no monólito já tem nome e regra de ouro esperando.
+Uma palavra honesta sobre essa última linha, porque ela vai aparecer em todo desenho do curso: **Cartões existe como fronteira reservada, não como funcionalidade.** O mundo de cartões — PSPs como Stripe e Adyen, as bandeiras, o settlement em D+n — é um trilho inteiro próprio, com diagramas clássicos próprios, e está fora do escopo deste curso, que segue o trilho do Pix. Mas a fronteira fica desenhada desde o dia 1 de propósito: quando (se) a TechPix entrar nesse mundo, o lugar dela no monólito já tem nome e regra de ouro esperando.
 
 Minha recomendação, e isso vem de gente que já bateu a cabeça nisso — Martin Fowler chama essa estratégia de "[monolith first](https://martinfowler.com/bliki/MonolithFirst.html)" —: comecem com o monólito modular. Não é fase intermediária vergonhosa; é a decisão mais defensável no dia 1, porque vocês ainda não sabem exatamente onde as fronteiras de verdade do domínio de vocês vão cair. Extrair serviço cedo demais, antes de entender o domínio, é pagar o preço de operar sistemas distribuídos sem ter comprado ainda o benefício de escalar de forma independente. E tem uma regra prática que eu gosto de usar: só extraiam um módulo para um serviço separado depois que a fronteira dele ficar **estável por meses** — depois que vocês tiverem certeza de que aquela linha não vai se mover. Extrair cedo demais é caro; extrair tarde demais só custa um refactor. A assimetria favorece esperar.
 
@@ -242,7 +249,7 @@ A ideia, que Neal Ford, Rebecca Parsons e Patrick Kua sistematizaram no livro [*
 
 E a ferramenta central da arquitetura evolutiva é a **fitness function** — termo que eu já usei na Aula 1, quando falei da invariante do ledger. Agora eu quero formalizar. Uma fitness function é qualquer mecanismo que dá a vocês uma avaliação objetiva de uma característica arquitetural que importa: performance, segurança, escalabilidade, a fronteira entre módulos. Existem fitness functions **atômicas**, que testam uma coisa isolada — "o p99 do caminho de escrita do Pix é menor que X milissegundos?" — e fitness functions **holísticas**, que testam a interação entre várias características ao mesmo tempo. Existem fitness functions **disparadas**, que rodam quando alguém propõe uma mudança — tipicamente no pipeline de CI —, e fitness functions **contínuas**, que ficam rodando o tempo todo em produção, como um monitor.
 
-Deixa eu dar exemplos concretos, do próprio TechPix, para isso não ficar abstrato. Uma fitness function disparada, que roda a cada pull request: um teste de dependência de arquitetura — ferramentas como o ArchUnit fazem isso — que **quebra o build** se alguém, sem querer, introduzir uma chamada direta do módulo de Cartões para uma tabela interna do Ledger. Isso transforma a regra "nenhum módulo lê a tabela de outro" de um acordo de cavalheiros, que todo mundo esquece sob pressão de prazo, numa checagem automática que ninguém consegue burlar sem perceber. Uma fitness function contínua: um monitor que observa o p99 de latência do caminho de pagamento em produção, o tempo inteiro, e dispara alerta se ele passar de um limite que vocês definiram como seguro dentro do orçamento de 40 segundos que a gente viu na Aula 1. E uma fitness function holística: um teste de carga, um "game day", onde vocês simulam artificialmente um pico de tráfego — o próprio cenário do dia 5 que eu contei no começo — antes que ele aconteça de verdade, e medem se o sistema se comporta como esperado sob pressão.
+Deixa eu dar exemplos concretos, da própria TechPix, para isso não ficar abstrato. Uma fitness function disparada, que roda a cada pull request: um teste de dependência de arquitetura — ferramentas como o ArchUnit fazem isso — que **quebra o build** se alguém, sem querer, introduzir uma chamada direta do módulo de Cartões para uma tabela interna do Ledger. Isso transforma a regra "nenhum módulo lê a tabela de outro" de um acordo de cavalheiros, que todo mundo esquece sob pressão de prazo, numa checagem automática que ninguém consegue burlar sem perceber. Uma fitness function contínua: um monitor que observa o p99 de latência do caminho de pagamento em produção, o tempo inteiro, e dispara alerta se ele passar de um limite que vocês definiram como seguro dentro do orçamento de 40 segundos que a gente viu na Aula 1. E uma fitness function holística: um teste de carga, um "game day", onde vocês simulam artificialmente um pico de tráfego — o próprio cenário do dia 5 que eu contei no começo — antes que ele aconteça de verdade, e medem se o sistema se comporta como esperado sob pressão.
 
 E aqui eu quero fazer uma ponte que vai voltar com força lá na Aula 8: uma fitness function que trava um deploy porque uma característica do sistema não está sendo respeitada tem exatamente o mesmo formato de uma avaliação automática — um *eval* — que trava a proposta de um agente de inteligência artificial porque ela violaria uma invariante. Vocês, hoje, sem saber, já estão construindo o esqueleto do que mais para frente eu vou chamar de Harness. A disciplina é a mesma; só muda quem está propondo a mudança — um humano ou um agente.
 
@@ -359,7 +366,7 @@ Com os nomes técnicos: "ocupado" é a **utilização**, que se escreve com a le
 
 *(Para quem for pesquisar depois: esse modelo simples — um atendente, chegadas ao acaso — é apelidado de **M/M/1** na literatura. Modelos mais sofisticados mudam os detalhes; o cotovelo sobrevive em todos.)*
 
-Agora troquem "caixa" por "lock do banco de dados" e "atendimento de 10 segundos" por "transação de 5 milissegundos", e vocês têm o TechPix do dia 5:
+Agora troquem "caixa" por "lock do banco de dados" e "atendimento de 10 segundos" por "transação de 5 milissegundos", e vocês têm a TechPix do dia 5:
 
 | Utilização (ρ) | Fator de espera ρ/(1−ρ) | Espera real, se cada transação leva 5 ms | O que isso significa |
 |---|---|---|---|
@@ -430,7 +437,7 @@ Nos livros, ela se escreve `L = λ × W`. Traduzindo as três letras:
 
 - **λ** (lambda, outra letra grega de apelido) — a **taxa de chegada**: quantas transações chegam por segundo;
 - **W** — o **tempo no sistema**: quanto cada transação demora, da chegada à resposta. Reparem: é exatamente o tempo que a curva da Seção 3.1 faz explodir quando a folga acaba;
-- **L** — o resultado: quantas transações estão **dentro** do sistema ao mesmo tempo. E no TechPix, cada uma dessas transações ocupa uma conexão do pool enquanto está lá dentro.
+- **L** — o resultado: quantas transações estão **dentro** do sistema ao mesmo tempo. E na TechPix, cada uma dessas transações ocupa uma conexão do pool enquanto está lá dentro.
 
 Sigam o encadeamento comigo, porque ele é vicioso:
 
@@ -637,23 +644,23 @@ Três, e todas valem nomear porque são padrões de indústria:
 
 ---
 
-## 4. Anatomia da fratura: onde o TechPix racha de verdade
+## 4. Anatomia da fratura: onde a TechPix racha de verdade
 
 Agora sim, com a matemática na mão, deixa eu abrir o capô e mostrar exatamente **onde** ele quebrou. São dois pontos, e os dois já estavam plantados desde a Aula 1 — eu até avisei, lembram? "Racha na Aula 2: ledger e DICT síncrono." Chegou a hora.
 
 ### 4.1 O ponto quente do ledger
 
-Relembrando a Aula 1: o ledger do TechPix tem consistência forte, porque conservação de dinheiro exige isso. Mas "consistência forte" tem um custo que eu não detalhei até agora: para garantir que Σ débitos sempre seja igual a Σ créditos, cada escrita no ledger precisa coordenar com as outras escritas que tocam a mesma conta, ou o mesmo recurso compartilhado. Se a implementação usa, por exemplo, um contador sequencial único para gerar o identificador de cada lançamento, ou se duas transações concorrentes tentam debitar a mesma conta de liquidação ao mesmo tempo — lembra da conta `pix_a_liquidar` que eu usei como exemplo? — elas competem pelo mesmo lock. Isso se chama **ponto quente**, ou *hot partition*: um recurso que deveria ser só mais um entre milhares, mas que na prática concentra uma fração desproporcional do tráfego, e vira gargalo.
+Relembrando a Aula 1: o ledger da TechPix tem consistência forte, porque conservação de dinheiro exige isso. Mas "consistência forte" tem um custo que eu não detalhei até agora: para garantir que Σ débitos sempre seja igual a Σ créditos, cada escrita no ledger precisa coordenar com as outras escritas que tocam a mesma conta, ou o mesmo recurso compartilhado. Se a implementação usa, por exemplo, um contador sequencial único para gerar o identificador de cada lançamento, ou se duas transações concorrentes tentam debitar a mesma conta de liquidação ao mesmo tempo — lembra da conta `pix_a_liquidar` que eu usei como exemplo? — elas competem pelo mesmo lock. Isso se chama **ponto quente**, ou *hot partition*: um recurso que deveria ser só mais um entre milhares, mas que na prática concentra uma fração desproporcional do tráfego, e vira gargalo.
 
-No dia 5, o volume de Pix simultâneos que passavam pela mesma conta de liquidação disparou. Cada transação precisava esperar sua vez para adquirir o lock daquela conta. A fila cresceu. E cada milissegundo de espera na fila é, literalmente, uma fatia a mais consumida do orçamento de latência que a gente desenhou na Aula 1 — aquele orçamento de 40 segundos, com a experiência-alvo de poucos segundos. Só que dessa vez, quem estava comendo o orçamento não era o SPI, nem o DICT — era o **próprio sistema do TechPix**, brigando consigo mesmo por um recurso compartilhado.
+No dia 5, o volume de Pix simultâneos que passavam pela mesma conta de liquidação disparou. Cada transação precisava esperar sua vez para adquirir o lock daquela conta. A fila cresceu. E cada milissegundo de espera na fila é, literalmente, uma fatia a mais consumida do orçamento de latência que a gente desenhou na Aula 1 — aquele orçamento de 40 segundos, com a experiência-alvo de poucos segundos. Só que dessa vez, quem estava comendo o orçamento não era o SPI, nem o DICT — era o **próprio sistema da TechPix**, brigando consigo mesmo por um recurso compartilhado.
 
 Reparem numa coisa importante: essa dor **não** significa que o ADR-001 estava errado. O ledger continua precisando de consistência forte — isso não mudou, e não vai mudar. O problema não é a decisão de ser forte; é a **implementação ingênua** dessa decisão, que concentrou contenção onde não precisava. A correção aqui não é enfraquecer o ledger — é redesenhar como o ledger particiona o trabalho, para que a consistência forte aconteça em paralelo, em vez de em fila única.
 
 ### 4.2 O DICT síncrono e o pool de threads
 
-O segundo ponto de fratura é ainda mais traiçoeiro, porque ele não mora dentro do TechPix — mora na dependência de um sistema externo que a gente não controla. Relembrando a Aula 1: toda transação por chave Pix precisa consultar o **DICT**, e essa chamada é síncrona. Num dia normal, o DICT responde rápido — p99 de 1 segundo, como o próprio Banco Central publica. Mas no dia 5, com o volume triplicado, cada requisição do TechPix ficava esperando essa resposta síncrona chegar, e enquanto espera, ela **segura uma thread** — ou uma conexão do pool de banco, ou um slot de conexão HTTP, dependendo de como o sistema foi implementado.
+O segundo ponto de fratura é ainda mais traiçoeiro, porque ele não mora dentro da TechPix — mora na dependência de um sistema externo que a gente não controla. Relembrando a Aula 1: toda transação por chave Pix precisa consultar o **DICT**, e essa chamada é síncrona. Num dia normal, o DICT responde rápido — p99 de 1 segundo, como o próprio Banco Central publica. Mas no dia 5, com o volume triplicado, cada requisição da TechPix ficava esperando essa resposta síncrona chegar, e enquanto espera, ela **segura uma thread** — ou uma conexão do pool de banco, ou um slot de conexão HTTP, dependendo de como o sistema foi implementado.
 
-E aqui está a parte traiçoeira: se o número de requisições simultâneas esperando o DICT ultrapassa o tamanho do pool de threads disponível, **todas as outras operações** que dependeriam dessa mesma pool — inclusive operações que não têm nada a ver com o DICT — começam a esperar também. Isso é o que se chama de **esgotamento de pool**, e o efeito colateral se chama **falha em cascata**: um componente lento, ou um sistema externo lento, contamina o sistema inteiro através de um recurso compartilhado que ele nem deveria estar disputando. É exatamente esse mecanismo que fez o TechPix parecer "andando na areia" — não é que tudo tenha ficado lento por igual; é que uma dependência específica, o DICT, consumiu o recurso que todo o resto também precisava.
+E aqui está a parte traiçoeira: se o número de requisições simultâneas esperando o DICT ultrapassa o tamanho do pool de threads disponível, **todas as outras operações** que dependeriam dessa mesma pool — inclusive operações que não têm nada a ver com o DICT — começam a esperar também. Isso é o que se chama de **esgotamento de pool**, e o efeito colateral se chama **falha em cascata**: um componente lento, ou um sistema externo lento, contamina o sistema inteiro através de um recurso compartilhado que ele nem deveria estar disputando. É exatamente esse mecanismo que fez a TechPix parecer "andando na areia" — não é que tudo tenha ficado lento por igual; é que uma dependência específica, o DICT, consumiu o recurso que todo o resto também precisava.
 
 A defesa clássica contra esse tipo de fratura tem nome, e vem da literatura de sistemas resilientes: **bulkhead**, o mesmo princípio dos compartimentos estanques de um navio — se um compartimento alaga, os outros continuam secos. Na prática, isso significa isolar o pool de conexões usado para chamar o DICT do pool usado para o resto do sistema, para que uma lentidão no DICT nunca sequestre a capacidade de processar, por exemplo, uma consulta de saldo. Junto disso vem o **circuit breaker**: um interruptor que, depois de detectar falhas ou lentidão repetida numa dependência, **para de tentar** por um tempo, falhando rápido em vez de deixar a fila crescer sem controle — e voltando a tentar aos poucos, quando a dependência dá sinal de que se recuperou. E, claro, o **timeout bem calibrado**: se o DICT normalmente responde em até 1 segundo no p99, esperar 10 segundos por uma resposta dele não é paciência, é desperdício do orçamento inteiro do Pix.
 
@@ -743,7 +750,7 @@ Reparem que essas três táticas — bulkhead, circuit breaker, timeout calibrad
 
 ## 5. Desacoplamento incremental: cortando sem parar de operar
 
-Agora que a gente sabe onde dói, vamos falar de como tratar — sem, no processo, criar um novo incidente pior que o primeiro. E antes da técnica, deixa eu encenar a reunião que aconteceu no TechPix na manhã seguinte ao dia 5, porque essa reunião acontece em **toda** empresa depois de um susto desses, e vocês vão estar nela um dia.
+Agora que a gente sabe onde dói, vamos falar de como tratar — sem, no processo, criar um novo incidente pior que o primeiro. E antes da técnica, deixa eu encenar a reunião que aconteceu na TechPix na manhã seguinte ao dia 5, porque essa reunião acontece em **toda** empresa depois de um susto desses, e vocês vão estar nela um dia.
 
 O primeiro a falar é um dev da equipe, ainda com a adrenalina do plantão: *"A causa é óbvia: a gente é um monólito. A Netflix quebrou tudo em microsserviços e escala infinito. Vamos reescrever."* E eu quero que vocês notem que esse argumento é sedutor e **não sobrevive ao diagnóstico que a gente acabou de fazer**. Voltem nas duas fraturas da Seção 4. O ponto quente era o lock da conta `pix_a_liquidar` — se vocês colocarem o Ledger num serviço separado, aquele lock **continua existindo**, só que agora cada transação paga uma viagem de rede para chegar até ele. Vocês não removeram a contenção; mudaram o endereço dela e adicionaram latência e falha parcial no caminho. E o esgotamento de pool era uma dependência externa lenta sequestrando recurso compartilhado — que se resolve com bulkhead e circuit breaker, dentro ou fora de um monólito, indiferente. **Nenhuma das duas fraturas tem "deploy único" como causa raiz.** Microsserviços trocam o problema da contenção pelo problema da distribuição; quem extrai sem critério paga os dois ao mesmo tempo.
 
@@ -799,7 +806,7 @@ No TechPix, a estratégia seria: colocar uma fachada na frente do módulo de Pag
 
 ### 5.3 O problema da escrita dupla, e o Outbox Pattern
 
-Agora, o ponto mais sutil e, para mim, o mais bonito dessa aula: o que acontece quando o TechPix precisa, na mesma operação, gravar um lançamento no ledger **e** avisar o resto do sistema que aquilo aconteceu — para atualizar o extrato, disparar uma notificação, alimentar o feed? Se vocês gravam no banco e, logo em seguida, publicam um evento numa fila de mensagens como duas operações separadas, existe uma janela de falha real: e se o sistema gravar no banco e cair exatamente antes de publicar o evento? O lançamento existe, mas ninguém nunca soube. Isso se chama **problema da escrita dupla**, o *dual write problem*, e é um dos jeitos mais silenciosos de um sistema ficar inconsistente sem ninguém perceber por semanas.
+Agora, o ponto mais sutil e, para mim, o mais bonito dessa aula: o que acontece quando a TechPix precisa, na mesma operação, gravar um lançamento no ledger **e** avisar o resto do sistema que aquilo aconteceu — para atualizar o extrato, disparar uma notificação, alimentar o feed? Se vocês gravam no banco e, logo em seguida, publicam um evento numa fila de mensagens como duas operações separadas, existe uma janela de falha real: e se o sistema gravar no banco e cair exatamente antes de publicar o evento? O lançamento existe, mas ninguém nunca soube. Isso se chama **problema da escrita dupla**, o *dual write problem*, e é um dos jeitos mais silenciosos de um sistema ficar inconsistente sem ninguém perceber por semanas.
 
 A solução elegante chama-se **Outbox Pattern**. Em vez de escrever no banco e publicar na fila como duas operações, vocês escrevem **duas coisas na mesma transação, no mesmo banco**: o lançamento do ledger, e um registro numa tabela de "outbox" — uma caixa de saída — descrevendo o evento que precisa ser publicado. Como as duas escritas acontecem dentro da mesma transação ACID, ou as duas acontecem, ou nenhuma acontece — nunca existe o estado intermediário perigoso. Depois, um processo separado — um relay — lê a tabela de outbox e publica os eventos, de forma assíncrona, para quem precisar consumir: o serviço de extrato, o de notificações, o de feed.
 
@@ -937,7 +944,7 @@ Antes de escrever o ADR, eu quero fazer uma conta com vocês que a maioria dos t
 
 A promessa intuitiva do particionamento é linear: "vou dividir a escrita em 8 partições, então tenho 8 vezes mais capacidade de escrita." **Isso só é verdade se o tráfego se distribuir uniformemente entre as partições.** E tráfego financeiro real quase nunca é uniforme.
 
-Vamos supor o cenário realista do TechPix. Vocês particionam por `hash(conta_id)` em 8 partições. Mas o TechPix tem uma conta de marketplace que concentra, sozinha, 15% de todo o volume de recebimento — coisa comum em qualquer PSP que atenda um grande vendedor. O que acontece?
+Vamos supor o cenário realista da TechPix. Vocês particionam por `hash(conta_id)` em 8 partições. Mas a TechPix tem uma conta de marketplace que concentra, sozinha, 15% de todo o volume de recebimento — coisa comum em qualquer PSP que atenda um grande vendedor. O que acontece?
 
 Sete partições ficam com aproximadamente 12% do tráfego cada — tranquilas. E a partição que abriga a conta do marketplace fica com os 12% dela **mais** os 15% do marketplace, ou seja, ~27% do tráfego total. Ela recebe mais que o dobro da carga das outras.
 
@@ -1037,7 +1044,7 @@ E agora que os nomes estão na mesa, deixa eu juntar as peças num desenho só �
 <p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O CQRS da Seção 5.4 com a stack nomeada: Postgres → outbox → relay (poller→Debezium) → Kafka → Redis + réplica. O desenho conceitual e este são o mesmo sistema — um para entender, outro para operar.</p>
 </div>
 
-E o Redis ali no canto merece uma pausa, porque "botar um cache" é a frase mais enganosamente simples da engenharia. Existem três estratégias clássicas de manter um cache — e duas formas de ele parar de mentir. O TechPix usa duas combinações diferentes, para dois problemas diferentes:
+E o Redis ali no canto merece uma pausa, porque "botar um cache" é a frase mais enganosamente simples da engenharia. Existem três estratégias clássicas de manter um cache — e duas formas de ele parar de mentir. A TechPix usa duas combinações diferentes, para dois problemas diferentes:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 920 430" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
@@ -1112,7 +1119,7 @@ E o Redis ali no canto merece uma pausa, porque "botar um cache" é a frase mais
   </g>
   <text x="460" y="400" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">O trade-off é sempre o mesmo triângulo: staleness aceitável × custo por leitura × complexidade de invalidação. Escolham por caso, não por moda.</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Três estratégias de cache com Redis, duas formas de invalidar — e os dois casos reais do TechPix: DICT (cache-aside + TTL) e saldo exibido (projeção por evento).</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Três estratégias de cache com Redis, duas formas de invalidar — e os dois casos reais da TechPix: DICT (cache-aside + TTL) e saldo exibido (projeção por evento).</p>
 </div>
 
 **Feature flags para o Strangler Fig.** O **Unleash** é a opção open source madura; o **LaunchDarkly** é a comercial mais conhecida. E vale dizer para a turma: começar com um sistema próprio de flags é tentador e quase sempre subestimado — o difícil não é o `if`, é a propagação de mudança de configuração em segundos para centenas de instâncias, com auditoria de quem mudou o quê. Isso importa muito na Aula 8, porque é o mecanismo do canary.
@@ -1123,7 +1130,7 @@ E o Redis ali no canto merece uma pausa, porque "botar um cache" é a frase mais
 
 ## 8. Registrando a decisão: ADR-002
 
-Chegou a hora de formalizar. Vamos escrever, juntos, o segundo registro de decisão do TechPix — e reparem que ele **não contradiz** o ADR-001. Ele o complementa, resolvendo exatamente o ponto de fratura que a gente diagnosticou hoje, sem tocar na consistência forte do núcleo.
+Chegou a hora de formalizar. Vamos escrever, juntos, o segundo registro de decisão da TechPix — e reparem que ele **não contradiz** o ADR-001. Ele o complementa, resolvendo exatamente o ponto de fratura que a gente diagnosticou hoje, sem tocar na consistência forte do núcleo.
 
 ```
 ADR-002 · Outbox + CQRS para o caminho de leitura          Status: Aceito (2026-08-06)
@@ -1161,7 +1168,7 @@ Reparem que a linha "Revisão" deixa uma porta aberta, de propósito: talvez o O
 
 ## 9. Fecho: fronteiras eu desenhei no olho — e isso é um problema
 
-Eu quero terminar essa aula com uma confissão. Reparem que, hoje, eu desenhei as fronteiras do monólito modular do TechPix meio de improviso: "tem um módulo de Contas, tem um módulo de Pagamentos, tem um módulo de Antifraude". Eu apontei essas fronteiras como se fossem óbvias. **Elas não são.** Eu as escolhi com a experiência de quem já viu esse tipo de sistema antes — mas isso não é uma técnica, é um palpite educado.
+Eu quero terminar essa aula com uma confissão. Reparem que, hoje, eu desenhei as fronteiras do monólito modular da TechPix meio de improviso: "tem um módulo de Contas, tem um módulo de Pagamentos, tem um módulo de Antifraude". Eu apontei essas fronteiras como se fossem óbvias. **Elas não são.** Eu as escolhi com a experiência de quem já viu esse tipo de sistema antes — mas isso não é uma técnica, é um palpite educado.
 
 E um palpite educado, por melhor que seja, não escala para um time inteiro, nem sobrevive ao primeiro desacordo sério entre dois engenheiros que discordam sobre onde uma fronteira deveria estar. Vocês precisam de um jeito **sistemático** de descobrir essas fronteiras, a partir da própria linguagem do domínio — não do meu palpite, nem do gráfico da estrutura organizacional da empresa.
 
@@ -1182,7 +1189,7 @@ E antes de encerrar, o retrato de sempre — a gente vai tirar um desses ao fim 
       <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
     </marker>
   </defs>
-  <text x="480" y="24" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 2</text>
+  <text x="480" y="24" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">A TechPix ao fim da Aula 2</text>
 
   <!-- fronteira em L -->
   <line x1="760" y1="34" x2="760" y2="272" stroke="#666" stroke-width="1.5" stroke-dasharray="8 5"/>
