@@ -260,29 +260,106 @@ A resposta depende de uma única medida: a **utilização** — a fração do te
 
 A intuição ingênua diz: "se o caixa está livre metade do tempo, quase ninguém espera". E a intuição está **errada**, porque os clientes chegam em rajada. Quando três chegam juntos, o terceiro espera dois atendimentos inteiros — e essa fila acumulada só é drenada nos momentos em que o caixa fica vazio. Quanto mais ocupado o caixa, menos momentos vazios sobram para drenar. Por isso a espera não cresce em linha reta: cresce devagar no começo e **explode** no fim.
 
-A teoria de filas resume isso numa fórmula pequena. Primeiro em palavras:
+E agora a receita do cálculo. Sem fórmula ainda — só três perguntas, uma de cada vez:
+
+**Pergunta 1 — de cada 100 minutos, quantos o caixa passa ocupado?** Digamos 90.
+
+**Pergunta 2 — quantos minutos sobram de folga?** O que falta para chegar em 100: sobram 10.
+
+**Pergunta 3 — divida um pelo outro.** 90 ÷ 10 = **9**. E esse 9 não é abstração matemática: ele diz **quantos atendimentos de fila existem, em média, na sua frente** quando você chega. Nove pessoas. Cada atendimento leva 10 segundos, então sua espera é 9 × 10 = **90 segundos**.
+
+Só isso. O cálculo inteiro é: **ocupado ÷ folga, vezes o tempo de um atendimento.** Vejam a mesma conta em três cenários, agora em desenho:
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 430" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <text x="450" y="24" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">A padaria com um caixa — cada atendimento leva 10 s</text>
+
+  <!-- cabeçalhos de coluna -->
+  <rect x="150" y="42" width="12" height="12" fill="#4338ca"/>
+  <text x="167" y="52" font-family="sans-serif" font-size="10" fill="#666">ocupado</text>
+  <rect x="235" y="42" width="12" height="12" fill="#f0fdf4" stroke="#a8a29e"/>
+  <text x="252" y="52" font-family="sans-serif" font-size="10" fill="#666">livre (é aqui que a fila drena)</text>
+  <text x="618" y="52" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#666">fila média na sua frente</text>
+  <text x="795" y="52" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#666">a conta</text>
+  <line x1="535" y1="62" x2="535" y2="390" stroke="#eee" stroke-width="1.5"/>
+  <line x1="705" y1="62" x2="705" y2="390" stroke="#eee" stroke-width="1.5"/>
+
+  <!-- linha 1: 50% -->
+  <text x="30" y="94" font-family="sans-serif" font-size="10" fill="#666">ocupado</text>
+  <text x="30" y="116" font-family="sans-serif" font-size="20" font-weight="bold" fill="#166534">50%</text>
+  <text x="30" y="132" font-family="sans-serif" font-size="10" fill="#166534">folga: 50</text>
+  <rect x="140" y="78" width="380" height="26" rx="4" fill="#f0fdf4" stroke="#a8a29e"/>
+  <g fill="#4338ca">
+    <rect x="140" y="78" width="40" height="26"/>
+    <rect x="210" y="78" width="50" height="26"/>
+    <rect x="290" y="78" width="40" height="26"/>
+    <rect x="370" y="78" width="30" height="26"/>
+    <rect x="440" y="78" width="30" height="26"/>
+  </g>
+  <text x="330" y="122" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">muitos buracos livres — a fila drena logo</text>
+  <circle cx="565" cy="91" r="6" fill="#d4a017"/>
+  <text x="618" y="122" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#7a5c00">1 atendimento de fila</text>
+  <text x="715" y="88" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">50 ÷ 50 = 1</text>
+  <text x="715" y="106" font-family="sans-serif" font-size="10.5" fill="#666">1 × 10 s =</text>
+  <text x="715" y="126" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">10 s de espera</text>
+
+  <!-- linha 2: 90% -->
+  <text x="30" y="202" font-family="sans-serif" font-size="10" fill="#666">ocupado</text>
+  <text x="30" y="224" font-family="sans-serif" font-size="20" font-weight="bold" fill="#b45309">90%</text>
+  <text x="30" y="240" font-family="sans-serif" font-size="10" fill="#b45309">folga: 10</text>
+  <rect x="140" y="186" width="380" height="26" rx="4" fill="#4338ca"/>
+  <g fill="#f0fdf4">
+    <rect x="200" y="187" width="12" height="24"/>
+    <rect x="320" y="187" width="10" height="24"/>
+    <rect x="440" y="187" width="16" height="24"/>
+  </g>
+  <text x="330" y="230" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b45309">os buracos quase sumiram — a fila acumula</text>
+  <g fill="#d4a017">
+    <circle cx="552" cy="194" r="6"/><circle cx="569" cy="194" r="6"/><circle cx="586" cy="194" r="6"/><circle cx="603" cy="194" r="6"/><circle cx="620" cy="194" r="6"/>
+    <circle cx="552" cy="212" r="6"/><circle cx="569" cy="212" r="6"/><circle cx="586" cy="212" r="6"/><circle cx="603" cy="212" r="6"/>
+  </g>
+  <text x="618" y="234" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#7a5c00">9 atendimentos de fila</text>
+  <text x="715" y="196" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">90 ÷ 10 = 9</text>
+  <text x="715" y="214" font-family="sans-serif" font-size="10.5" fill="#666">9 × 10 s =</text>
+  <text x="715" y="234" font-family="sans-serif" font-size="13" font-weight="bold" fill="#b45309">90 s de espera</text>
+
+  <!-- linha 3: 95% -->
+  <text x="30" y="312" font-family="sans-serif" font-size="10" fill="#666">ocupado</text>
+  <text x="30" y="334" font-family="sans-serif" font-size="20" font-weight="bold" fill="#b91c1c">95%</text>
+  <text x="30" y="350" font-family="sans-serif" font-size="10" fill="#b91c1c">folga: 5</text>
+  <rect x="140" y="296" width="380" height="26" rx="4" fill="#4338ca"/>
+  <g fill="#f0fdf4">
+    <rect x="240" y="297" width="7" height="24"/>
+    <rect x="390" y="297" width="6" height="24"/>
+    <rect x="490" y="297" width="6" height="24"/>
+  </g>
+  <text x="330" y="340" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">folga de 5% — a fila quase não drena</text>
+  <g fill="#d4a017">
+    <circle cx="550" cy="290" r="6"/><circle cx="567" cy="290" r="6"/><circle cx="584" cy="290" r="6"/><circle cx="601" cy="290" r="6"/><circle cx="618" cy="290" r="6"/><circle cx="635" cy="290" r="6"/><circle cx="652" cy="290" r="6"/>
+    <circle cx="550" cy="306" r="6"/><circle cx="567" cy="306" r="6"/><circle cx="584" cy="306" r="6"/><circle cx="601" cy="306" r="6"/><circle cx="618" cy="306" r="6"/><circle cx="635" cy="306" r="6"/><circle cx="652" cy="306" r="6"/>
+    <circle cx="550" cy="322" r="6"/><circle cx="567" cy="322" r="6"/><circle cx="584" cy="322" r="6"/><circle cx="601" cy="322" r="6"/><circle cx="618" cy="322" r="6"/>
+  </g>
+  <text x="618" y="344" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#7a5c00">19 atendimentos de fila</text>
+  <text x="715" y="300" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">95 ÷ 5 = 19</text>
+  <text x="715" y="318" font-family="sans-serif" font-size="10.5" fill="#666">19 × 10 s =</text>
+  <text x="715" y="338" font-family="sans-serif" font-size="13" font-weight="bold" fill="#b91c1c">190 s — 3 min</text>
+
+  <text x="450" y="414" text-anchor="middle" font-family="sans-serif" font-size="12.5" font-weight="bold" fill="#b91c1c">O caixa nunca ficou mais lento — 10 s por cliente, sempre. Toda a piora veio da fila.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A mesma padaria em três níveis de ocupação. A coluna do meio é a chave: a fila só drena nos buracos livres — e é o buraco que some primeiro.</p>
+</div>
+
+A fórmula dos livros é só essa receita escrita em uma linha:
 
 ```
-espera média na fila = tempo de um atendimento × [ utilização ÷ (1 − utilização) ]
+espera na fila = tempo de um atendimento × (ocupado ÷ folga)
 ```
 
-E na notação dos livros, chamando o pedaço entre colchetes de **fator de espera**:
+Com os nomes técnicos: "ocupado" é a **utilização**, que se escreve com a letra grega **ρ** ("rô"), e a folga vira `1 − ρ`. Então vocês vão encontrar assim nos livros: `fator de espera = ρ / (1 − ρ)`. É a mesma divisão das três perguntas — só mudaram os nomes. E o drama todo mora na folga: perto de 100% de ocupação, a folga encosta no zero, e dividir por quase zero dá um número gigante. Por isso a curva é quase plana no começo e, de repente, sobe na vertical — o **"cotovelo"**.
 
-```
-fator de espera = ρ / (1 − ρ)
-```
+*(Para quem for pesquisar depois: esse modelo simples — um atendente, chegadas ao acaso — é apelidado de **M/M/1** na literatura. Modelos mais sofisticados mudam os detalhes; o cotovelo sobrevive em todos.)*
 
-Não tem nada exótico aí: é uma **divisão**. Em cima, a utilização. Embaixo, `1 − ρ` — ou seja, "o quanto falta para chegar em 100%", a **folga** do sistema. E é embaixo que mora o drama: quando a utilização se aproxima de 100%, a folga se aproxima de **zero** — e dividir por um número perto de zero dá um resultado gigante. No limite, a espera vai para o infinito. Não é uma reta: é uma curva quase plana que, num certo ponto, vira para cima quase na vertical — por isso o apelido de "cotovelo" ou "hockey stick".
-
-*(Um parêntese para quem for pesquisar depois: essa forma vale para o modelo mais simples da literatura, apelidado de **M/M/1** — o "1" é o número de atendentes, e os dois "M" descrevem o padrão aleatório das chegadas e dos atendimentos. Modelos mais sofisticados mudam os detalhes, mas o formato da curva — plana, depois vertical — sobrevive em todos.)*
-
-Agora façam a conta comigo, na padaria dos 10 segundos:
-
-- **Utilização de 50%:** fator = 0,5 ÷ 0,5 = **1**. Espera = 1 × 10 s = **10 segundos** — um atendimento de espera. Tranquilo.
-- **Utilização de 90%:** fator = 0,9 ÷ 0,1 = **9**. Espera = 9 × 10 s = **90 segundos**. O caixa continua atendendo cada cliente nos mesmos 10 segundos — mas agora existem, em média, nove atendimentos de fila na sua frente.
-- **Utilização de 95%:** fator = 0,95 ÷ 0,05 = **19**. Espera = **mais de 3 minutos** — por um atendimento de 10 segundos.
-
-Reparem no detalhe que muda tudo: **o caixa nunca ficou mais lento.** Só ficou mais ocupado. Toda a piora veio da fila. Agora troquem "caixa" por "lock do banco de dados" e "atendimento de 10 segundos" por "transação de 5 milissegundos", e vocês têm o TechPix do dia 5:
+Agora troquem "caixa" por "lock do banco de dados" e "atendimento de 10 segundos" por "transação de 5 milissegundos", e vocês têm o TechPix do dia 5:
 
 | Utilização (ρ) | Fator de espera ρ/(1−ρ) | Espera real, se cada transação leva 5 ms | O que isso significa |
 |---|---|---|---|

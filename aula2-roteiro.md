@@ -74,7 +74,8 @@ title: "Aula 2 — Roteiro (fonte)"
 - **Abra com a padaria, não com a fórmula:** um caixa só, atendimento de 10 s, clientes chegando em rajada. Pergunta: "quanto tempo o cliente espera na fila?" Defina utilização em palavras (fração do tempo com o caixa ocupado) ANTES de mostrar o ρ — e avise: "ρ (rô) é só o apelido grego de utilização".
 - **Escreva a fórmula no Excalidraw, primeiro em palavras:** `espera na fila = tempo de um atendimento × [utilização ÷ (1 − utilização)]` — e só então a versão dos livros, `fator = ρ / (1 − ρ)`. Nomeie o denominador: "1 − ρ é a folga".
 - **Fala-chave:** "Olhem embaixo da divisão. Quando a utilização se aproxima de 100%, a folga vai a zero — e dividir por quase zero dá um número gigante. Não é uma reta — é um cotovelo."
-- **Faça a conta ao vivo na padaria:** 50% → 0,5÷0,5 = 1 → 10 s de espera; 90% → 0,9÷0,1 = 9 → 90 s; 95% → 19 → mais de 3 min. Frase-âncora: "o caixa nunca ficou mais lento — só mais ocupado. Toda a piora veio da fila."
+- **Faça a conta em três perguntas, uma por vez:** (1) de cada 100 minutos, quantos o caixa passa ocupado? (2) quantos sobram de folga? (3) divida um pelo outro — o resultado é quantos atendimentos de fila existem na sua frente. 90 ÷ 10 = 9 → 9 × 10 s = 90 s.
+- **Desenhe o Diagrama 3a (a padaria em três linhas):** para 50%, 90% e 95% — a linha do tempo do caixa (blocos ocupado/livre), a fila média em bolinhas, e a conta ao lado. O ponto visual: os buracos livres são o que drena a fila, e é o buraco que some primeiro. Frase-âncora: "o caixa nunca ficou mais lento — só mais ocupado. Toda a piora veio da fila."
 - **Construa a tabela ao vivo**, linha por linha, agora com transação de 5 ms: 50% → 1,0 (5 ms) · 70% → 2,3 (~12 ms) · 80% → 4,0 (20 ms) · 90% → 9,0 (45 ms) · 95% → 19 (95 ms) · 99% → 99 (~500 ms).
 - **M/M/1 é parêntese, não bloqueio:** "1" = um atendente; os dois "M" = chegadas e atendimentos aleatórios. Só o nome para quem for pesquisar.
 - **Pare em 80→95%:** "A utilização subiu 15 pontos e a espera **quintuplicou**. É por isso que a intuição linear falha."
@@ -189,6 +190,7 @@ Percorra rápido, sem se alongar em nenhuma:
 1. Monólito modular do TechPix.
 1b. **A travessia** — um Pix atravessando os 6 módulos, numerado 1–8, com a fronteira dentro/fora (BACEN).
 2. Loop de fitness function.
+3a. **A padaria em três linhas** (50/90/95%: linha do tempo do caixa + fila média + a conta).
 3. **Curva do cotovelo** (utilização × espera) + encadeamento do retry storm.
 4. Anatomia da fratura (hotspot + DICT/pool).
 5. Strangler Fig.
