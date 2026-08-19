@@ -71,9 +71,12 @@ title: "Aula 2 — Roteiro (fonte)"
 
 **Parte A — a curva de filas [32–42]**
 
-- **Escreva a fórmula no Excalidraw:** `espera ∝ ρ / (1 − ρ)`.
-- **Fala-chave:** "Olhem o denominador. Quando a utilização se aproxima de 100%, o denominador vai a zero e a espera vai ao infinito. Não é uma reta — é um cotovelo."
-- **Construa a tabela ao vivo**, linha por linha: 50% → 1,0 · 70% → 2,3 · 80% → 4,0 · 90% → 9,0 · 95% → 19 · 99% → 99.
+- **Abra com a padaria, não com a fórmula:** um caixa só, atendimento de 10 s, clientes chegando em rajada. Pergunta: "quanto tempo o cliente espera na fila?" Defina utilização em palavras (fração do tempo com o caixa ocupado) ANTES de mostrar o ρ — e avise: "ρ (rô) é só o apelido grego de utilização".
+- **Escreva a fórmula no Excalidraw, primeiro em palavras:** `espera na fila = tempo de um atendimento × [utilização ÷ (1 − utilização)]` — e só então a versão dos livros, `fator = ρ / (1 − ρ)`. Nomeie o denominador: "1 − ρ é a folga".
+- **Fala-chave:** "Olhem embaixo da divisão. Quando a utilização se aproxima de 100%, a folga vai a zero — e dividir por quase zero dá um número gigante. Não é uma reta — é um cotovelo."
+- **Faça a conta ao vivo na padaria:** 50% → 0,5÷0,5 = 1 → 10 s de espera; 90% → 0,9÷0,1 = 9 → 90 s; 95% → 19 → mais de 3 min. Frase-âncora: "o caixa nunca ficou mais lento — só mais ocupado. Toda a piora veio da fila."
+- **Construa a tabela ao vivo**, linha por linha, agora com transação de 5 ms: 50% → 1,0 (5 ms) · 70% → 2,3 (~12 ms) · 80% → 4,0 (20 ms) · 90% → 9,0 (45 ms) · 95% → 19 (95 ms) · 99% → 99 (~500 ms).
+- **M/M/1 é parêntese, não bloqueio:** "1" = um atendente; os dois "M" = chegadas e atendimentos aleatórios. Só o nome para quem for pesquisar.
 - **Pare em 80→95%:** "A utilização subiu 15 pontos e a espera **quintuplicou**. É por isso que a intuição linear falha."
 - **A regra operacional (o take-away mais prático da aula):** "Nunca dimensionem sistema financeiro para operar acima de 70% no pico. Aquela folga que parece desperdício é o que separa 'lento' de 'fora do ar'."
 - **Pergunte:** "Quando alguém disser 'esses servidores estão a 40%, dá pra cortar metade', o que vocês respondem agora?"

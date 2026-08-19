@@ -254,24 +254,44 @@ Antes de eu abrir o capô do incidente, eu preciso responder uma pergunta que ta
 
 ### 3.1 A curva que todo arquiteto precisa ter na cabeça
 
-Existe uma relação, que vem da teoria de filas, entre o quanto um recurso está ocupado e quanto tempo você espera por ele. A forma mais simples dela — para uma fila com um servidor e chegadas aleatórias, o que a literatura chama de M/M/1 — é esta:
+Antes de qualquer fórmula, a cena. Imaginem uma padaria com **um caixa só**. Atender cada cliente leva, em média, **10 segundos**. E os clientes não chegam espaçados certinho — chegam ao acaso: às vezes ninguém por um minuto, às vezes três pessoas juntas. A pergunta que define esta seção inteira é: **quanto tempo um cliente espera na fila antes de ser atendido?**
+
+A resposta depende de uma única medida: a **utilização** — a fração do tempo em que o caixa está ocupado. Se o caixa trabalha 5 minutos a cada 10, a utilização é 50%. É um número entre 0 (sempre livre) e 100% (nunca livre). Os livros de teoria de filas escrevem essa medida com a letra grega **ρ** — lê-se "rô". É só um apelido: toda vez que vocês virem ρ daqui em diante, leiam "utilização".
+
+A intuição ingênua diz: "se o caixa está livre metade do tempo, quase ninguém espera". E a intuição está **errada**, porque os clientes chegam em rajada. Quando três chegam juntos, o terceiro espera dois atendimentos inteiros — e essa fila acumulada só é drenada nos momentos em que o caixa fica vazio. Quanto mais ocupado o caixa, menos momentos vazios sobram para drenar. Por isso a espera não cresce em linha reta: cresce devagar no começo e **explode** no fim.
+
+A teoria de filas resume isso numa fórmula pequena. Primeiro em palavras:
 
 ```
-tempo de espera ∝ ρ / (1 − ρ)      onde ρ (rô) = utilização, de 0 a 1
+espera média na fila = tempo de um atendimento × [ utilização ÷ (1 − utilização) ]
 ```
 
-Leiam essa fórmula com atenção no denominador, porque é ali que mora o drama: **quando a utilização se aproxima de 100%, o denominador se aproxima de zero, e o tempo de espera vai para o infinito.** Não é uma reta. É uma curva que fica quase plana e depois sobe verticalmente, e por isso ela costuma ser chamada de "cotovelo" ou "hockey stick".
+E na notação dos livros, chamando o pedaço entre colchetes de **fator de espera**:
 
-Vamos colocar números, porque é aqui que a turma sente:
+```
+fator de espera = ρ / (1 − ρ)
+```
 
-| Utilização (ρ) | Fator de espera ρ/(1−ρ) | O que isso significa |
-|---|---|---|
-| 50% | 1,0 | espera ≈ o tempo de serviço. Tranquilo. |
-| 70% | 2,3 | começou a doer, mas ainda operável |
-| 80% | 4,0 | **o dobro** da espera de 70% |
-| 90% | 9,0 | 4× a espera de 80% |
-| 95% | 19,0 | o sistema "parece travado" |
-| 99% | 99,0 | colapso |
+Não tem nada exótico aí: é uma **divisão**. Em cima, a utilização. Embaixo, `1 − ρ` — ou seja, "o quanto falta para chegar em 100%", a **folga** do sistema. E é embaixo que mora o drama: quando a utilização se aproxima de 100%, a folga se aproxima de **zero** — e dividir por um número perto de zero dá um resultado gigante. No limite, a espera vai para o infinito. Não é uma reta: é uma curva quase plana que, num certo ponto, vira para cima quase na vertical — por isso o apelido de "cotovelo" ou "hockey stick".
+
+*(Um parêntese para quem for pesquisar depois: essa forma vale para o modelo mais simples da literatura, apelidado de **M/M/1** — o "1" é o número de atendentes, e os dois "M" descrevem o padrão aleatório das chegadas e dos atendimentos. Modelos mais sofisticados mudam os detalhes, mas o formato da curva — plana, depois vertical — sobrevive em todos.)*
+
+Agora façam a conta comigo, na padaria dos 10 segundos:
+
+- **Utilização de 50%:** fator = 0,5 ÷ 0,5 = **1**. Espera = 1 × 10 s = **10 segundos** — um atendimento de espera. Tranquilo.
+- **Utilização de 90%:** fator = 0,9 ÷ 0,1 = **9**. Espera = 9 × 10 s = **90 segundos**. O caixa continua atendendo cada cliente nos mesmos 10 segundos — mas agora existem, em média, nove atendimentos de fila na sua frente.
+- **Utilização de 95%:** fator = 0,95 ÷ 0,05 = **19**. Espera = **mais de 3 minutos** — por um atendimento de 10 segundos.
+
+Reparem no detalhe que muda tudo: **o caixa nunca ficou mais lento.** Só ficou mais ocupado. Toda a piora veio da fila. Agora troquem "caixa" por "lock do banco de dados" e "atendimento de 10 segundos" por "transação de 5 milissegundos", e vocês têm o TechPix do dia 5:
+
+| Utilização (ρ) | Fator de espera ρ/(1−ρ) | Espera real, se cada transação leva 5 ms | O que isso significa |
+|---|---|---|---|
+| 50% | 1,0 | 5 ms | espera = um atendimento. Tranquilo. |
+| 70% | 2,3 | ~12 ms | começou a doer, mas ainda operável |
+| 80% | 4,0 | 20 ms | **o dobro** da espera de 70% |
+| 90% | 9,0 | 45 ms | 4× a espera de 80% |
+| 95% | 19,0 | 95 ms | o sistema "parece travado" |
+| 99% | 99,0 | ~500 ms | colapso |
 
 Reparem no que acontece entre 80% e 95%: a utilização subiu 15 pontos, e a espera **quintuplicou**. É por isso que a intuição linear falha tão feio. Um sistema rodando a 30% de utilização pode absorver o triplo do tráfego e ficar em 90% — e a experiência do usuário não piora três vezes, piora **nove vezes**. Foi exatamente isso que aconteceu no dia 5.
 
