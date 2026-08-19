@@ -81,6 +81,153 @@ E por que eu insisto tanto nisso? Porque as fronteiras de um monólito modular b
 <p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Monólito não é o vilão: com fronteiras internas reais, ele é o ensaio das fronteiras de serviço. O vilão é a bola de lama.</p>
 </div>
 
+Só que caixas paradas não mostram um sistema — mostram um organograma. Para vocês **verem** o monólito funcionando, deixa eu fazer o que todo bom desenho de payment system faz: pegar **uma** transação e acompanhar ela atravessando o sistema, passo numerado por passo numerado, com a fronteira entre "o que é nosso" e "o que é do Banco Central" desenhada explicitamente. Este é o retrato do TechPix na manhã do dia 5 — antes de qualquer coisa quebrar:
+
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 940 560" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2w-int" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a2w-ext" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d4a017"/>
+    </marker>
+  </defs>
+  <text x="470" y="24" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">Um Pix atravessa o monólito — o TechPix na manhã do dia 5</text>
+
+  <!-- fronteira dentro/fora -->
+  <line x1="700" y1="34" x2="700" y2="505" stroke="#666" stroke-width="1.5" stroke-dasharray="8 5"/>
+  <text x="692" y="48" text-anchor="end" font-family="sans-serif" font-size="11" fill="#666">dentro (TechPix)</text>
+  <text x="710" y="48" font-family="sans-serif" font-size="11" fill="#666">fora (BACEN)</text>
+
+  <!-- cliente e gateway -->
+  <rect x="10" y="190" width="85" height="52" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="52" y="212" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">App da Ana</text>
+  <text x="52" y="229" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">toca "enviar"</text>
+  <rect x="125" y="178" width="120" height="76" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="185" y="200" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Gateway / BFF</text>
+  <text x="185" y="218" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">TLS · rate limit</text>
+  <text x="185" y="234" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">idempotência (E2E ID)</text>
+
+  <!-- monólito -->
+  <rect x="265" y="40" width="360" height="470" rx="12" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="445" y="62" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#333">Monólito TechPix — um processo, um deploy, um banco</text>
+
+  <!-- fileira de cima -->
+  <rect x="280" y="80" width="105" height="52" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="332" y="102" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">Identidade/KYC</text>
+  <text x="332" y="118" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a55a0">cliente ativo? PLD?</text>
+  <rect x="395" y="80" width="105" height="52" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="447" y="102" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">Antifraude</text>
+  <text x="447" y="118" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a55a0">score em ~100 ms</text>
+  <rect x="510" y="80" width="100" height="52" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="560" y="102" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Ledger</text>
+  <text x="560" y="118" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">Σ déb = Σ créd</text>
+
+  <!-- orquestrador -->
+  <rect x="330" y="185" width="230" height="58" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+  <text x="445" y="208" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Pagamentos — orquestrador</text>
+  <text x="445" y="227" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#5a55a0">coordena o fluxo inteiro</text>
+
+  <!-- fileira de baixo -->
+  <rect x="280" y="290" width="145" height="52" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="352" y="311" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">Contas</text>
+  <text x="352" y="328" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a55a0">extrato · saldo exibido</text>
+  <rect x="455" y="290" width="140" height="52" rx="8" fill="#f5f5f4" stroke="#999" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="525" y="311" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#57534e">Cartões</text>
+  <text x="525" y="328" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#78716c">roadmap — fora do fluxo</text>
+
+  <text x="445" y="368" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">passo 8: extrato e notificação no mesmo processo,</text>
+  <text x="445" y="384" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">nos mesmos pools da escrita — guardem esse detalhe</text>
+
+  <!-- banco -->
+  <rect x="280" y="402" width="330" height="94" rx="10" fill="#f9f9f7" stroke="#78716c" stroke-width="1.5"/>
+  <text x="445" y="422" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#44403c">PostgreSQL — um banco físico</text>
+  <text x="445" y="437" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#78716c">um schema por módulo: fronteira lógica, recursos compartilhados</text>
+  <g stroke-width="1">
+    <path d="M 298 448 v22 a22 5 0 0 0 44 0 v-22" fill="#eef2ff" stroke="#4338ca"/>
+    <ellipse cx="320" cy="448" rx="22" ry="5" fill="#eef2ff" stroke="#4338ca"/>
+    <path d="M 358 448 v22 a22 5 0 0 0 44 0 v-22" fill="#eef2ff" stroke="#4338ca"/>
+    <ellipse cx="380" cy="448" rx="22" ry="5" fill="#eef2ff" stroke="#4338ca"/>
+    <path d="M 418 448 v22 a22 5 0 0 0 44 0 v-22" fill="#f0fdf4" stroke="#166534"/>
+    <ellipse cx="440" cy="448" rx="22" ry="5" fill="#f0fdf4" stroke="#166534"/>
+    <path d="M 478 448 v22 a22 5 0 0 0 44 0 v-22" fill="#eef2ff" stroke="#4338ca"/>
+    <ellipse cx="500" cy="448" rx="22" ry="5" fill="#eef2ff" stroke="#4338ca"/>
+    <path d="M 538 448 v22 a22 5 0 0 0 44 0 v-22" fill="#eef2ff" stroke="#4338ca"/>
+    <ellipse cx="560" cy="448" rx="22" ry="5" fill="#eef2ff" stroke="#4338ca"/>
+  </g>
+  <g font-family="sans-serif" font-size="8" fill="#666" text-anchor="middle">
+    <text x="320" y="487">identidade</text>
+    <text x="380" y="487">contas</text>
+    <text x="440" y="487" fill="#166534">ledger</text>
+    <text x="500" y="487">pagamentos</text>
+    <text x="560" y="487">antifraude</text>
+  </g>
+
+  <!-- BACEN -->
+  <rect x="730" y="120" width="170" height="64" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="815" y="145" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">DICT</text>
+  <text x="815" y="164" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">resolve chave Pix · p99 1 s</text>
+  <rect x="730" y="300" width="170" height="76" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="815" y="323" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">SPI</text>
+  <text x="815" y="342" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">pacs.008 → pacs.002</text>
+  <text x="815" y="358" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">liquidação final · p99 4,6 s</text>
+
+  <!-- fluxo interno -->
+  <g stroke="#4338ca" stroke-width="2">
+    <line x1="95" y1="216" x2="123" y2="216" marker-end="url(#a2w-int)"/>
+    <line x1="245" y1="216" x2="328" y2="214" marker-end="url(#a2w-int)"/>
+    <line x1="375" y1="183" x2="343" y2="136" marker-end="url(#a2w-int)"/>
+    <line x1="445" y1="183" x2="447" y2="136" marker-end="url(#a2w-int)"/>
+    <line x1="520" y1="183" x2="553" y2="136" marker-end="url(#a2w-int)"/>
+    <line x1="390" y1="245" x2="362" y2="286" marker-end="url(#a2w-int)"/>
+  </g>
+  <!-- fluxo externo -->
+  <g stroke="#d4a017" stroke-width="2.5">
+    <line x1="560" y1="198" x2="727" y2="150" marker-end="url(#a2w-ext)"/>
+    <line x1="560" y1="230" x2="727" y2="320" marker-end="url(#a2w-ext)"/>
+  </g>
+  <!-- numeração -->
+  <g font-family="sans-serif" font-size="11" font-weight="bold" text-anchor="middle">
+    <circle cx="109" cy="216" r="10" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/><text x="109" y="220" fill="#333">1</text>
+    <circle cx="287" cy="215" r="10" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/><text x="287" y="219" fill="#333">2</text>
+    <circle cx="359" cy="160" r="10" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/><text x="359" y="164" fill="#333">3</text>
+    <circle cx="447" cy="160" r="10" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/><text x="447" y="164" fill="#333">4</text>
+    <circle cx="644" cy="174" r="10" fill="#fff" stroke="#b45309" stroke-width="1.5"/><text x="644" y="178" fill="#7a5c00">5</text>
+    <circle cx="537" cy="160" r="10" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/><text x="537" y="164" fill="#333">6</text>
+    <circle cx="644" cy="275" r="10" fill="#fff" stroke="#b45309" stroke-width="1.5"/><text x="644" y="279" fill="#7a5c00">7</text>
+    <circle cx="376" cy="266" r="10" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/><text x="376" y="270" fill="#333">8</text>
+  </g>
+
+  <text x="470" y="540" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">O que este desenho ainda não tem: fila, cache, réplica de leitura, pool isolado — tudo síncrono, no mesmo processo, no mesmo banco.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A travessia de um Pix pelos seis módulos — os números são a ordem do fluxo. Fronteiras lógicas de verdade; recursos físicos compartilhados. Essa tensão é a aula inteira.</p>
+</div>
+
+Sigam os números comigo, porque cada passo é uma decisão de design que a gente já tomou (ou vai tomar):
+
+1. O app da Ana chama o **Gateway/BFF**: terminação TLS, rate limit e a idempotência por E2E ID da Aula 1 — tudo **antes** de qualquer lógica de negócio.
+2. O Gateway entrega ao módulo de **Pagamentos**, a única porta de entrada do domínio. Ninguém de fora fala com Ledger ou Contas diretamente.
+3. Pagamentos pergunta a **Identidade/KYC**: esse cliente está ativo? Está dentro dos limites regulatórios de PLD? Chamada síncrona, interna, via interface — nunca via tabela.
+4. Pagamentos pergunta ao **Antifraude**: qual o score dessa transação? Orçamento de ~100 ms, síncrono, porque a resposta bloqueia o fluxo.
+5. Pagamentos cruza a fronteira e consulta o **DICT**, lá fora: quem é o dono dessa chave Pix? Síncrono, p99 de 1 segundo — e reparem: é a primeira vez que o TechPix fica **esperando alguém que não controla**.
+6. Com tudo aprovado, Pagamentos manda o **Ledger** reservar: débito na carteira da Ana, crédito em `pix_a_liquidar`, na mesma transação ACID.
+7. Pagamentos envia a `pacs.008` ao **SPI**, com o mesmo E2E ID; a `pacs.002` volta confirmando a liquidação final, e o Ledger registra.
+8. Por fim, Pagamentos pede a **Contas** para atualizar o extrato e disparar a notificação — hoje, no mesmo processo, competindo pelos mesmos pools da escrita. Esse "por fim" inocente é uma das sementes do incidente de hoje.
+
+E agora que vocês viram o fluxo, deixa eu preencher a planta do prédio — porque "seis módulos" só vira arquitetura quando cada um tem responsabilidade, dados e interface declarados:
+
+| Módulo | Responsabilidade | Dados que possui (schema) | Quem o chama | Comunicação |
+|---|---|---|---|---|
+| **Identidade e KYC/PLD** | quem é o cliente, se pode operar, limites regulatórios | clientes, documentos, limites | Gateway (sessão), Pagamentos (passo 3) | síncrona, interna |
+| **Contas** | ciclo de vida da conta; extrato e saldo exibido | contas, extrato materializado | app (consultas), Pagamentos (passo 8) | síncrona, interna |
+| **Ledger** | fatos financeiros; invariante Σ débitos = Σ créditos | lançamentos, contas contábeis | Pagamentos — única porta de escrita | síncrona, ACID |
+| **Pagamentos** | orquestra o fluxo: identidade → antifraude → DICT → ledger → SPI | ordens de pagamento, estado da orquestração | Gateway (passo 2) | síncrona; é quem fala com o mundo externo |
+| **Antifraude** | decisão por transação: aprova, nega, segura para análise | regras, histórico de decisões | Pagamentos (passo 4) | síncrona, ~100 ms de orçamento |
+| **Cartões** | *(roadmap)* emissão e adquirência, via PSP externo | — nada ainda | ninguém | — |
+
+Uma palavra honesta sobre essa última linha, porque ela vai aparecer em todo desenho do curso: **Cartões existe como fronteira reservada, não como funcionalidade.** O mundo de cartões — PSPs como Stripe e Adyen, as bandeiras, o settlement em D+n — é um trilho inteiro próprio, com diagramas clássicos próprios, e está fora do escopo deste curso, que segue o trilho do Pix. Mas a fronteira fica desenhada desde o dia 1 de propósito: quando (se) o TechPix entrar nesse mundo, o lugar dele no monólito já tem nome e regra de ouro esperando.
+
 Minha recomendação, e isso vem de gente que já bateu a cabeça nisso — Martin Fowler chama essa estratégia de "monolith first" —: comecem com o monólito modular. Não é fase intermediária vergonhosa; é a decisão mais defensável no dia 1, porque vocês ainda não sabem exatamente onde as fronteiras de verdade do domínio de vocês vão cair. Extrair serviço cedo demais, antes de entender o domínio, é pagar o preço de operar sistemas distribuídos sem ter comprado ainda o benefício de escalar de forma independente. E tem uma regra prática que eu gosto de usar: só extraiam um módulo para um serviço separado depois que a fronteira dele ficar **estável por meses** — depois que vocês tiverem certeza de que aquela linha não vai se mover. Extrair cedo demais é caro; extrair tarde demais só custa um refactor. A assimetria favorece esperar.
 
 ---
@@ -750,56 +897,171 @@ E um palpite educado, por melhor que seja, não escala para um time inteiro, nem
 
 É exatamente isso que a gente vai fazer na próxima aula. A gente vai pegar o próprio fluxo do Pix — evento por evento — e usar uma técnica chamada event storming para deixar as fronteiras **emergirem** dos fatos do domínio, ao vivo, na frente de vocês. E vamos descobrir, entre outras coisas, por que a palavra "conta" — que eu já usei um punhado de vezes hoje, sem me preocupar — pode significar coisas completamente diferentes dependendo de quem está falando, e por que isso, se não for tratado direito, quebra sistemas de um jeito muito mais sutil do que um pico de tráfego num dia 5.
 
-E antes de encerrar, o retrato de sempre — a gente vai tirar um desses ao fim de cada aula, para vocês verem a fintech crescendo tijolo a tijolo:
+E antes de encerrar, o retrato de sempre — a gente vai tirar um desses ao fim de cada aula, para vocês verem a fintech crescendo tijolo a tijolo. Só que, desta vez, o retrato não é um inventário de caixas: é **a própria arquitetura** — a travessia da Seção 1, com tudo que a aula construiu por cima, em verde:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
-<svg viewBox="0 0 920 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
-  <text x="460" y="26" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 2</text>
-  <!-- Row 1: existed (A1) -->
-  <text x="30" y="58" font-family="sans-serif" font-size="11" fill="#78716c">Aula 1 (já existia):</text>
-  <g font-family="sans-serif" font-size="10">
-    <rect x="30" y="68" width="160" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
-    <text x="110" y="87" text-anchor="middle" fill="#57534e">monólito TechPix</text>
-    <text x="110" y="103" text-anchor="middle" fill="#78716c">um deploy, um processo</text>
-    <rect x="205" y="68" width="180" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
-    <text x="295" y="87" text-anchor="middle" fill="#57534e">Postgres — ledger Σ=Σ</text>
-    <text x="295" y="103" text-anchor="middle" fill="#78716c">partida dobrada, serializable</text>
-    <rect x="400" y="68" width="160" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
-    <text x="480" y="87" text-anchor="middle" fill="#57534e">idempotência</text>
-    <text x="480" y="103" text-anchor="middle" fill="#78716c">E2E ID, estado do registro</text>
-    <rect x="575" y="68" width="160" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
-    <text x="655" y="87" text-anchor="middle" fill="#57534e">DICT / SPI (BACEN)</text>
-    <text x="655" y="103" text-anchor="middle" fill="#78716c">síncronos, teto de 40s</text>
-    <rect x="750" y="68" width="140" height="46" rx="8" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.5"/>
-    <text x="820" y="87" text-anchor="middle" fill="#57534e">ADR-001</text>
-    <text x="820" y="103" text-anchor="middle" fill="#78716c">núcleo forte</text>
+<svg viewBox="0 0 960 660" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2z-int" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a2z-ext" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d4a017"/>
+    </marker>
+    <marker id="a2z-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <text x="480" y="24" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#333">O TechPix ao fim da Aula 2</text>
+
+  <!-- fronteira em L -->
+  <line x1="760" y1="34" x2="760" y2="272" stroke="#666" stroke-width="1.5" stroke-dasharray="8 5"/>
+  <line x1="760" y1="272" x2="950" y2="272" stroke="#666" stroke-width="1.5" stroke-dasharray="8 5"/>
+  <text x="752" y="48" text-anchor="end" font-family="sans-serif" font-size="11" fill="#666">dentro (TechPix)</text>
+  <text x="768" y="48" font-family="sans-serif" font-size="11" fill="#666">fora (BACEN)</text>
+  <text x="945" y="290" text-anchor="end" font-family="sans-serif" font-size="9" fill="#666">↓ dentro de novo</text>
+
+  <!-- cliente e gateway -->
+  <rect x="10" y="118" width="88" height="66" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="54" y="140" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">App da Ana</text>
+  <text x="54" y="156" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#166534">+ backoff exp.</text>
+  <text x="54" y="169" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#166534">+ jitter no retry</text>
+  <rect x="118" y="110" width="126" height="82" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="181" y="130" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#3730a3">Gateway / BFF</text>
+  <text x="181" y="146" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a55a0">TLS · rate limit · E2E</text>
+  <text x="181" y="162" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">+ load shedding</text>
+  <text x="181" y="177" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">+ retry budget</text>
+
+  <!-- monólito -->
+  <rect x="264" y="40" width="356" height="380" rx="12" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="442" y="60" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#333">Monólito TechPix — ainda um deploy</text>
+
+  <rect x="278" y="76" width="100" height="52" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="328" y="98" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">Identidade/KYC</text>
+  <text x="328" y="114" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#5a55a0">KYC · PLD</text>
+  <rect x="388" y="76" width="100" height="52" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="438" y="98" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#3730a3">Antifraude</text>
+  <text x="438" y="114" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#5a55a0">~100 ms</text>
+  <rect x="498" y="76" width="112" height="52" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2.5"/>
+  <text x="554" y="94" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">Ledger</text>
+  <text x="554" y="108" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#166534">Σ=Σ · + outbox na</text>
+  <text x="554" y="121" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#166534">mesma transação</text>
+
+  <rect x="320" y="160" width="230" height="64" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+  <text x="435" y="182" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#3730a3">Pagamentos — orquestrador</text>
+  <text x="435" y="200" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">+ pools por dependência (bulkhead)</text>
+  <text x="435" y="214" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">+ timeouts por aresta</text>
+
+  <rect x="278" y="250" width="145" height="48" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="350" y="270" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">Contas</text>
+  <text x="350" y="287" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#166534">consulta os read models →</text>
+  <rect x="455" y="250" width="140" height="48" rx="8" fill="#f5f5f4" stroke="#999" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="525" y="270" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#57534e">Cartões</text>
+  <text x="525" y="287" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#78716c">roadmap</text>
+
+  <!-- banco particionado -->
+  <rect x="278" y="316" width="332" height="96" rx="10" fill="#f9f9f7" stroke="#78716c" stroke-width="1.5"/>
+  <text x="444" y="334" text-anchor="middle" font-family="sans-serif" font-size="10.5" font-weight="bold" fill="#44403c">PostgreSQL — particionado: tempo + hash(conta_id)</text>
+  <text x="444" y="349" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#166534">conta quente do marketplace em N baldes (Seção 6)</text>
+  <g stroke-width="1">
+    <path d="M 288 360 v20 a20 4.5 0 0 0 40 0 v-20" fill="#eef2ff" stroke="#4338ca"/>
+    <ellipse cx="308" cy="360" rx="20" ry="4.5" fill="#eef2ff" stroke="#4338ca"/>
+    <path d="M 342 360 v20 a20 4.5 0 0 0 40 0 v-20" fill="#eef2ff" stroke="#4338ca"/>
+    <ellipse cx="362" cy="360" rx="20" ry="4.5" fill="#eef2ff" stroke="#4338ca"/>
+    <path d="M 396 360 v20 a20 4.5 0 0 0 40 0 v-20" fill="#f0fdf4" stroke="#166534"/>
+    <ellipse cx="416" cy="360" rx="20" ry="4.5" fill="#f0fdf4" stroke="#166534"/>
+    <path d="M 450 360 v20 a20 4.5 0 0 0 40 0 v-20" fill="#f0fdf4" stroke="#166534"/>
+    <ellipse cx="470" cy="360" rx="20" ry="4.5" fill="#f0fdf4" stroke="#166534"/>
+    <path d="M 504 360 v20 a20 4.5 0 0 0 40 0 v-20" fill="#eef2ff" stroke="#4338ca"/>
+    <ellipse cx="524" cy="360" rx="20" ry="4.5" fill="#eef2ff" stroke="#4338ca"/>
+    <path d="M 558 360 v20 a20 4.5 0 0 0 40 0 v-20" fill="#eef2ff" stroke="#4338ca"/>
+    <ellipse cx="578" cy="360" rx="20" ry="4.5" fill="#eef2ff" stroke="#4338ca"/>
   </g>
-  <!-- Row 2: new (A2) -->
-  <text x="30" y="148" font-family="sans-serif" font-size="11" fill="#166534">Aula 2 (construído hoje):</text>
-  <g font-family="sans-serif" font-size="10">
-    <rect x="30" y="158" width="160" height="46" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
-    <text x="110" y="177" text-anchor="middle" fill="#166534">6 módulos com fronteira</text>
-    <text x="110" y="193" text-anchor="middle" fill="#4d7c5f">regra de ouro + ArchUnit</text>
-    <rect x="205" y="158" width="180" height="46" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
-    <text x="295" y="177" text-anchor="middle" fill="#166534">Outbox → relay → Kafka</text>
-    <text x="295" y="193" text-anchor="middle" fill="#4d7c5f">poller→Debezium, sem dual write</text>
-    <rect x="400" y="158" width="160" height="46" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
-    <text x="480" y="177" text-anchor="middle" fill="#166534">read models (CQRS)</text>
-    <text x="480" y="193" text-anchor="middle" fill="#4d7c5f">Redis saldo · réplica extrato</text>
-    <rect x="575" y="158" width="160" height="46" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
-    <text x="655" y="177" text-anchor="middle" fill="#166534">defesas de tráfego</text>
-    <text x="655" y="190" text-anchor="middle" fill="#4d7c5f">backoff+jitter · budget</text>
-    <text x="655" y="201" text-anchor="middle" fill="#4d7c5f">shedding · bulkhead · breaker</text>
-    <rect x="750" y="158" width="140" height="46" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
-    <text x="820" y="177" text-anchor="middle" fill="#166534">partições + ADR-002</text>
-    <text x="820" y="193" text-anchor="middle" fill="#4d7c5f">hash(conta_id), 8+baldes</text>
+  <g font-family="sans-serif" font-size="7.5" fill="#666" text-anchor="middle">
+    <text x="308" y="398">identidade</text>
+    <text x="362" y="398">contas</text>
+    <text x="416" y="398" fill="#166534">ledger ×8</text>
+    <text x="470" y="398" fill="#166534">outbox</text>
+    <text x="524" y="398">pagamentos</text>
+    <text x="578" y="398">antifraude</text>
   </g>
-  <!-- Pending -->
-  <rect x="30" y="228" width="860" height="34" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="6 4"/>
-  <text x="460" y="250" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#7a5c00">pendência aberta (linha "Revisão" do ADR-002): se a contenção persistir, reparticionar a própria escrita do ledger — ainda sem dono</text>
-  <text x="460" y="288" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">cinza = já existia · verde = construído nesta aula</text>
+
+  <!-- bulkhead na aresta do DICT -->
+  <rect x="630" y="64" width="120" height="54" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="690" y="84" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#166534">bulkhead · circuit</text>
+  <text x="690" y="99" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#166534">breaker · timeout 1 s</text>
+
+  <!-- BACEN -->
+  <rect x="790" y="60" width="150" height="56" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="865" y="84" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">DICT</text>
+  <text x="865" y="102" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#7a5c00">p99 1 s</text>
+  <rect x="790" y="170" width="150" height="72" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="865" y="193" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">SPI</text>
+  <text x="865" y="211" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#7a5c00">pacs.008 → pacs.002</text>
+  <text x="865" y="227" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#7a5c00">liquidação final</text>
+
+  <!-- pipeline assíncrono -->
+  <rect x="402" y="452" width="140" height="56" rx="9" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="472" y="474" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">Relay</text>
+  <text x="472" y="492" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#166534">poller → Debezium (CDC)</text>
+  <rect x="578" y="452" width="132" height="56" rx="9" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="644" y="474" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#7a5c00">Kafka</text>
+  <text x="644" y="492" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#7a5c00">tópico PixLiquidado</text>
+
+  <!-- read models -->
+  <rect x="760" y="380" width="190" height="44" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="855" y="398" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#166534">Redis — saldo exibido</text>
+  <text x="855" y="414" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#4d7c5f">leitura em µs</text>
+  <rect x="760" y="432" width="190" height="44" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="855" y="450" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#166534">Réplica PG — extrato</text>
+  <text x="855" y="466" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#4d7c5f">SQL · paginação</text>
+  <rect x="760" y="484" width="190" height="44" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="855" y="502" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#166534">Feed / notificações</text>
+  <text x="855" y="518" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#4d7c5f">push · e-mail</text>
+  <rect x="760" y="536" width="190" height="64" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2.5"/>
+  <text x="855" y="556" text-anchor="middle" font-family="sans-serif" font-size="10.5" font-weight="bold" fill="#166534">Reconciliação</text>
+  <text x="855" y="572" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#166534">ledger × Conta PI, por E2E ID</text>
+  <text x="855" y="586" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#4d7c5f">divergência vira investigação</text>
+
+  <!-- fluxos -->
+  <g stroke="#4338ca" stroke-width="2">
+    <line x1="98" y1="150" x2="116" y2="150" marker-end="url(#a2z-int)"/>
+    <line x1="244" y1="152" x2="316" y2="185" marker-end="url(#a2z-int)"/>
+    <line x1="550" y1="178" x2="628" y2="95" marker-end="url(#a2z-int)"/>
+  </g>
+  <g stroke="#d4a017" stroke-width="2.5">
+    <line x1="750" y1="88" x2="788" y2="88" marker-end="url(#a2z-ext)"/>
+    <line x1="550" y1="205" x2="788" y2="205" marker-end="url(#a2z-ext)"/>
+  </g>
+  <g stroke="#166534" stroke-width="2">
+    <line x1="470" y1="412" x2="471" y2="448" marker-end="url(#a2z-g)"/>
+    <line x1="542" y1="480" x2="574" y2="480" marker-end="url(#a2z-g)"/>
+  </g>
+  <g stroke="#166534" stroke-width="1.5">
+    <line x1="710" y1="472" x2="756" y2="404" marker-end="url(#a2z-g)"/>
+    <line x1="710" y1="478" x2="756" y2="454" marker-end="url(#a2z-g)"/>
+    <line x1="710" y1="486" x2="756" y2="506" marker-end="url(#a2z-g)"/>
+    <line x1="710" y1="492" x2="756" y2="562" marker-end="url(#a2z-g)"/>
+  </g>
+  <line x1="862" y1="244" x2="858" y2="533" stroke="#d4a017" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a2z-ext)"/>
+  <text x="876" y="330" font-family="sans-serif" font-size="9" fill="#7a5c00">extrato da</text>
+  <text x="876" y="344" font-family="sans-serif" font-size="9" fill="#7a5c00">Conta PI</text>
+  <text x="876" y="358" font-family="sans-serif" font-size="9" fill="#7a5c00">(settlement)</text>
+
+  <!-- CI -->
+  <rect x="30" y="452" width="210" height="76" rx="9" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="135" y="474" text-anchor="middle" font-family="sans-serif" font-size="10.5" font-weight="bold" fill="#166534">CI — fitness functions</text>
+  <text x="135" y="492" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#166534">ArchUnit: fronteira de módulo quebra o build</text>
+  <text x="135" y="508" text-anchor="middle" font-family="sans-serif" font-size="8.5" fill="#166534">k6: teste de degrau a cada release</text>
+
+  <!-- pendência -->
+  <rect x="30" y="560" width="580" height="44" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="320" y="578" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">pendência aberta (ADR-002, linha "Revisão"): se a contenção persistir,</text>
+  <text x="320" y="594" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7a5c00">reparticionar a própria escrita do ledger — ainda sem dono</text>
+
+  <text x="480" y="640" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">branco/cinza = já existia (Aula 1) · verde = construído nesta aula · tracejado = roadmap</text>
 </svg>
-<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A construção incremental do TechPix: o que a Aula 1 deixou de pé, o que a Aula 2 acrescentou — e a pendência que fica armada para o resto do curso.</p>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O retrato ao fim da Aula 2: a travessia da Seção 1, agora com defesas na borda, bulkhead na aresta do DICT, banco particionado, e o pipeline Outbox → Kafka alimentando os quatro read models. Reparem no canto direito — eventos internos de um lado, extrato da Conta PI do outro, reconciliação no meio: é o mesmo desenho de settlement e reconciliation que aparece em qualquer referência clássica de payment system.</p>
 </div>
 
 ---

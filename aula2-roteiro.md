@@ -44,6 +44,9 @@ title: "Aula 2 — Roteiro (fonte)"
 
 - **Fala-chave:** "O vilão não é monólito. É Big Ball of Mud — zero fronteira interna."
 - **Desenhe o Diagrama 1:** módulos do TechPix dentro de UM deployable.
+- **Desenhe o Diagrama 1b (a travessia):** um Pix atravessando os 6 módulos, passos numerados 1–8, com a linha dentro/fora (TechPix | DICT/SPI). É o desenho clássico de payment system aplicado ao TechPix. Termine apontando o passo 8: "extrato e notificação no mesmo processo — guardem."
+- **Preencha a tabela de módulos:** responsabilidade · dados que possui · quem chama · comunicação. "Seis módulos" só vira arquitetura quando cada linha está preenchida.
+- **Sobre Cartões:** seja honesto — é fronteira reservada, não funcionalidade. O trilho de cartões (PSP, bandeiras, settlement D+n) está fora do escopo do curso.
 - **Pergunte:** "Se Cartões faz um JOIN direto na tabela do Ledger porque 'é mais rápido', isso ainda é monólito modular?" (não — é bola de lama com nome bonito).
 - **Regra prática:** só extraia um módulo para serviço depois que a fronteira ficar estável **por meses**. Extrair cedo é caro; extrair tarde custa um refactor. A assimetria favorece esperar.
 - **Armadilha:** não deixe "monólito modular" virar desculpa para nunca evoluir.
@@ -178,10 +181,12 @@ Percorra rápido, sem se alongar em nenhuma:
 ## Diagramas desta aula (ver aula2-roteiro.html)
 
 1. Monólito modular do TechPix.
+1b. **A travessia** — um Pix atravessando os 6 módulos, numerado 1–8, com a fronteira dentro/fora (BACEN).
 2. Loop de fitness function.
 3. **Curva do cotovelo** (utilização × espera) + encadeamento do retry storm.
 4. Anatomia da fratura (hotspot + DICT/pool).
 5. Strangler Fig.
-6. Outbox + CQRS.
+6. Outbox + CQRS (com os 4 consumidores — o 4º é a Reconciliação).
 7. **A conta quente** (por que 8 partições não dão 8× de capacidade).
 8. ADR-002.
+9. **Retrato arquitetural** de fim de aula: a travessia + tudo que a aula construiu, em verde (defesas na borda, bulkhead, partições, Outbox → Kafka → read models + reconciliação).
