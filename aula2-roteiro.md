@@ -80,6 +80,7 @@ title: "Aula 2 — Roteiro (fonte)"
 - **M/M/1 é parêntese, não bloqueio:** "1" = um atendente; os dois "M" = chegadas e atendimentos aleatórios. Só o nome para quem for pesquisar.
 - **Pare em 80→95%:** "A utilização subiu 15 pontos e a espera **quintuplicou**. É por isso que a intuição linear falha."
 - **A regra operacional (o take-away mais prático da aula):** "Nunca dimensionem sistema financeiro para operar acima de 70% no pico. Aquela folga que parece desperdício é o que separa 'lento' de 'fora do ar'."
+- **Se perguntarem a fonte dos 70%:** não é teorema — é regra de bolso que cai da tabela (a curva é lisa; Gunther chama o "joelho" de folclore). Âncoras citáveis: DynamoDB auto scaling usa 70% de alvo como padrão de fábrica; SRE do Google trata operar perto da capacidade como causa de cascata e manda folga N+2.
 - **Pergunte:** "Quando alguém disser 'esses servidores estão a 40%, dá pra cortar metade', o que vocês respondem agora?"
 
 **Parte B — o composto com Lei de Little + retry storm [42–52]**
