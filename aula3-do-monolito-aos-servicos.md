@@ -7,15 +7,19 @@ title: "Aula 3 — Do monólito aos serviços: modelagem de domínio com 20 pess
 
 *Curso de Arquitetura de Sistemas Financeiros com IA · versão evolutiva da Aula 3*
 
-> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3 — conteúdo completo](aula3-conteudo-completo.md) · **Aula 3 — do monólito aos serviços (você está aqui)** · [Aula 4](aula4-conteudo-completo.md)
+> **Nota para mim (não é falada):** os números de custo — R$ 50 mil, R$ 3.400/mês, R$ 2.500/mês — são cenário hipotético montado para a discussão, não cotação. Dizer isso à turma na hora da tabela da seção 1. Os alunos não veem este documento; o que está abaixo é o texto como eu falo. Ao fim, eles recebem o repositório `fintechdev-aula-3`.
 
-> **Sobre os números desta aula.** Os valores de custo que aparecem aqui — R$ 50 mil, R$ 3.400 por mês, R$ 2.500 por mês — são um cenário hipotético, montado para a discussão. Não são cotação de fornecedor nem tabela de preço da AWS. O que eu quero que vocês levem não é o número; é a estrutura do raciocínio: o que entra na conta, o que fica escondido, e em que momento uma decisão vira outra.
+Bom, a aula de hoje é sobre modelagem de domínio. Mas eu não vou começar por modelagem de domínio. Vou começar por uma reunião.
 
-Eu quero começar esta aula de um jeito diferente do que está no [conteúdo completo](aula3-conteudo-completo.md). Lá, eu começo pelo substantivo errado — a palavra "conta" significando duas coisas para dois times — e vou construindo a técnica até chegar, na seção 8, na pergunta que toda turma faz: "bounded context é microsserviço?". Hoje eu quero inverter o caminho. Quero começar pela pergunta, porque ela chegou para a TechPix de um jeito muito concreto, numa reunião de planejamento, e a resposta passa por tudo o que a aula ensina — mas passa numa ordem que faz mais sentido para quem está sentado na cadeira de quem decide.
+Nas duas primeiras aulas a gente construiu a TechPix: um ledger que não perde dinheiro, um fluxo de Pix que fala com o DICT e com o SPI, uma outbox que garante que evento não some, defesas contra pico de tráfego. E tudo isso mora num único lugar — um binário Go, um Postgres, um deploy. Eu disse na Aula 1 que isso era uma escolha, e uma boa escolha. Hoje eu quero contar o que aconteceu quando essa escolha foi questionada.
+
+A TechPix cresceu. São vinte desenvolvedores mexendo nesse código. E vinte pessoas num único deploy é exatamente o tamanho em que alguém, numa reunião de planejamento, levanta a mão e diz: *"a gente devia começar a quebrar isso em microsserviços"*. Na mesma reunião — porque a vida é assim — o financeiro pergunta se vamos comprar servidor ou alugar nuvem, e o compliance lembra que a gente opera Pix, e que o Banco Central tem opinião sobre continuidade, backup, segurança e onde os dados moram.
+
+Eu quero levar essa reunião a sério, com vocês, nas próximas duas horas. Porque a resposta certa para "quebrar ou não quebrar" passa por tudo o que a aula de hoje ensina — bounded contexts, event storming, agregados, mapa de contexto —, só que numa ordem diferente da que os livros usam. Os livros começam pela técnica e chegam na arquitetura. A gente vai começar pela situação: vinte pessoas, pouco dinheiro, o regulador olhando. E vai descobrir que a pergunta "microsserviços sim ou não" é a **última** da lista, não a primeira. Antes dela vêm três outras. E a terceira delas — quais são as fronteiras de verdade do nosso domínio — é a única que não muda seja qual for a resposta das outras. Por isso ela é o tema de hoje.
 
 ## 0. A reunião de planejamento
 
-A situação é esta. A TechPix tem hoje **vinte desenvolvedores**. O sistema é **um binário Go** — `cmd/techpix` —, **um Postgres**, **um deploy**. Quinze módulos dentro de `internal/modules/`. Tudo sobe com `docker compose up`. Isso foi uma escolha, e uma boa escolha, registrada no ADR-002: começar por um monólito, porque não tínhamos nem o problema de escala nem o problema de autonomia de times que justifica separar processos.
+A situação é esta. A TechPix tem hoje **vinte desenvolvedores**. O sistema é **um binário Go** — `cmd/techpix` —, **um Postgres**, **um deploy**. Quinze módulos dentro de `internal/modules/`. Tudo sobe com `docker compose up`. Isso foi uma escolha registrada por escrito, no ADR-002: começar por um monólito, porque não tínhamos nem o problema de escala nem o problema de autonomia de times que justifica separar processos.
 
 Deixa eu desenhar o que existe hoje, porque tudo nesta aula parte deste desenho.
 
@@ -102,7 +106,7 @@ Três pressões de uma vez, e eu quero que vocês vejam as três como forças pu
 
 A pressão de **organização** empurra para separar: vinte pessoas geram fila de deploy, e a saída aparente é "cada squad com seu serviço". A pressão de **dinheiro** empurra para o simples: somos pequenos, e cada componente novo é uma linha na fatura e uma pessoa a menos escrevendo produto. E a pressão **regulatória** empurra para provar: o BACEN não pergunta se somos monólito ou microsserviço — pergunta se temos um plano para quando cair, e se conseguimos demonstrar isso.
 
-A tese que eu vou defender, e que vocês vão poder verificar no repositório `fintechdev-aula-3` no fim, é simples de enunciar e difícil de praticar: **a decisão "microsserviços sim ou não" é a última da lista, não a primeira.** Antes dela vêm três outras — *onde* rodar, *com o quê* rodar, e *quais são as fronteiras de verdade* do nosso domínio. E a terceira dessas, que é o tema desta aula, é a única que não muda seja qual for a resposta das outras. Quem pula as três e vai direto para a última costuma acertar a topologia e errar o sistema.
+A tese que eu vou defender, e que vocês vão poder verificar no repositório que recebem no fim, é simples de enunciar e difícil de praticar: **a decisão "microsserviços sim ou não" é a última da lista, não a primeira.** Antes dela vêm três outras — *onde* rodar, *com o quê* rodar, e *quais são as fronteiras de verdade* do nosso domínio. Quem pula as três e vai direto para a última costuma acertar a topologia e errar o sistema.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 250" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -498,7 +502,7 @@ A Aula 2 mostrou que a outbox transacional garante que o evento existe se a tran
 
 ### 2.5 Borda, segredos, operação
 
-**Borda: load balancer gerenciado com TLS e WAF.** Terminação TLS, health check no `/healthz` que já existe, proteção básica. É o item mais barato da lista e o primeiro que uma auditoria pergunta. Gateway ou BFF só quando houver mais de um serviço atrás — a camada 2 da [topologia progressiva](topologia-progressiva.md).
+**Borda: load balancer gerenciado com TLS e WAF.** Terminação TLS, health check no `/healthz` que já existe, proteção básica. É o item mais barato da lista e o primeiro que uma auditoria pergunta. Gateway ou BFF só quando houver mais de um serviço atrás — e isso é assunto da aula de integração.
 
 **Segredos e chaves: gerenciador de segredos e KMS; o certificado ICP-Brasil que assina mensagens para o SPI mora num HSM gerenciado.** Chave privada de assinatura **nunca** vive em variável de ambiente. Isso não é preferência; é exigência de segurança cibernética. Sem gatilho.
 
@@ -711,7 +715,7 @@ Os quinze módulos não são quinze coisas soltas. Eles se agrupam — e o agrup
 </svg>
 </div>
 
-Cinco contextos e uma plataforma. As cores são o tipo de subdomínio da §1.5 do conteúdo completo: roxo é core, o que se constrói em casa com o melhor time; azul é genérico, o que se compra; verde é de suporte, o que se constrói simples; cinza é plataforma, o que não é domínio e não pode carregar regra de negócio. (Uma observação honesta: o conteúdo completo classifica Pagamentos como *supporting*, com o argumento de que o `pacs.008` é igual para todos; o `contextos.go` do repositório o marca como *core*, com o argumento de que a orquestração DICT/SPI é o produto. As duas leituras são defensáveis, e é exatamente o tipo de discussão que vale a sala.)
+Cinco contextos e uma plataforma. As cores são o tipo de subdomínio, uma ideia do DDD estratégico que eu vou usar o dia inteiro: roxo é core, o que se constrói em casa com o melhor time; azul é genérico, o que se compra; verde é de suporte, o que se constrói simples; cinza é plataforma, o que não é domínio e não pode carregar regra de negócio. (Uma provocação honesta: Pagamentos é core mesmo? O `pacs.008` é igual para todos os participantes — o Banco Central dita formato, prazo e semântica; ninguém ganha mercado por orquestrar o Pix melhor. Dá para defender que é *supporting*. O repositório o marca como *core* porque a orquestração DICT/SPI é o produto. As duas leituras são defensáveis, e é exatamente o tipo de discussão que vale a sala.)
 
 E agora a observação que liga isso à pergunta da reunião. **Vinte pessoas, cinco contextos.** Isso já é um organograma:
 
@@ -757,14 +761,14 @@ E agora a observação que liga isso à pergunta da reunião. **Vinte pessoas, c
 </svg>
 </div>
 
-Um squad para cada contexto core — três —, e um squad de plataforma que também cuida de Identidade e Devoluções, que são leves. Quatro squads de cinco. A Lei de Conway, que eu discuto na §7 do conteúdo completo, diz que a arquitetura vai convergir para o organograma de qualquer jeito. Então é melhor desenhar o organograma *a partir* dos contextos do que o contrário — o *Inverse Conway Maneuver* —, e isso está literalmente escrito no campo `Equipe` de cada contexto em `internal/platform/contextos/contextos.go`.
+Um squad para cada contexto core — três —, e um squad de plataforma que também cuida de Identidade e Devoluções, que são leves. Quatro squads de cinco. A Lei de Conway — a organização sempre vence o diagrama; o sistema espelha a estrutura de comunicação de quem o constrói — diz que a arquitetura vai convergir para o organograma de qualquer jeito. Então é melhor desenhar o organograma *a partir* dos contextos do que o contrário — o *Inverse Conway Maneuver* —, e isso está literalmente escrito no campo `Equipe` de cada contexto em `internal/platform/contextos/contextos.go`.
 
 Reparem que a pergunta "vamos quebrar em serviços?" ainda não foi respondida. Mas ela já ficou mais precisa: virou "quais destes cinco contextos, se algum, precisam de um processo próprio?". E para responder isso, precisamos ter certeza de que os cinco são os cinco certos.
 
 ---
 ## 4. Modelar antes de cortar: o event storming que desenha as fronteiras
 
-Aqui entra o tema da aula, e eu vou ser econômico porque o [conteúdo completo](aula3-conteudo-completo.md) trata cada uma dessas ideias em profundidade. O que eu quero acrescentar é a pergunta que a reunião colocou na frente de tudo: **se a gente for cortar, onde a gente corta?**
+Aqui entra o tema da aula. Domain-Driven Design tem um vocabulário grande — linguagem ubíqua, bounded context, agregado, evento de domínio, mapa de contexto — e eu vou apresentar cada peça no momento em que a reunião precisar dela, não antes. A pergunta que a reunião colocou na frente de tudo é: **se a gente for cortar, onde a gente corta?**
 
 A frase "vamos quebrar em microsserviços" tem um pressuposto escondido: que a gente sabe onde estão as linhas. Na Aula 2 eu confessei que os módulos da TechPix foram desenhados no olho. Funcionou — as fronteiras de módulo quebravam o build — mas ninguém sabia dizer *por que aquela linha e não outra*. E o incidente que abre o repositório mostra o custo de não saber.
 
@@ -821,7 +825,7 @@ A Ana tem duas carteiras. O limite diário é R$ 1.000. O time de risco avaliava
 </svg>
 </div>
 
-A Ana paga R$ 800 de cada uma. Os dois passam. Nenhuma linha de código está errada; o bug está **na palavra**, entre os times. É a falha de linguagem ubíqua da §1.1, e é a razão de a linguagem ser **por contexto**: "conta" é pote no Ledger e é palavra proibida em Limites, onde se diz `cliente` ou `carteira`; "cliente" é pessoa na Identidade e é proibida no Ledger. O `contextos.go` carrega essas proibições, e `tests/linguagem_test.go` quebra o build se alguém usar a palavra errada no lugar errado.
+A Ana paga R$ 800 de cada uma. Os dois passam. Nenhuma linha de código está errada; o bug está **na palavra**, entre os times. O DDD tem um nome para isso: falha de **linguagem ubíqua** — a ideia de que, dentro de uma fronteira, todo mundo usa a mesma palavra com o mesmo significado, do engenheiro ao especialista de negócio. E reparem na nuance que pegou os dois times: a linguagem ubíqua **não é global**. Ela vale dentro de um contexto; fora dele, a mesma palavra pode — e frequentemente deve — significar outra coisa. É a razão de a linguagem ser **por contexto**: "conta" é pote no Ledger e é palavra proibida em Limites, onde se diz `cliente` ou `carteira`; "cliente" é pessoa na Identidade e é proibida no Ledger. O `contextos.go` carrega essas proibições, e `tests/linguagem_test.go` quebra o build se alguém usar a palavra errada no lugar errado.
 
 Agora eu quero que vocês imaginem esse mesmo bug com Limites e Ledger em **serviços separados**, times separados, repositórios separados:
 
@@ -867,7 +871,7 @@ A palavra ambígua vira um campo num contrato JSON, e o erro não aparece num te
 make demo-rio
 ```
 
-A técnica para descobrir as fronteiras em vez de decretá-las é o **event storming** da §2: os fatos do domínio, no passado, em ordem, com quem publica cada um. Antes do rio, a gramática — porque é a gramática que faz a fronteira aparecer sozinha:
+A técnica para descobrir as fronteiras em vez de decretá-las chama-se **event storming**: a gente coloca numa parede, em post-its, os fatos do domínio, no passado, em ordem, com quem publica cada um. Antes do rio, a gramática — porque é a gramática que faz a fronteira aparecer sozinha:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 230" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -954,7 +958,7 @@ A fronteira não é uma linha que alguém traça. É **o lugar onde o dono do fa
 
 ### 4.3 Os quatro testes de fronteira, lidos com a pergunta da reunião
 
-Uma fronteira candidata é boa quando passa nos quatro testes da §2.5. Eu quero reler cada um deles com a pergunta "e se fosse um serviço?", porque é assim que eles viram argumento na reunião.
+Uma fronteira candidata é boa quando passa em quatro testes — e os quatro dão para medir, não são opinião. Eu quero reler cada um deles com a pergunta "e se fosse um serviço?", porque é assim que eles viram argumento na reunião.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -998,7 +1002,7 @@ Reparem no padrão da última coluna: cada teste que uma fronteira *reprova* com
 curl -s localhost:8080/v1/contextos | python3 -m json.tool | less
 ```
 
-A §3 do conteúdo completo dá o vocabulário das relações: upstream decide, downstream respeita; customer/supplier, open host service, camada anticorrupção, published language, conformist. Este é o mapa da TechPix, desenhado a partir do `contextos.go`:
+Contextos conversam, e o DDD tem um vocabulário para descrever *como*: **upstream** é quem decide, **downstream** é quem respeita. Um par pode ser *customer/supplier* (o de baixo tem voz no backlog do de cima), *open host service* (o de cima publica um contrato estável para qualquer um consumir), *conformist* (o de baixo aceita o modelo do de cima sem traduzir), ou ter uma *camada anticorrupção* — uma ACL — que traduz o modelo alheio na porta de entrada. Este é o mapa da TechPix, desenhado a partir do `contextos.go`:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 400" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -1090,11 +1094,11 @@ Agora a observação que resolve metade da reunião. Olhem para esse mapa e repa
 </svg>
 </div>
 
-Os padrões, a direção das setas, os eventos publicados — tudo igual. O que muda é uma coluna: o campo `Meio` da relação em `contextos.go` sai de "síncrono, em memória" para "síncrono, pela rede". Isso é a frase central da §8, agora com o mapa na mão para prová-la: **bounded context é decisão de modelagem; serviço é decisão de topologia.** São decisões diferentes, tomadas por critérios diferentes, e confundi-las é a origem de boa parte dos projetos de microsserviços que dão errado.
+Os padrões, a direção das setas, os eventos publicados — tudo igual. O que muda é uma coluna: o campo `Meio` da relação em `contextos.go` sai de "síncrono, em memória" para "síncrono, pela rede". Isso é a frase central da aula, agora com o mapa na mão para prová-la: **bounded context é decisão de modelagem; serviço é decisão de topologia.** São decisões diferentes, tomadas por critérios diferentes, e confundi-las é a origem de boa parte dos projetos de microsserviços que dão errado.
 
 ### 4.5 Agregados: a fronteira que já desenha o corte
 
-Dentro de um contexto, o agregado é a unidade de consistência — a §4 do conteúdo completo cobre as quatro regras de Vernon e a matemática da contenção, e eu recomendo a calculadora do painel para sentir o que 1 segundo de DICT dentro de um lock faz com a vazão. Para a discussão de hoje, a regra que importa é a terceira: **referenciar outros agregados por identidade, nunca por objeto.**
+Dentro de um contexto, o **agregado** é a unidade de consistência: o conjunto de coisas que precisa ser atualizado junto, na mesma transação, para uma invariante nunca ser violada. Vocês já conhecem um: o Ledger, com Σdébitos = Σcréditos e saldo ≥ 0. Vaughn Vernon dá quatro regras para desenhá-los — proteger a invariante dentro; manter o agregado pequeno; referenciar outros agregados por identidade; consistência entre agregados só por evento — e a segunda tem uma matemática que eu recomendo sentir na calculadora do painel: vazão é 1 dividido pelo tempo de lock, então 4 ms de lock são 250 transações por segundo, e 1 segundo de DICT dentro do lock é 1 por segundo. Para a discussão de hoje, a regra que importa é a terceira: **referenciar outros agregados por identidade, nunca por objeto.**
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -1236,7 +1240,7 @@ Agora comparem com o que microsserviços dariam "de graça": a fronteira de rede
 
 **As três camadas compram a mesma garantia de fronteira por um preço que vinte pessoas podem pagar.** É isso que "monólito modular bem definido" significa nesta aula: a garantia de microsserviço sem a conta de microsserviço. E é o terceiro argumento — o decisivo — para não cortar antes de precisar.
 
-Para quem não está em Go, a §9 do conteúdo completo tem a lista: ArchUnit em Java e Kotlin, Spring Modulith — que é literalmente um monólito modular com estas regras embutidas —, NetArchTest em .NET, import-linter em Python, dependency-cruiser em TypeScript, go-arch-lint em Go. O ponto não é a ferramenta. É rodar no pull request.
+Para quem não está em Go, as ferramentas equivalentes existem em toda linguagem: ArchUnit em Java e Kotlin, Spring Modulith — que é literalmente um monólito modular com estas regras embutidas —, NetArchTest em .NET, import-linter em Python, dependency-cruiser em TypeScript, go-arch-lint em Go. O ponto não é a ferramenta. É rodar no pull request.
 
 ---
 
@@ -1244,7 +1248,7 @@ Para quem não está em Go, a §9 do conteúdo completo tem a lista: ArchUnit em
 
 Agora sim a pergunta da reunião, respondida com o vocabulário que a aula construiu e não com opinião.
 
-A §8 do conteúdo completo dá o critério: extrair um contexto para serviço próprio se justifica quando **pelo menos um** de quatro gatilhos dispara. O contexto precisa **escalar de forma diferente** do resto. O contexto tem **ciclo de deploy diferente** — muda dez vezes por dia enquanto o resto muda uma vez por semana. O contexto pertence a um **time diferente**, e o acoplamento de deploy virou fila entre times — este é, na prática, o motivo mais comum e mais legítimo. Ou o contexto tem **requisito de disponibilidade ou de isolamento de falha** distinto, que é o bulkhead da Aula 2 aplicado no nível de serviço.
+O critério: extrair um contexto para serviço próprio se justifica quando **pelo menos um** de quatro gatilhos dispara. O contexto precisa **escalar de forma diferente** do resto. O contexto tem **ciclo de deploy diferente** — muda dez vezes por dia enquanto o resto muda uma vez por semana. O contexto pertence a um **time diferente**, e o acoplamento de deploy virou fila entre times — este é, na prática, o motivo mais comum e mais legítimo. Ou o contexto tem **requisito de disponibilidade ou de isolamento de falha** distinto, que é o bulkhead da Aula 2 aplicado no nível de serviço.
 
 Isso vira um fluxo de decisão, e eu quero que vocês o apliquem literalmente, contexto por contexto:
 
@@ -1585,9 +1589,9 @@ make demo-fat-thin && make demo-versao   # se sobrar tempo: autonomia do consumi
 cat docs/ADR-002-monolito-modular.md docs/ADR-005-bounded-contexts.md   # as decisões, por escrito
 ```
 
-## Apêndice — Onde cada seção se apoia no conteúdo completo
+## Apêndice (só para mim) — Onde aprofundar, se sobrar tempo ou surgir pergunta
 
-| Seção desta versão | Seções do [conteúdo completo](aula3-conteudo-completo.md) | Material do repositório |
+| Seção desta aula | Seções do conteúdo completo (aula3-conteudo-completo.md) | Material do repositório |
 |---|---|---|
 | 0 · A reunião | novo | `cmd/techpix/main.go`, ADR-002 |
 | 1 · Onde rodar | nova; apoia-se na Aula 1 §3.5 (Lei de Little) e Aula 2 §5 (outbox) | `docker-compose.yml`, `Dockerfile`, `bacen-sim` |
