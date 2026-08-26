@@ -1157,7 +1157,7 @@ Dentro de um contexto, o **agregado** é a unidade de consistência: o conjunto 
 </svg>
 </div>
 
-Devoluções conhece um pagamento pelo E2E ID, não por uma chave estrangeira; Limites conhece um cliente por um id em texto, não por um join. É exatamente por isso que os schemas `devolucoes` e `limites` não têm FK para `pix_payments` nem para `accounts` — e é por isso que, se um dia esses contextos saírem para outro banco, o corte já está desenhado. O agregado bem feito é o pré-requisito silencioso de qualquer extração futura. Quem modela agregados grandes, com objetos atravessando contextos, descobre no dia da extração que não existe onde cortar.
+Devoluções conhece um pagamento pelo E2E ID, não por uma chave estrangeira; Limites conhece um cliente por um id em texto, não por um join. É exatamente por isso que os schemas `devolucoes` e `limites` não têm FK para `pix_payments` nem para `accounts` — e é por isso que, se um dia esses contextos saírem para outro banco, o corte já está desenhado. O agregado bem feito é o pré-requisito silencioso de qualquer extração futura. Quem modela agregados grandes, com objetos atravessando contextos, descobre no dia da extração que não existe linha por onde separar.
 
 Pergunta para a sala: *no banco de vocês, quantas chaves estrangeiras atravessam o que vocês chamam de "módulo"?* Se a resposta for "não sei", vocês não têm módulos — têm diretórios.
 
@@ -1547,7 +1547,7 @@ Olhem o que o desenho diz: sair da Fase 0 para a Fase 3 multiplica a fatura mens
 
 ## 8. Fecho: a ordem certa das perguntas
 
-Deixa eu amarrar o que a reunião de planejamento levou para casa — e voltar à pergunta que eu fiz no início: *por onde vocês cortariam?*
+Deixa eu amarrar o que a reunião de planejamento levou para casa — e voltar à pergunta que eu fiz no início: *qual módulo sairia primeiro, e por qual linha?*
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 260" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -1619,7 +1619,7 @@ cat docs/ADR-002-monolito-modular.md docs/ADR-005-bounded-contexts.md   # as dec
 | 1 · Onde rodar | nova; apoia-se na Aula 1 §3.5 (Lei de Little) e Aula 2 §5 (outbox) | `docker-compose.yml`, `Dockerfile`, `bacen-sim` |
 | 2 · Stack | §9 (ferramentas reais) | `Dockerfile`, `cmd/techpix/main.go`, `migrations/embed.go`, `scripts/k6_degrau.js` |
 | 3 · Módulos | §1.5 (core/supporting/generic), §7 (Conway) | `internal/modules/`, `internal/platform/modular/`, ADR-002 |
-| 4 · Modelar antes de cortar | §1–§3 (DDD, event storming, context map), §4.1–§4.2 (agregados) | `contextos.go`, `docs/EVENT-STORMING.md`, `docs/CONTEXT-MAP.md`, ADR-005, ADR-007 |
+| 4 · Modelar antes de separar | §1–§3 (DDD, event storming, context map), §4.1–§4.2 (agregados) | `contextos.go`, `docs/EVENT-STORMING.md`, `docs/CONTEXT-MAP.md`, ADR-005, ADR-007 |
 | 5 · Monólito modular | §4.5, §6 (fronteira que ninguém verifica não existe) | `tests/*_test.go`, `migrations/006_contextos_aula3.sql`, `specs/` |
 | 6 · Decompor? | §8 (bounded context = microsserviço?) | ADR-002 "Revisão", `CONTEXT-MAP.md` §8 |
 | 7 · Plano | §10 (fecho) e a [topologia progressiva](topologia-progressiva.md) | — |
