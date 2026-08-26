@@ -909,18 +909,18 @@ Agora eu quero que vocês imaginem esse mesmo bug com Limites e Ledger em **serv
 
 A palavra ambígua vira um campo num contrato JSON, e o erro não aparece num teste — aparece na conciliação do fim do mês, ou numa fiscalização. **Microsserviço não corrige fronteira errada; ele a torna permanente.** Esse é o primeiro argumento contra separar antes de modelar.
 
-### 4.2 O rio de eventos, e onde o dono muda
+### 4.2 A linha do tempo de eventos, e onde o dono muda
 
 ```bash
-make demo-rio
+make demo-rio     # o repositório chama a linha do tempo de "rio"
 ```
 
-A técnica para descobrir as fronteiras em vez de decretá-las chama-se **event storming**: a gente coloca numa parede, em post-its, os fatos do domínio, no passado, em ordem, com quem publica cada um. Antes do rio, a gramática — porque é a gramática que faz a fronteira aparecer sozinha:
+A técnica para descobrir as fronteiras em vez de decretá-las chama-se **event storming**: a gente coloca numa parede, em post-its, os fatos do domínio, no passado, em ordem, com quem publica cada um. Antes da linha do tempo, a gramática — porque é a gramática que faz a fronteira aparecer sozinha:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 230" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs><marker id="p4-c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57534e"/></marker></defs>
-  <text x="450" y="26" text-anchor="middle" font-size="16" font-weight="bold" fill="#1f1e1c">A gramática do event storming — a frase que se repete ao longo do rio</text>
+  <text x="450" y="26" text-anchor="middle" font-size="16" font-weight="bold" fill="#1f1e1c">A gramática do event storming — a frase que se repete ao longo da linha do tempo</text>
   <g font-size="10.5" text-anchor="middle">
     <rect x="20" y="70" width="130" height="70" rx="4" fill="#fde68a" stroke="#b45309"/><text x="85" y="98" font-weight="bold" fill="#412402">ator</text><text x="85" y="116" fill="#412402">cliente · operador</text><text x="85" y="130" font-size="9" fill="#7a5c00">amarelo</text>
     <line x1="152" y1="105" x2="176" y2="105" stroke="#57534e" stroke-width="1.5" marker-end="url(#p4-c)"/>
@@ -939,7 +939,7 @@ A técnica para descobrir as fronteiras em vez de decretá-las chama-se **event 
 </svg>
 </div>
 
-Sobre o fluxo do Pix, o que sai é um rio: `PixIniciado → ChaveResolvida → LimitesValidados → FundosReservados → OrdemEnviadaAoSPI → PixLiquidado`, com `PixDevolvido` como ramo.
+Sobre o fluxo do Pix, o que sai é esta linha do tempo: `PixIniciado → ChaveResolvida → LimitesValidados → FundosReservados → OrdemEnviadaAoSPI → PixLiquidado`, com `PixDevolvido` como desvio, quando algo dá errado depois da liquidação.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 200" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -955,7 +955,7 @@ Sobre o fluxo do Pix, o que sai é um rio: `PixIniciado → ChaveResolvida → L
   </g>
   <g stroke="#8a897f" stroke-width="1.5" marker-end="url(#m4d-c)"><line x1="142" y1="90" x2="156" y2="90"/><line x1="287" y1="90" x2="301" y2="90"/><line x1="432" y1="90" x2="446" y2="90"/><line x1="577" y1="90" x2="591" y2="90"/><line x1="732" y1="90" x2="746" y2="90"/></g>
   <path d="M812,122 Q812,160 700,160" fill="none" stroke="#8a897f" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#m4d-c)"/>
-  <rect x="560" y="140" width="135" height="40" rx="6" fill="#FAEEDA" stroke="#166534" stroke-width="2" stroke-dasharray="6 3"/><text x="627" y="158" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#412402">PixDevolvido</text><text x="627" y="173" text-anchor="middle" font-size="9" fill="#166534">Devoluções (ramo)</text>
+  <rect x="560" y="140" width="135" height="40" rx="6" fill="#FAEEDA" stroke="#166534" stroke-width="2" stroke-dasharray="6 3"/><text x="627" y="158" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#412402">PixDevolvido</text><text x="627" y="173" text-anchor="middle" font-size="9" fill="#166534">Devoluções (desvio)</text>
 </svg>
 </div>
 
@@ -963,7 +963,7 @@ A fronteira não é uma linha que alguém traça. É **o lugar onde o dono do fa
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 250" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
-  <text x="450" y="26" text-anchor="middle" font-size="16" font-weight="bold" fill="#1f1e1c">O mesmo rio, agrupado por dono — os contextos emergem</text>
+  <text x="450" y="26" text-anchor="middle" font-size="16" font-weight="bold" fill="#1f1e1c">A mesma linha do tempo, agrupada por dono — os contextos emergem</text>
   <g font-size="10" text-anchor="middle">
     <rect x="20" y="50" width="300" height="180" rx="10" fill="#EEEDFE" stroke="#534AB7" stroke-width="2"/>
     <text x="170" y="72" font-size="12" font-weight="bold" fill="#26215C">Pagamentos</text>
@@ -1602,7 +1602,7 @@ Primeiro: **onde rodar é uma conta de três colunas** — a da planilha, a da o
 
 Segundo: **com o quê rodar tem gatilho escrito para cada escolha.** Linux e Docker sempre; Kubernetes, broker e cache distribuído só quando a condição nomeada disparar. Escolha sem gatilho é dogma, nas duas direções.
 
-Terceiro: **as fronteiras se descobrem, não se decretam.** O event storming sobre o rio de eventos do Pix é o que diz onde o dono do fato muda. A palavra ambígua entre dois times é o bug mais caro que existe — e serviços não o corrigem; o eternizam.
+Terceiro: **as fronteiras se descobrem, não se decretam.** O event storming sobre a linha do tempo do Pix é o que diz onde o dono do fato muda. A palavra ambígua entre dois times é o bug mais caro que existe — e serviços não o corrigem; o eternizam.
 
 Quarto: **bounded context é modelagem; serviço é topologia.** O mapa de contexto não muda quando um módulo vira serviço; só a coluna `Meio` muda. São duas decisões, com dois critérios.
 
@@ -1623,7 +1623,7 @@ E a pergunta para vocês levarem: no sistema de vocês, qual módulo *já* tem u
 make reset && make up            # banco zerado, bug das duas carteiras ligado
 make painel                      # http://localhost:8080 — aba Contextos: o mapa
 make demo-duas-carteiras         # §4.1 — a palavra "conta" entre dois times
-make demo-rio                    # §4.2 — o rio de eventos pintado por contexto
+make demo-rio                    # §4.2 — a linha do tempo de eventos, pintada por contexto ("rio" é o nome no repo)
 make comutacao                   # §4.3 — co-mutação entre módulos pelo git log
 curl -s localhost:8080/v1/contextos | python3 -m json.tool    # §4.4 — o mapa é código
 curl 'localhost:8080/v1/filas/aggregate?lock_ms=4&espera_rede_ms=1000'   # §4.5 — contenção
