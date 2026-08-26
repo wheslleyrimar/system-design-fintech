@@ -342,7 +342,7 @@ O Regulamento do Pix acrescenta requisitos de disponibilidade e tempo de respost
 </svg>
 </div>
 
-Essa decisão de negócio — A, B ou C — muda o módulo `bacen` mais do que qualquer decisão sobre microsserviços, e é por isso que ela entra numa aula de modelagem: a fronteira com o BACEN é a única fronteira que **já é** um sistema externo hoje, e ela já está atrás de uma camada anticorrupção. O simulador `bacen-sim` do repositório finge exatamente essa fronteira.
+Essa decisão de negócio — A, B ou C — muda o módulo `bacen` mais do que qualquer decisão sobre microsserviços, e é por isso que ela entra numa aula de modelagem: a fronteira com o BACEN é a única fronteira que **já é** um sistema externo hoje, e ela já está atrás de uma **ACL** — *anti-corruption layer*, camada anticorrupção: o módulo `bacen`, que traduz o modelo do sistema externo para o nosso na porta de entrada. `pacs.008` e `pacs.002` em ISO 20022 entram; `ChaveResolvida` e `PixLiquidado`, na nossa língua, saem. O formato do BACEN — e o CPF — não vazam para dentro do domínio. O simulador `bacen-sim` do repositório finge exatamente essa fronteira.
 
 Agora coloquem os dois cenários lado a lado contra a lista de exigências. On-premises com dois servidores: vocês escrevem, implementam e operam todos os controles; a continuidade exige o segundo par de máquinas num segundo local; a política de segurança é inteiramente de vocês. Na nuvem com serviços gerenciados: vocês escrevem a política, mas boa parte dos controles técnicos vem pronta e auditada; Multi-AZ no banco e réplicas da aplicação são configuração, não compra; a burocracia da contratação existe, mas é papel, não hardware.
 
@@ -1022,7 +1022,7 @@ Reparem no padrão da última coluna: cada teste que uma fronteira *reprova* com
 curl -s localhost:8080/v1/contextos | python3 -m json.tool | less
 ```
 
-Contextos conversam, e o DDD tem um vocabulário para descrever *como*: **upstream** é quem decide, **downstream** é quem respeita. Um par pode ser *customer/supplier* (o de baixo tem voz no backlog do de cima), *open host service* (o de cima publica um contrato estável para qualquer um consumir), *conformist* (o de baixo aceita o modelo do de cima sem traduzir), ou ter uma *camada anticorrupção* — uma ACL — que traduz o modelo alheio na porta de entrada. Este é o mapa da TechPix, desenhado a partir do `contextos.go`:
+Contextos conversam, e o DDD tem um vocabulário para descrever *como*: **upstream** é quem decide, **downstream** é quem respeita. Um par pode ser *customer/supplier* (o de baixo tem voz no backlog do de cima), *open host service* (o de cima publica um contrato estável para qualquer um consumir), *conformist* (o de baixo aceita o modelo do de cima sem traduzir), ou ter uma *camada anticorrupção* — a ACL que vocês já viram no módulo `bacen` — que traduz o modelo alheio na porta de entrada. Este é o mapa da TechPix, desenhado a partir do `contextos.go`:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 400" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -1631,6 +1631,7 @@ cat docs/ADR-002-monolito-modular.md docs/ADR-005-bounded-contexts.md   # as dec
 | **Multi-AZ** | Réplica do banco em outra zona de disponibilidade, com failover automático. É a redundância mínima que uma operação financeira exige, como configuração e não como compra. |
 | **Savings Plan / compromisso de uso** | Desconto em troca de um compromisso de gasto por um ou três anos. Uma aposta na topologia: só faz sentido sobre o que não muda. |
 | **Responsabilidade compartilhada** | O provedor responde pela segurança *da* nuvem; vocês, pela segurança *na* nuvem. Boa parte dos controles técnicos exigidos vem pronta; a política e a operação continuam de vocês. |
+| **ACL (anti-corruption layer)** | Camada anticorrupção: traduz o modelo de um sistema externo para o nosso na fronteira, para que o modelo alheio não contamine o domínio. Na TechPix, o módulo `bacen`. |
 | **Arranjo de pagamento** | O conjunto de regras de um esquema de pagamento — quem participa, como liquida, prazos, disponibilidade, disputas. Pix, Visa e boleto são arranjos; quem entra é *participante* e se submete ao regulamento. |
 | **RSFN / PSTI** | A rede privada do Sistema Financeiro Nacional, pela qual se fala com o SPI; e o provedor homologado que conecta uma instituição pequena a ela. |
 | **Participante indireto** | Instituição que acessa o Pix por meio de um participante direto, que liquida por ela. Alternativa de negócio à conexão própria. |
