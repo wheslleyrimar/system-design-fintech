@@ -161,7 +161,7 @@ E vocês vão me ouvir usar uma palavra o dia inteiro: **gatilho**. Gatilho é a
 </svg>
 </div>
 
-Uma pergunta para a sala antes de seguir: *se a TechPix tivesse decidido, hoje, quebrar em serviços, por onde ela cortaria?* Guardem a resposta. No fim da aula vocês vão comparar com o que a técnica diz.
+Uma pergunta para a sala antes de seguir: *se a TechPix decidisse, hoje, quebrar o monólito em serviços, qual módulo sairia primeiro — e por qual linha ela o separaria do resto?* "Cortar", nesta aula, é isso: passar a faca no monólito e separar um pedaço para virar processo próprio. Não tem nada a ver com cortar custo. Guardem a resposta. No fim da aula vocês vão comparar com o que a técnica diz.
 
 ---
 
@@ -788,9 +788,9 @@ Um squad para cada contexto core — três —, e um squad de plataforma que tam
 Reparem que a pergunta "vamos quebrar em serviços?" ainda não foi respondida. Mas ela já ficou mais precisa: virou "quais destes cinco contextos, se algum, precisam de um processo próprio?". E para responder isso, precisamos ter certeza de que os cinco são os cinco certos.
 
 ---
-## 4. Modelar antes de cortar: o event storming que desenha as fronteiras
+## 4. Modelar antes de separar: o event storming que desenha as fronteiras
 
-Aqui entra o tema da aula. Domain-Driven Design tem um vocabulário grande — linguagem ubíqua, bounded context, agregado, evento de domínio, mapa de contexto — e eu vou apresentar cada peça no momento em que a reunião precisar dela, não antes. A pergunta que a reunião colocou na frente de tudo é: **se a gente for cortar, onde a gente corta?**
+Aqui entra o tema da aula. Domain-Driven Design tem um vocabulário grande — linguagem ubíqua, bounded context, agregado, evento de domínio, mapa de contexto — e eu vou apresentar cada peça no momento em que a reunião precisar dela, não antes. A pergunta que a reunião colocou na frente de tudo é: **se a gente for separar um pedaço, por qual linha a gente separa?**
 
 A frase "vamos quebrar em microsserviços" tem um pressuposto escondido: que a gente sabe onde estão as linhas. Na Aula 2 eu confessei que os módulos da TechPix foram desenhados no olho. Funcionou — as fronteiras de módulo quebravam o build — mas ninguém sabia dizer *por que aquela linha e não outra*. E o incidente que abre o repositório mostra o custo de não saber.
 
@@ -885,7 +885,7 @@ Agora eu quero que vocês imaginem esse mesmo bug com Limites e Ledger em **serv
 </svg>
 </div>
 
-A palavra ambígua vira um campo num contrato JSON, e o erro não aparece num teste — aparece na conciliação do fim do mês, ou numa fiscalização. **Microsserviço não corrige fronteira errada; ele a torna permanente.** Esse é o primeiro argumento contra cortar antes de modelar.
+A palavra ambígua vira um campo num contrato JSON, e o erro não aparece num teste — aparece na conciliação do fim do mês, ou numa fiscalização. **Microsserviço não corrige fronteira errada; ele a torna permanente.** Esse é o primeiro argumento contra separar antes de modelar.
 
 ### 4.2 O rio de eventos, e onde o dono muda
 
@@ -976,7 +976,7 @@ A fronteira não é uma linha que alguém traça. É **o lugar onde o dono do fa
 </svg>
 </div>
 
-É por isso que o `contextos.go` lista, para cada contexto, os eventos que ele publica: o mapa é a saída do event storming, gravada como código. E é por isso que a resposta à pergunta "onde cortar?" **não pode vir da reunião** — ela vem de um dia de parede com post-its, e o resultado é verificável.
+É por isso que o `contextos.go` lista, para cada contexto, os eventos que ele publica: o mapa é a saída do event storming, gravada como código. E é por isso que a resposta à pergunta "por qual linha separar?" **não pode vir da reunião** — ela vem de um dia de parede com post-its, e o resultado é verificável.
 
 ### 4.3 Os quatro testes de fronteira, lidos com a pergunta da reunião
 
@@ -1016,7 +1016,7 @@ Uma fronteira candidata é boa quando passa em quatro testes — e os quatro dã
 
 O primeiro teste é **linguagem própria**: a mesma palavra muda de sentido ao cruzar a linha? Se a fronteira falha nesse teste e vocês extraíram um serviço, o contrato carrega uma ambiguidade que ninguém mais pode corrigir sem quebrar o vizinho. O segundo é **co-mutação baixa**, medida com `make comutacao` — pares de módulos que mudam no mesmo commit. Se falha e vocês extraíram, toda funcionalidade vira dois pull requests em dois repositórios e um deploy coordenado, que é o pior dos dois mundos. O terceiro é **a invariante fecha dentro**: a regra de negócio precisa de dado do outro lado para ser verificada? Se falha e vocês extraíram, a transação vira saga e a invariante passa a ser "quase sempre verdadeira", o que num sistema financeiro é a mesma coisa que falsa. O quarto é **contrato pequeno e estável**: quantas chamadas e eventos atravessam a linha, e com que frequência mudam? Se falha e vocês extraíram, é latência de rede a cada chamada de um contrato que muda toda semana.
 
-Reparem no padrão da última coluna: cada teste que uma fronteira *reprova* como módulo, ela reprova **muito mais caro** como serviço. É o segundo argumento para modelar antes de cortar.
+Reparem no padrão da última coluna: cada teste que uma fronteira *reprova* como módulo, ela reprova **muito mais caro** como serviço. É o segundo argumento para modelar antes de separar.
 
 ### 4.4 O mapa de contexto não muda quando o módulo vira serviço
 
@@ -1260,7 +1260,7 @@ Agora comparem com o que microsserviços dariam "de graça": a fronteira de rede
 </svg>
 </div>
 
-**As três camadas compram a mesma garantia de fronteira por um preço que vinte pessoas podem pagar.** É isso que "monólito modular bem definido" significa nesta aula: a garantia de microsserviço sem a conta de microsserviço. E é o terceiro argumento — o decisivo — para não cortar antes de precisar.
+**As três camadas compram a mesma garantia de fronteira por um preço que vinte pessoas podem pagar.** É isso que "monólito modular bem definido" significa nesta aula: a garantia de microsserviço sem a conta de microsserviço. E é o terceiro argumento — o decisivo — para não separar antes de precisar.
 
 Para quem não está em Go, as ferramentas equivalentes existem em toda linguagem: ArchUnit em Java e Kotlin, Spring Modulith — que é literalmente um monólito modular com estas regras embutidas —, NetArchTest em .NET, import-linter em Python, dependency-cruiser em TypeScript, go-arch-lint em Go. O ponto não é a ferramenta. É rodar no pull request.
 
