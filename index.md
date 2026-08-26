@@ -26,6 +26,7 @@ Curso ao vivo, com o caso contínuo da fintech fictícia **TechPix**, desenhado 
 ## Aula 3 — Modelagem de Domínio e Decisões Arquiteturais (SDD na prática)
 
 - [Roteiro (apresentação)](aula3-roteiro.html)
+- [Do monólito aos serviços — versão evolutiva (20 pessoas, baixo orçamento, BACEN)](aula3-do-monolito-aos-servicos.md)
 - [Conteúdo completo](aula3-conteudo-completo.md)
 - [Guia de perguntas difíceis](aula3-perguntas-dificeis.md)
 
