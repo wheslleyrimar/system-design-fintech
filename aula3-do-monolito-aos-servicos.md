@@ -24,46 +24,66 @@ A situação é esta. A TechPix tem hoje **vinte desenvolvedores**. O sistema é
 Deixa eu desenhar o que existe hoje, porque tudo nesta aula parte deste desenho.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
-<svg viewBox="0 0 900 260" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+<svg viewBox="0 0 900 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs><marker id="p0-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57534e"/></marker></defs>
   <text x="450" y="26" text-anchor="middle" font-size="16" font-weight="bold" fill="#1f1e1c">A TechPix hoje: um processo, um banco, um deploy — e vinte pessoas atrás dele</text>
   <!-- devs -->
   <g fill="#534AB7">
-    <circle cx="45" cy="90" r="9"/><circle cx="70" cy="90" r="9"/><circle cx="95" cy="90" r="9"/><circle cx="120" cy="90" r="9"/><circle cx="145" cy="90" r="9"/>
-    <circle cx="45" cy="115" r="9"/><circle cx="70" cy="115" r="9"/><circle cx="95" cy="115" r="9"/><circle cx="120" cy="115" r="9"/><circle cx="145" cy="115" r="9"/>
-    <circle cx="45" cy="140" r="9"/><circle cx="70" cy="140" r="9"/><circle cx="95" cy="140" r="9"/><circle cx="120" cy="140" r="9"/><circle cx="145" cy="140" r="9"/>
-    <circle cx="45" cy="165" r="9"/><circle cx="70" cy="165" r="9"/><circle cx="95" cy="165" r="9"/><circle cx="120" cy="165" r="9"/><circle cx="145" cy="165" r="9"/>
+    <circle cx="35" cy="110" r="8"/><circle cx="57" cy="110" r="8"/><circle cx="79" cy="110" r="8"/><circle cx="101" cy="110" r="8"/><circle cx="123" cy="110" r="8"/>
+    <circle cx="35" cy="132" r="8"/><circle cx="57" cy="132" r="8"/><circle cx="79" cy="132" r="8"/><circle cx="101" cy="132" r="8"/><circle cx="123" cy="132" r="8"/>
+    <circle cx="35" cy="154" r="8"/><circle cx="57" cy="154" r="8"/><circle cx="79" cy="154" r="8"/><circle cx="101" cy="154" r="8"/><circle cx="123" cy="154" r="8"/>
+    <circle cx="35" cy="176" r="8"/><circle cx="57" cy="176" r="8"/><circle cx="79" cy="176" r="8"/><circle cx="101" cy="176" r="8"/><circle cx="123" cy="176" r="8"/>
   </g>
-  <text x="95" y="195" text-anchor="middle" font-size="11" fill="#57534e">20 desenvolvedores</text>
-  <line x1="165" y1="128" x2="215" y2="128" stroke="#57534e" stroke-width="2" marker-end="url(#p0-a)"/>
-  <text x="190" y="118" text-anchor="middle" font-size="10" fill="#8a897f">1 repo</text>
+  <text x="79" y="204" text-anchor="middle" font-size="11" fill="#57534e">20 desenvolvedores</text>
+  <line x1="140" y1="143" x2="178" y2="143" stroke="#57534e" stroke-width="2" marker-end="url(#p0-a)"/>
+  <text x="159" y="133" text-anchor="middle" font-size="9.5" fill="#8a897f">1 repo</text>
   <!-- pipeline -->
-  <rect x="220" y="100" width="130" height="56" rx="8" fill="#fff" stroke="#57534e" stroke-width="2"/>
-  <text x="285" y="124" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f1e1c">1 pipeline</text>
-  <text x="285" y="142" text-anchor="middle" font-size="10.5" fill="#57534e">build · test · deploy</text>
-  <line x1="352" y1="128" x2="392" y2="128" stroke="#57534e" stroke-width="2" marker-end="url(#p0-a)"/>
+  <rect x="182" y="115" width="108" height="56" rx="8" fill="#fff" stroke="#57534e" stroke-width="2"/>
+  <text x="236" y="139" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f1e1c">1 pipeline</text>
+  <text x="236" y="157" text-anchor="middle" font-size="10" fill="#57534e">build · test · deploy</text>
+  <line x1="292" y1="143" x2="318" y2="143" stroke="#57534e" stroke-width="2" marker-end="url(#p0-a)"/>
   <!-- binary -->
-  <rect x="398" y="60" width="250" height="140" rx="10" fill="#EEEDFE" stroke="#534AB7" stroke-width="2.5"/>
-  <text x="523" y="84" text-anchor="middle" font-size="13" font-weight="bold" fill="#26215C">cmd/techpix — 1 binário Go</text>
+  <rect x="322" y="60" width="240" height="166" rx="10" fill="#EEEDFE" stroke="#534AB7" stroke-width="2.5"/>
+  <text x="442" y="84" text-anchor="middle" font-size="13" font-weight="bold" fill="#26215C">cmd/techpix — 1 binário Go</text>
   <g font-size="9.5" fill="#26215C" text-anchor="middle">
-    <rect x="410" y="96" width="70" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="445" y="111">ledger</text>
-    <rect x="488" y="96" width="70" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="523" y="111">pix</text>
-    <rect x="566" y="96" width="70" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="601" y="111">limites</text>
-    <rect x="410" y="124" width="70" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="445" y="139">bacen</text>
-    <rect x="488" y="124" width="70" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="523" y="139">identidade</text>
-    <rect x="566" y="124" width="70" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="601" y="139">devolucoes</text>
-    <rect x="410" y="152" width="70" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="445" y="167">outbox</text>
-    <rect x="488" y="152" width="70" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="523" y="167">idempotency</text>
-    <rect x="566" y="152" width="70" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="601" y="167">+ 6 outros</text>
+    <rect x="334" y="96" width="68" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="368" y="111">ledger</text>
+    <rect x="408" y="96" width="68" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="442" y="111">pix</text>
+    <rect x="482" y="96" width="68" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="516" y="111">limites</text>
+    <rect x="334" y="124" width="68" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="368" y="139">bacen</text>
+    <rect x="408" y="124" width="68" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="442" y="139">identidade</text>
+    <rect x="482" y="124" width="68" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="516" y="139">devolucoes</text>
+    <rect x="334" y="152" width="68" height="22" rx="4" fill="#FAEEDA" stroke="#b45309"/><text x="368" y="167" fill="#412402">outbox</text>
+    <rect x="408" y="152" width="68" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="442" y="167">idempotency</text>
+    <rect x="482" y="152" width="68" height="22" rx="4" fill="#fff" stroke="#534AB7"/><text x="516" y="167">+ 6 outros</text>
   </g>
-  <text x="523" y="190" text-anchor="middle" font-size="10" fill="#5a55a0">15 módulos · 1 deploy</text>
-  <line x1="650" y1="128" x2="690" y2="128" stroke="#57534e" stroke-width="2" marker-end="url(#p0-a)"/>
+  <text x="442" y="196" text-anchor="middle" font-size="10" fill="#5a55a0">15 módulos · 1 deploy</text>
+  <text x="442" y="212" text-anchor="middle" font-size="9" fill="#b45309">o módulo outbox grava e lê a tabela outbox</text>
+  <line x1="564" y1="143" x2="592" y2="143" stroke="#57534e" stroke-width="2" marker-end="url(#p0-a)"/>
   <!-- db -->
-  <rect x="696" y="88" width="180" height="80" rx="10" fill="#E1F5EE" stroke="#166534" stroke-width="2.5"/>
-  <text x="786" y="114" text-anchor="middle" font-size="13" font-weight="bold" fill="#04342C">1 PostgreSQL</text>
-  <text x="786" y="134" text-anchor="middle" font-size="10.5" fill="#04342C">ledger ACID · outbox</text>
-  <text x="786" y="152" text-anchor="middle" font-size="10.5" fill="#04342C">4 schemas</text>
-  <text x="450" y="240" text-anchor="middle" font-size="11" fill="#8a897f">o que a reunião questionou não foi o desenho — foi se ele aguenta vinte pessoas, pouco dinheiro e o regulador</text>
+  <rect x="596" y="60" width="290" height="200" rx="10" fill="#E1F5EE" stroke="#166534" stroke-width="2.5"/>
+  <text x="741" y="82" text-anchor="middle" font-size="13" font-weight="bold" fill="#04342C">1 PostgreSQL · 4 schemas</text>
+  <!-- schema public -->
+  <rect x="608" y="92" width="266" height="86" rx="6" fill="#fff" stroke="#166534" stroke-width="1.5"/>
+  <text x="618" y="106" font-size="9.5" font-weight="bold" fill="#04342C" font-family="monospace">public</text>
+  <text x="700" y="106" font-size="8.5" fill="#8a897f">ledger + pix, herdados das Aulas 1 e 2</text>
+  <g font-size="8.5" font-family="monospace" fill="#04342C" text-anchor="middle">
+    <rect x="616" y="114" width="78" height="18" rx="3" fill="#E1F5EE" stroke="#166534"/><text x="655" y="126">accounts</text>
+    <rect x="700" y="114" width="82" height="18" rx="3" fill="#E1F5EE" stroke="#166534"/><text x="741" y="126">transactions</text>
+    <rect x="788" y="114" width="78" height="18" rx="3" fill="#E1F5EE" stroke="#166534"/><text x="827" y="126">entries</text>
+    <rect x="616" y="136" width="78" height="18" rx="3" fill="#E1F5EE" stroke="#166534"/><text x="655" y="148">pix_payments</text>
+    <rect x="700" y="136" width="82" height="18" rx="3" fill="#E1F5EE" stroke="#166534"/><text x="741" y="148">pix_keys</text>
+    <rect x="788" y="136" width="78" height="18" rx="3" fill="#E1F5EE" stroke="#166534"/><text x="827" y="148">idempotency_…</text>
+    <rect x="616" y="158" width="78" height="16" rx="3" fill="#FAEEDA" stroke="#b45309" stroke-width="1.5"/><text x="655" y="170" fill="#412402" font-weight="bold">outbox</text>
+    <text x="780" y="170" font-family="sans-serif" fill="#b45309" font-size="8">← evento nasce na mesma transação do ledger</text>
+  </g>
+  <!-- other schemas -->
+  <g font-size="9" font-family="monospace" text-anchor="middle">
+    <rect x="608" y="186" width="84" height="40" rx="6" fill="#fff" stroke="#1d4ed8" stroke-width="1.5"/><text x="650" y="201" font-weight="bold" fill="#1e2a5a">identidade</text><text x="650" y="216" font-size="7.5" fill="#1e2a5a">clientes, carteiras</text>
+    <rect x="699" y="186" width="84" height="40" rx="6" fill="#fff" stroke="#534AB7" stroke-width="1.5"/><text x="741" y="201" font-weight="bold" fill="#26215C">limites</text><text x="741" y="216" font-size="8" fill="#26215C">consumo</text>
+    <rect x="790" y="186" width="84" height="40" rx="6" fill="#fff" stroke="#166534" stroke-width="1.5"/><text x="832" y="201" font-weight="bold" fill="#04342C">devolucoes</text><text x="832" y="216" font-size="8" fill="#04342C">devolucoes</text>
+  </g>
+  <text x="741" y="246" text-anchor="middle" font-size="8.5" fill="#8a897f">um schema por contexto novo · nenhuma FK cruza schema · ledger ACID</text>
+  <text x="450" y="286" text-anchor="middle" font-size="11" fill="#8a897f">o que a reunião questionou não foi o desenho — foi se ele aguenta vinte pessoas, pouco dinheiro e o regulador</text>
 </svg>
 </div>
 
