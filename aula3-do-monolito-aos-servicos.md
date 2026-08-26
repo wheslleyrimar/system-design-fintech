@@ -128,8 +128,6 @@ A pressão de **organização** empurra para separar: vinte pessoas geram fila d
 
 A tese que eu vou defender, e que vocês vão poder verificar no repositório que recebem no fim, é simples de enunciar e difícil de praticar: **a decisão "microsserviços sim ou não" é a última da lista, não a primeira.** Antes dela vêm três outras — *onde* rodar, *com o quê* rodar, e *quais são as fronteiras de verdade* do nosso domínio. Quem pula as três e vai direto para a última costuma acertar a topologia e errar o sistema.
 
-E vocês vão me ouvir usar uma palavra o dia inteiro: **gatilho**. Gatilho é a condição, escrita junto com a decisão, que obriga a revisá-la — "Kubernetes não; gatilho: o terceiro serviço extraído". Toda decisão desta aula vem com o seu. Uma decisão sem gatilho não é decisão: é dogma.
-
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 250" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs><marker id="m4d-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57534e"/></marker></defs>
