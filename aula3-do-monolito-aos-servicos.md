@@ -230,7 +230,7 @@ A linha "energia, backup e manutenção" tem gente dentro dela. Backup que ningu
 
 Agora a linha da nuvem. O que os R$ 3.400 estão comprando de verdade não é um servidor. É um Postgres gerenciado com backup automático e uma réplica em outra zona de disponibilidade; é patch de sistema operacional feito por outra pessoa; é monitoramento pronto; é storage que cresce sem ninguém comprar disco; e é a possibilidade de **errar o tamanho e corrigir amanhã**, que com hardware comprado não existe. Vocês não estão pagando uma máquina. Estão pagando o time de operação que não precisam contratar.
 
-E o compromisso de uso, os R$ 2.500, precisa ser lido como o que ele é: **uma aposta na topologia**. O Savings Plan reduz em torno de um quarto do valor em troca de um ano de previsibilidade. A pergunta certa não é "vale a pena?"; é "temos certeza de que essa topologia sobrevive um ano?". Se a resposta da seção 6 desta aula for "vamos extrair dois serviços em seis meses", o compromisso só deveria cobrir a parte que não muda. Guardem essa observação; ela volta no fim.
+E o compromisso de uso, os R$ 2.500, precisa ser lido como o que ele é: **uma aposta na topologia**. O Savings Plan reduz em torno de um quarto do valor em troca de um ano de previsibilidade. A pergunta certa não é "vale a pena?"; é "temos certeza de que essa topologia sobrevive um ano?". Se, no fim da aula, na hora de decidir o que extrai, a resposta for "vamos extrair dois serviços em seis meses", o compromisso só deveria cobrir a parte que não muda. Guardem essa observação; ela volta no fim.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -350,7 +350,7 @@ A frase que eu quero que fique: **o regulador não está do lado da nuvem; ele e
 
 ### 1.3 A decisão
 
-A decisão da TechPix, registrada para a turma: **AWS, sob demanda nos três primeiros meses; compromisso de uso só sobre o que não muda.** Sob demanda primeiro porque ainda não sabemos o tamanho certo — a Lei de Little da Aula 1, pool igual a TPS vezes latência, dá o ponto de partida, mas só o tráfego real dá o tamanho. Compromisso sobre o Postgres depois de estabilizar, porque ele é a parte que a seção 6 vai mostrar que não muda mesmo se a aplicação virar serviços. E reavaliar on-premises ou híbrido no dia em que a fatura mensal ultrapassar o salário de uma pessoa de infraestrutura dedicada. Antes disso, a nuvem *é* a pessoa de infraestrutura.
+A decisão da TechPix, registrada para a turma: **AWS, sob demanda nos três primeiros meses; compromisso de uso só sobre o que não muda.** Sob demanda primeiro porque ainda não sabemos o tamanho certo — a Lei de Little da Aula 1, pool igual a TPS vezes latência, dá o ponto de partida, mas só o tráfego real dá o tamanho. Compromisso sobre o Postgres depois de estabilizar, porque ele é a parte que — vocês vão ver na hora de decidir o que extrai — não muda mesmo se a aplicação virar serviços. E reavaliar on-premises ou híbrido no dia em que a fatura mensal ultrapassar o salário de uma pessoa de infraestrutura dedicada. Antes disso, a nuvem *é* a pessoa de infraestrutura.
 
 Pergunta para a sala: *qual é a primeira linha da fatura de vocês que, se dobrar, muda essa decisão?* Se ninguém sabe responder, a decisão não tem gatilho — e é disso que trata a próxima seção.
 
@@ -386,7 +386,17 @@ Vou percorrer a stack camada por camada. Muito disso já está no repositório; 
 
 ### 2.1 Código: Go, e por que o compilador é parte da arquitetura
 
-**Go 1.25.** Binário estático, sem runtime para instalar, consumo de memória baixo — a instância pequena da nuvem serve —, concorrência nativa para o pipeline outbox/relay da Aula 2. Mas o motivo que mais importa para esta aula é uma regra do compilador: o diretório `internal/`. Um pacote dentro de `internal/` só pode ser importado por quem está acima dele na árvore. Isso vai virar, na seção 5, a nossa fronteira de módulo verificada pelo compilador. O gatilho para trocar de linguagem: nunca por moda; talvez para um contexto específico, e a seção 6 vai mostrar qual.
+**Por que Go?** Três motivos práticos e um motivo de arquitetura.
+
+O primeiro é o que sai do build: um **binário estático**. Um arquivo só, que já carrega tudo o que precisa para rodar. Não existe "instalar o runtime na máquina", não existe versão de biblioteca conflitando — copia o arquivo, executa. Isso é o que deixa a imagem Docker com quinze megabytes, e vocês vão ver isso no `Dockerfile` daqui a pouco.
+
+O segundo é **memória**. Um serviço Go em repouso gasta dezenas de megabytes, não centenas. Na prática: a instância pequena da nuvem serve, e a fatura que a gente acabou de discutir fica onde está.
+
+O terceiro é **concorrência barata**. Lembram do relay da outbox, da Aula 2 — aquele carteiro que passa a cada 100 ms e entrega os eventos? Em Go isso é uma goroutine rodando ao lado do servidor HTTP, no mesmo processo, sem thread pool, sem framework. Um sistema que faz Pix vive de coisas assim: relay, reconciliação, cache expirando. Go faz isso de graça.
+
+Mas o motivo que mais importa **para esta aula** não é nenhum desses. É uma regra do compilador que quase ninguém nota até precisar dela: o diretório **`internal/`**. Em Go, tudo que está dentro de uma pasta chamada `internal/` só pode ser importado por código que esteja *acima* dela na árvore de diretórios. Se o módulo `pix` tentar importar `ledger/internal/store`, o compilador recusa. Não é aviso, não é lint — é erro de compilação. Guardem isso, porque quando a gente chegar em "fronteira que o build verifica", essa regra vira a nossa **fronteira de módulo**: a garantia de que ninguém escreve na tabela do ledger pelas costas dele.
+
+E o gatilho para trocar de linguagem? Nunca "porque a outra está na moda". Talvez para **um contexto específico** que precise de algo que Go não faz bem — e na hora de decidir o que extrai, vocês vão ver qual é esse contexto na TechPix.
 
 ### 2.2 Artefato: Linux dentro de um container
 
@@ -530,7 +540,7 @@ A Aula 2 mostrou que a outbox transacional garante que o evento existe se a tran
 
 **Infraestrutura como código: Terraform desde o primeiro dia.** O regulador pergunta "como você reconstrói isso?". A resposta tem que ser um repositório, não uma pessoa.
 
-**CI/CD: a cada pull request, `go test ./...` e `make test-arch`; build da imagem; deploy com aprovação.** Os testes de arquitetura da seção 5 só valem se rodarem no PR. Uma fronteira que ninguém verifica evapora em seis semanas. O pipeline inteiro cabe num desenho, e eu quero que vocês reparem em *onde* a arquitetura é verificada:
+**CI/CD: a cada pull request, `go test ./...` e `make test-arch`; build da imagem; deploy com aprovação.** Os testes de arquitetura — os que eu vou mostrar quebrando o build daqui a pouco — só valem se rodarem no PR. Uma fronteira que ninguém verifica evapora em seis semanas. O pipeline inteiro cabe num desenho, e eu quero que vocês reparem em *onde* a arquitetura é verificada:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 200" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -643,7 +653,7 @@ Quinze diretórios. Cada um é um pacote Go com um `api.go` — o contrato públ
 
 Ninguém escreve na tabela de lançamentos pelas costas do ledger, não por disciplina, mas por compilador. Isso é o ADR-002, "monólito modular, com fronteiras verificadas pelo compilador", e eu quero que vocês notem a data dele: foi escrito na Aula 1, quando decidimos começar pequeno, e já dizia em que condições seria revisto.
 
-As dependências entre módulos são declaradas por interface e ligadas num único lugar, a função de composição do `main.go`. Ela cabe numa tela, e o ADR diz explicitamente: se ela ficar difícil de ler, a arquitetura azedou. Vale desenhar o que ela liga, porque é a versão "de código" do context map que vem na seção 4:
+As dependências entre módulos são declaradas por interface e ligadas num único lugar, a função de composição do `main.go`. Ela cabe numa tela, e o ADR diz explicitamente: se ela ficar difícil de ler, a arquitetura azedou. Vale desenhar o que ela liga, porque é a versão "de código" do mapa de contextos que a gente vai construir na parte de modelagem:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 360" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -697,7 +707,7 @@ As dependências entre módulos são declaradas por interface e ligadas num úni
 
 Reparem no formato do grafo: a plataforma em cima, usada por todos e sem usar ninguém; o ledger como upstream de quase tudo; a borda embaixo, só lendo ou derivando. Nenhuma seta sobe. O ADR-005 é explícito: uma seta nova aqui exige mudar o mapa de contextos **e** escrever um ADR, porque mudar dependência é mudar arquitetura.
 
-Os quinze módulos não são quinze coisas soltas. Eles se agrupam — e o agrupamento é o resultado da seção 4, mas eu vou mostrar o resultado antes, para vocês terem o mapa na cabeça:
+Os quinze módulos não são quinze coisas soltas. Eles se agrupam — e o agrupamento é o resultado da modelagem que vem logo a seguir, mas eu vou mostrar o resultado antes, para vocês terem o mapa na cabeça:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 420" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -935,7 +945,7 @@ Sobre o fluxo do Pix, o que sai é um rio: `PixIniciado → ChaveResolvida → L
 </svg>
 </div>
 
-A fronteira não é uma linha que alguém traça. É **o lugar onde o dono do fato muda**. Agrupem os eventos por quem os publica e os cinco contextos da seção 3 aparecem sozinhos:
+A fronteira não é uma linha que alguém traça. É **o lugar onde o dono do fato muda**. Agrupem os eventos por quem os publica e os cinco contextos que eu mostrei no desenho do binário aparecem sozinhos:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 250" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -1315,7 +1325,7 @@ Isso vira um fluxo de decisão, e eu quero que vocês o apliquem literalmente, c
 </svg>
 </div>
 
-Vamos aplicar os quatro aos cinco contextos da TechPix, com a equipe de vinte e o orçamento da seção 1.
+Vamos aplicar os quatro aos cinco contextos da TechPix, com a equipe de vinte e o orçamento do começo da aula.
 
 | Contexto | Escala ≠ | Deploy ≠ | Time ≠ com fila | Falha / SLA ≠ | Veredito hoje | O que faria disparar |
 |---|---|---|---|---|---|---|
@@ -1328,7 +1338,7 @@ Vamos aplicar os quatro aos cinco contextos da TechPix, com a equipe de vinte e 
 
 O resultado, dito sem rodeios: **zero serviços hoje. Um candidato com gatilho claro. Kubernetes continua desnecessário.** E reparem que o candidato — Antifraude — é exatamente o que o ADR-002 e o `CONTEXT-MAP.md` já previam, escrito antes de a pergunta aparecer na reunião. É para isso que serve registrar a decisão com os critérios de revisão: quando a pressão chega, a resposta não é improvisada.
 
-Vale desenhar como seria a extração do Antifraude, no dia em que o gatilho disparar — porque é o desenho que mostra o que a seção 4 preparou e o que a seção 7 vai cobrar:
+Vale desenhar como seria a extração do Antifraude, no dia em que o gatilho disparar — porque é o desenho que mostra o que a modelagem preparou e o que o plano de evolução, no fim, vai cobrar:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 380" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -1377,7 +1387,7 @@ Vale desenhar como seria a extração do Antifraude, no dia em que o gatilho dis
 </svg>
 </div>
 
-Olhem o que muda: um processo novo, um banco novo, um tópico, um adaptador HTTP no lugar da chamada em memória. E olhem o que **não** muda: o ledger, o mapa de contextos, os eventos, a linguagem. A extração é um sprint porque a modelagem foi feita antes. Sem a seção 4, esse mesmo desenho seria um projeto de seis meses — e é essa a assimetria que decide os casos de dúvida:
+Olhem o que muda: um processo novo, um banco novo, um tópico, um adaptador HTTP no lugar da chamada em memória. E olhem o que **não** muda: o ledger, o mapa de contextos, os eventos, a linguagem. A extração é um sprint porque a modelagem foi feita antes. Sem a modelagem, esse mesmo desenho seria um projeto de seis meses — e é essa a assimetria que decide os casos de dúvida:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 290" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -1462,7 +1472,7 @@ A **Fase 0** é hoje: monólito modular, um container, Postgres gerenciado com r
 
 A **Fase 1** dispara por p99 ou por disponibilidade, nunca por sensação: a segunda réplica da aplicação, o cache saindo do processo para um Redis gerenciado, e o relay da outbox virando um worker separado — ainda do mesmo binário, só com outro ponto de entrada. Mais ou menos R$ 1.500 por mês a mais. Ainda sem Kubernetes: duas réplicas de um container é o que ECS faz sem esforço.
 
-A **Fase 2** dispara pelo gatilho do Antifraude — um modelo de risco em produção, que pede outra linguagem, outro perfil de máquina, outro ciclo de deploy. É o primeiro serviço, e é o desenho da seção 6. E é aqui que a conta muda de patamar, porque o primeiro serviço traz consigo tudo o que um serviço exige: a outbox vira um tópico num broker, o schema `limites` vai para um banco próprio, aparecem OpenTelemetry e um gateway na borda. Mais R$ 3.000 a R$ 4.000 por mês. ECS ainda basta para dois serviços.
+A **Fase 2** dispara pelo gatilho do Antifraude — um modelo de risco em produção, que pede outra linguagem, outro perfil de máquina, outro ciclo de deploy. É o primeiro serviço, e é o desenho da extração do Antifraude que a gente acabou de ver. E é aqui que a conta muda de patamar, porque o primeiro serviço traz consigo tudo o que um serviço exige: a outbox vira um tópico num broker, o schema `limites` vai para um banco próprio, aparecem OpenTelemetry e um gateway na borda. Mais R$ 3.000 a R$ 4.000 por mês. ECS ainda basta para dois serviços.
 
 A **Fase 3** dispara por fila entre squads — medida em dias de espera de deploy, não em reclamação de retrospectiva. Com três ou mais serviços, Kubernetes se paga: placement, rollout independente, autoscaling por serviço. Mais R$ 2.000 por mês e, honestamente, mais uma pessoa, porque um cluster precisa de dono.
 
@@ -1539,7 +1549,7 @@ Deixa eu empilhar esses custos, porque o desenho diz mais do que os números:
 </svg>
 </div>
 
-Olhem o que o desenho diz: sair da Fase 0 para a Fase 3 multiplica a fatura mensal por três e adiciona uma pessoa. Cada seta precisa de um gatilho medido — fila em dias, p99 em milissegundos, co-mutação em percentual. E reparem na barra verde embaixo de todas as colunas, sempre do mesmo tamanho: o Postgres do ledger. É por isso que o compromisso de uso da seção 1 deveria cobrir o banco, e só o banco. **Comprometam-se com o que não muda.**
+Olhem o que o desenho diz: sair da Fase 0 para a Fase 3 multiplica a fatura mensal por três e adiciona uma pessoa. Cada seta precisa de um gatilho medido — fila em dias, p99 em milissegundos, co-mutação em percentual. E reparem na barra verde embaixo de todas as colunas, sempre do mesmo tamanho: o Postgres do ledger. É por isso que o compromisso de uso, lá do começo da aula, deveria cobrir o banco, e só o banco. **Comprometam-se com o que não muda.**
 
 ---
 
