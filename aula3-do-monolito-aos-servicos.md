@@ -915,7 +915,15 @@ A palavra ambígua vira um campo num contrato JSON, e o erro não aparece num te
 make demo-rio     # o repositório chama a linha do tempo de "rio"
 ```
 
-A técnica para descobrir as fronteiras em vez de decretá-las chama-se **event storming**: a gente coloca numa parede, em post-its, os fatos do domínio, no passado, em ordem, com quem publica cada um. Antes da linha do tempo, a gramática — porque é a gramática que faz a fronteira aparecer sozinha:
+A técnica para descobrir as fronteiras em vez de decretá-las chama-se **event storming**. É uma oficina, não uma ferramenta: a gente junta numa sala quem constrói o sistema e quem conhece o negócio, dá post-its para todo mundo e cobre uma parede com os **fatos** que acontecem no domínio — "Pix iniciado", "chave resolvida", "fundos reservados" —, em ordem, da esquerda para a direita, como uma linha do tempo. Cada fato é um post-it laranja, escrito com o verbo no passado, porque fato é algo que já aconteceu e não se desfaz.
+
+Só que a parede não fica só com laranja. Conforme a conversa avança, aparecem perguntas: *quem* fez isso acontecer? *o que* a pessoa pediu? *o que* decidiu se podia? *o que* acontece em seguida? Cada resposta ganha uma cor de post-it. E é aqui que a técnica vira gramática: as cores sempre se encaixam **na mesma frase**, lida da esquerda para a direita:
+
+> *um **ator** (amarelo) dispara um **comando** (azul) contra um **agregado** (amarelo claro), que decide e produz um **evento** (laranja); uma **política** (roxo) reage ao evento e dispara o próximo comando — e a frase recomeça.*
+
+Na TechPix, a primeira frase da parede é: a **cliente** pede **IniciarPix**; o agregado **Pagamento** verifica se pode e registra **PixIniciado**; a política "sempre que um Pix inicia, resolva a chave" dispara **ResolverChave** — e a frase seguinte começa. Quando um passo depende de algo fora do nosso sistema, como o DICT ou o SPI, ele ganha um post-it rosa: é a marca de "aqui tem uma fronteira externa, e vai precisar de uma ACL".
+
+Por que essa frase importa tanto? Porque ela responde duas perguntas sem ninguém precisar decidir nada. O **agregado** é onde o comando aterrissa e uma invariante decide — vocês não escolhem onde ficam os agregados; eles aparecem como o lugar onde as decisões acontecem. E o **evento** tem um dono: quem o publica. É esse dono que, daqui a pouco, vai desenhar as fronteiras.
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 230" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -935,7 +943,7 @@ A técnica para descobrir as fronteiras em vez de decretá-las chama-se **event 
     <text x="485" y="185" fill="#8a897f" font-size="10">…e a frase recomeça com outro comando</text>
     <rect x="800" y="70" width="90" height="70" rx="4" fill="#fecaca" stroke="#be123c"/><text x="845" y="98" font-weight="bold" fill="#5a1e2b">externo</text><text x="845" y="116" fill="#5a1e2b">DICT / SPI</text><text x="845" y="130" font-size="9" fill="#be123c">rosa · atrás de ACL</text>
   </g>
-  <text x="450" y="215" text-anchor="middle" font-size="11" fill="#8a897f">o agregado é onde o comando aterrissa e uma invariante decide; o dono do evento é quem o publica — e é aí que a fronteira mora</text>
+  <text x="450" y="215" text-anchor="middle" font-size="11" fill="#8a897f">ator dispara comando → agregado decide → evento acontece → política reage → próximo comando</text>
 </svg>
 </div>
 
