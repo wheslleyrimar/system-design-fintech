@@ -373,7 +373,7 @@ Reparem que cada um desses nomes é reconhecível por um especialista de negóci
     <rect x="635" y="168" width="130" height="56" rx="3" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
     <text x="700" y="200" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7f1d1d">PixDevolvido</text>
   </g>
-  <text x="330" y="200" font-family="sans-serif" font-size="12" fill="#666">pacs.004 / trilho do MED — a ramificação de exceção também é um fato de negócio</text>
+  <text x="615" y="200" text-anchor="end" font-family="sans-serif" font-size="12" fill="#666">pacs.004 / trilho do MED — a ramificação de exceção também é um fato de negócio</text>
 </svg>
 <p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O rio de eventos do Pix: fatos do domínio no passado, na ordem em que acontecem — a matéria-prima do event storming.</p>
 </div>
