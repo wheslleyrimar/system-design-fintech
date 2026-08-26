@@ -430,9 +430,17 @@ E o gatilho para trocar de linguagem? Nunca "porque a outra está na moda". Talv
 </svg>
 </div>
 
-O estágio de build tem a toolchain inteira do Go; o estágio de runtime tem só o binário, os certificados de raiz, os fusos horários e um `curl` para o health check. O processo sobe como o usuário `app`, sem privilégio. Uns quinze megabytes, superfície de ataque mínima, que é exatamente o que a política de segurança cibernética pede. O gatilho: se aparecer dependência em C, trocar Alpine por Debian slim. Nunca voltar a rodar fora de container.
+Olhem para o desenho. O `Dockerfile` da TechPix tem **dois estágios**, e a ideia é simples: **compilar num lugar, rodar em outro**.
 
-**Docker, sim.** A mesma imagem no laptop dos vinte desenvolvedores, no CI e em produção. Elimina o "na minha máquina funciona". E é a decisão que **mantém as opções abertas**: qualquer orquestrador futuro consome essa mesma imagem. Não há gatilho — container é o piso, não uma fase.
+O primeiro estágio, o de *build*, é uma imagem gorda: tem o compilador do Go, a toolchain inteira, o cache de dependências — uns 400 megabytes. É a oficina. Ela existe só para produzir uma coisa: o binário. Terminou de compilar, a oficina é descartada.
+
+O segundo estágio, o de *runtime*, é o que vai para produção. Começa de um Alpine pelado e recebe só o que o binário precisa para viver: os certificados de raiz (para falar HTTPS com o BACEN), a tabela de fusos horários (para não errar a data de um Pix à meia-noite) e um `curl`, que é o que o load balancer usa para perguntar `/healthz`. Mais nada. Não tem compilador, não tem shell útil, não tem pacote sobrando. Uns **quinze megabytes**.
+
+E reparem na linha `USER app`: o processo sobe como um usuário comum, sem privilégio. Se alguém encontrar um buraco na aplicação, o que ele ganha é um usuário que não pode nada, numa imagem que não tem nada. Isso tem nome — **superfície de ataque mínima** — e é literalmente o que a política de segurança cibernética que o regulador exige pede de vocês. Não é capricho de engenheiro; é um item de auditoria resolvido no build.
+
+O gatilho para mudar isso: se um dia aparecer uma dependência em C — um driver, uma biblioteca de criptografia nativa —, Alpine começa a atrapalhar, e a troca é para um Debian slim. Só isso muda. O que nunca muda: voltar a rodar fora de container.
+
+**E Docker? Sim, sem discussão.** O motivo não é moda; é que a mesma imagem roda no laptop dos vinte desenvolvedores, no CI e em produção. Byte a byte a mesma. O "na minha máquina funciona" deixa de existir, porque a máquina de todo mundo é a mesma imagem. E tem um segundo motivo, mais importante para esta aula: essa imagem é o **artefato**, e qualquer forma de executar que a gente escolha depois — uma VM, o ECS, um dia o Kubernetes — consome esse mesmo artefato. Docker é a decisão que mantém todas as outras abertas. Por isso ela não tem gatilho: container não é uma fase, é o piso.
 
 ### 2.3 Execução: por que Kubernetes ainda não
 
@@ -488,7 +496,13 @@ Kubernetes resolve o problema de *muitos* serviços heterogêneos que precisam d
 
 **Migrations: SQL embutido no binário**, aplicado no boot (`migrations/embed.go`). A versão do schema anda com a versão do código, sem ferramenta externa. O gatilho: no dia em que houver dois deploys independentes escrevendo no mesmo banco, migration vira um pipeline separado.
 
-**Mensageria: nenhum broker.** Esta é a segunda resposta que surpreende, e ela merece um desenho porque é o exemplo mais limpo de "gatilho escrito":
+**Mensageria: nenhum broker.** Esta é a segunda resposta que surpreende. Antes do desenho, deixa eu relembrar as duas peças da outbox da Aula 2, porque uma delas tem um nome que eu vou usar o dia inteiro.
+
+A primeira peça é a **escrita**: quando o ledger reserva os fundos de um Pix, na **mesma transação** ele grava uma linha na tabela `outbox` dizendo "aconteceu `FundosReservados`". Ou o commit leva os dois — lançamento e evento —, ou não leva nenhum. É isso que garante que nunca existe um lançamento sem evento, nem um evento sem lançamento.
+
+A segunda peça é o **relay**. Pensem na `outbox` como a caixa de cartas para enviar, na porta de casa. O relay é o **carteiro**: uma goroutine que, a cada 100 milissegundos, passa na caixa, pega até 200 cartas, entrega a cada destinatário e marca as cartas como entregues. Hoje os destinatários — `limites`, `statement`, `feed` — moram no mesmo processo, então "entregar" é chamar uma função. Se o carteiro cair no meio do caminho, na volta ele pega as cartas que ainda não estão marcadas e entrega de novo; por isso quem recebe tem que aguentar receber duas vezes — é a idempotência do consumidor. No repositório, é o `Worker` do módulo `outbox`, e o `RELAY_LAG_MS` do compose é um atraso proposital para a janela eventual ficar visível na demo.
+
+Por que isso importa agora? Porque o relay é exatamente o pedaço que muda quando entra um broker — e só ele. Vejam o desenho:
 
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -526,7 +540,7 @@ Kubernetes resolve o problema de *muitos* serviços heterogêneos que precisam d
 </svg>
 </div>
 
-A Aula 2 mostrou que a outbox transacional garante que o evento existe se a transação existiu; um consumidor no mesmo processo não precisa de Kafka. Kafka gerenciado custa na casa de R$ 1.500 por mês e é uma disciplina operacional inteira — partições, retenção, consumer groups, rebalanceamento. O gatilho: o **primeiro consumidor fora do processo**. Nesse dia a tabela de outbox vira a fonte de um tópico, sem mudar o produtor — é a beleza do padrão, e é por isso que ele foi escolhido na Aula 2 mesmo sem broker.
+Com os consumidores no mesmo processo, o carteiro entrega chamando função, e não precisa de Kafka. Kafka gerenciado custa na casa de R$ 1.500 por mês e é uma disciplina operacional inteira — partições, retenção, consumer groups, rebalanceamento. O gatilho: o **primeiro consumidor fora do processo**. Nesse dia o carteiro passa a depositar as cartas num tópico em vez de entregar em mãos; a caixa de correio e quem escreve as cartas — `pix`, `ledger` — não mudam uma linha. É a beleza do padrão, e é por isso que ele foi escolhido na Aula 2 mesmo sem broker.
 
 **Cache: em memória, no processo.** O cache do DICT com TTL já existe. Cache distribuído resolve um problema que ainda não temos, porque temos uma réplica. O gatilho: a segunda réplica da aplicação.
 
