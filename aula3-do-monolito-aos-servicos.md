@@ -128,6 +128,8 @@ A pressão de **organização** empurra para separar: vinte pessoas geram fila d
 
 A tese que eu vou defender, e que vocês vão poder verificar no repositório que recebem no fim, é simples de enunciar e difícil de praticar: **a decisão "microsserviços sim ou não" é a última da lista, não a primeira.** Antes dela vêm três outras — *onde* rodar, *com o quê* rodar, e *quais são as fronteiras de verdade* do nosso domínio. Quem pula as três e vai direto para a última costuma acertar a topologia e errar o sistema.
 
+E vocês vão me ouvir usar uma palavra o dia inteiro: **gatilho**. Gatilho é a condição, escrita junto com a decisão, que obriga a revisá-la — "Kubernetes não; gatilho: o terceiro serviço extraído". Toda decisão desta aula vem com o seu. Uma decisão sem gatilho não é decisão: é dogma.
+
 <div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
 <svg viewBox="0 0 900 250" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs><marker id="m4d-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57534e"/></marker></defs>
@@ -142,7 +144,7 @@ A tese que eu vou defender, e que vocês vão poder verificar no repositório qu
   <text x="337" y="88" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#04342C">2 · COM O QUÊ</text>
   <text x="337" y="114" text-anchor="middle" font-size="11.5" fill="#04342C">Linux, Docker, Go, Postgres</text>
   <text x="337" y="134" text-anchor="middle" font-size="11.5" fill="#04342C">Kubernetes? ainda não</text>
-  <text x="337" y="154" text-anchor="middle" font-size="11.5" fill="#04342C">cada escolha com gatilho</text>
+  <text x="337" y="154" text-anchor="middle" font-size="11.5" fill="#04342C">cada uma com a condição de revisão</text>
   <line x1="434" y1="120" x2="460" y2="120" stroke="#57534e" stroke-width="2" marker-end="url(#m4d-a)"/>
   <rect x="464" y="60" width="190" height="120" rx="10" fill="#EEEDFE" stroke="#534AB7" stroke-width="2.5"/>
   <text x="559" y="88" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#26215C">3 · QUAIS fronteiras</text>
@@ -152,9 +154,9 @@ A tese que eu vou defender, e que vocês vão poder verificar no repositório qu
   <line x1="656" y1="120" x2="682" y2="120" stroke="#57534e" stroke-width="2" marker-end="url(#m4d-a)"/>
   <rect x="686" y="60" width="190" height="120" rx="10" fill="#FAEEDA" stroke="#b45309" stroke-width="2"/>
   <text x="781" y="88" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#412402">4 · DECOMPOR?</text>
-  <text x="781" y="114" text-anchor="middle" font-size="11.5" fill="#412402">módulo ou serviço,</text>
-  <text x="781" y="134" text-anchor="middle" font-size="11.5" fill="#412402">contexto por contexto,</text>
-  <text x="781" y="154" text-anchor="middle" font-size="11.5" fill="#412402">com quatro gatilhos</text>
+  <text x="781" y="114" text-anchor="middle" font-size="11.5" fill="#412402">módulo ou serviço, por contexto,</text>
+  <text x="781" y="134" text-anchor="middle" font-size="11.5" fill="#412402">com 4 critérios: escala,</text>
+  <text x="781" y="154" text-anchor="middle" font-size="11.5" fill="#412402">deploy, time, falha</text>
   <text x="450" y="222" text-anchor="middle" font-size="12" fill="#8a897f">a decisão 4 só faz sentido depois da 3 — e a 3 é a mesma seja qual for a resposta da 1 e da 2</text>
 </svg>
 </div>
