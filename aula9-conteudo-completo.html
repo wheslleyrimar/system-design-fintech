@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aula 9 — Segurança em Sistemas Financeiros</title>
+<style>
+:root{--bg:#f8f9fb;--fg:#1a1a2e;--mut:#5b5b70;--bd:#e2e4ea;--acc:#4338ca;--card:#fff;--code:#f1f2f6}
+@media(prefers-color-scheme:dark){:root{--bg:#14151c;--fg:#e8e8f0;--mut:#a0a0b4;--bd:#2c2e3a;--acc:#8b86f5;--card:#1c1e28;--code:#22242f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+main{max-width:980px;margin:0 auto;padding:40px 20px 100px}
+h1{font-size:2.2rem;line-height:1.2;margin:.2em 0}h2{font-size:1.6rem;margin:2.4em 0 .6em;padding-top:1.2em;border-top:1px solid var(--bd)}h3{font-size:1.2rem;margin:1.8em 0 .4em;color:var(--acc)}
+a{color:var(--acc)}blockquote{margin:1.2em 0;padding:.6em 1.1em;border-left:4px solid var(--acc);background:var(--card);border-radius:0 8px 8px 0;color:var(--mut)}
+table{border-collapse:collapse;width:100%;margin:1.2em 0;font-size:.92rem;display:block;overflow-x:auto}th,td{border:1px solid var(--bd);padding:8px 10px;text-align:left;vertical-align:top}th{background:var(--code)}
+code{background:var(--code);padding:.1em .35em;border-radius:4px;font-size:.9em}pre{background:var(--code);padding:14px;border-radius:8px;overflow-x:auto;line-height:1.5}pre code{background:none;padding:0}
+hr{border:0;border-top:1px solid var(--bd);margin:2em 0}
+div[style*="background:#fafafa"]{background:#fafafa!important;color:#1a1a1a}
+@media print{body{background:#fff}main{padding:0}}
+</style></head><body><main>
+<h1>Aula 9 — Segurança em Sistemas Financeiros</h1>
+<p><em>Curso de Arquitetura de Sistemas Financeiros com IA</em></p>
+<blockquote>
+<p><strong>Navegação:</strong> <a href="https://wheslleyrimar.github.io/system-design-fintech/">Índice</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula1-conteudo-completo">Aula 1</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula2-conteudo-completo">Aula 2</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula3-conteudo-completo">Aula 3</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula4-conteudo-completo">Aula 4</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula5-conteudo-completo">Aula 5</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula6-conteudo-completo">Aula 6</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula7-conteudo-completo">Aula 7</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula8-conteudo-completo">Aula 8</a> · <strong>Aula 9 (você está aqui)</strong></p>
+</blockquote>
+<blockquote>
+<p><strong>Esta aula é autocontida.</strong> Todo conceito que ela usa é definido aqui, no ponto em que aparece. Quem chegou sem ter visto as anteriores só precisa saber uma coisa: a <strong>TechPix</strong> é uma fintech fictícia que processa Pix — pagamentos instantâneos brasileiros, liquidados em segundos, <strong>irreversíveis por natureza</strong> — sobre um ledger (o livro-razão que registra cada centavo), organizada em serviços: <em>Pagamentos</em>, <em>Antifraude e Limites</em>, <em>Contas e Ledger</em>, <em>Identidade e Onboarding</em>.</p>
+</blockquote>
+<p>Deixa eu começar com a coisa mais desconfortável que existe para quem constrói sistema financeiro: <strong>o atacante não precisa quebrar nada.</strong></p>
+<p>Terça-feira, 14h22. O Bruno, um cliente da TechPix, abre o app, faz login — senha, biometria, tudo certo — e manda um Pix de R$ 50 para a irmã. O app envia uma requisição para a API:</p>
+<pre><code class="language-http">POST /pix
+Authorization: Bearer eyJhbGciOiJSUzI1NiIs...
+Content-Type: application/json
+
+{ &quot;contaOrigemId&quot;: &quot;acc-8841&quot;, &quot;chaveDestino&quot;: &quot;irma@email.com&quot;, &quot;valor&quot;: 50.00 }
+</code></pre>
+<p><code>acc-8841</code> é a conta do Bruno. Funciona. Agora o Bruno — que trabalha com tecnologia e ficou curioso — abre o inspetor de rede do navegador do app web, copia a requisição, troca uma única string e reenvia:</p>
+<pre><code class="language-http">{ &quot;contaOrigemId&quot;: &quot;acc-2207&quot;, &quot;chaveDestino&quot;: &quot;bruno.laranja@email.com&quot;, &quot;valor&quot;: 4800.00 }
+</code></pre>
+<p><code>acc-2207</code> é a conta de <strong>outra pessoa</strong>. A resposta:</p>
+<pre><code class="language-http">HTTP/1.1 200 OK
+{ &quot;e2eId&quot;: &quot;E1234567820260930142201abc...&quot;, &quot;status&quot;: &quot;LIQUIDADO&quot; }
+</code></pre>
+<p>R$ 4.800 saíram da conta de um desconhecido, atravessaram o SPI em 2 segundos e não voltam mais — Pix não se desfaz com um <em>ctrl+Z</em>. E agora a parte que deve tirar o sono de vocês: <strong>o token era válido.</strong> Assinatura válida, não expirado, emitido pelo provedor de identidade correto, para a audiência correta. O Gateway conferiu tudo isso e deixou passar. Cada componente do caminho fez exatamente o que foi projetado para fazer. O sistema estava &quot;seguro&quot; por todos os checklists de autenticação que existem — e mesmo assim entregou dinheiro de A para B por ordem de um terceiro.</p>
+<p>Guardem essa cena, porque ela é a tese da aula inteira, e eu vou enunciá-la já:</p>
+<blockquote>
+<p><strong>Segurança não é ter JWT. Segurança é garantir que cada identidade execute apenas as operações permitidas, sobre os recursos permitidos — e conseguir provar isso depois.</strong></p>
+</blockquote>
+<p>Em sistema comum, um bug de segurança vaza dados. Em sistema financeiro, <strong>vaza dinheiro — e dinheiro que sai por Pix não volta por conta própria</strong>. Isso muda a economia da segurança: o custo de uma falha é imediato, monetário, irreversível e regulado. E muda também quem é o adversário: aqui existe gente cuja profissão é procurar exatamente a string que o Bruno trocou. Nas próximas duas horas a gente vai construir, camada por camada, a defesa da TechPix — e, mais importante, entender <em>por que cada camada existe</em>, o que ela <strong>não</strong> protege, e quanto ela custa.</p>
+<p><strong>Mapa da aula:</strong></p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 250" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9m-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <rect x="20" y="20" width="160" height="70" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="100" y="48" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#991b1b">1. Ameaças</text>
+  <text x="100" y="68" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">quem ataca, o quê</text>
+  <rect x="200" y="20" width="160" height="70" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="280" y="48" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">2. Identidade</text>
+  <text x="280" y="68" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">AuthN · MFA · JWT</text>
+  <rect x="380" y="20" width="160" height="70" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="460" y="48" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">3. Autorização</text>
+  <text x="460" y="68" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">BOLA · RBAC/ABAC</text>
+  <rect x="560" y="20" width="160" height="70" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="640" y="48" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">4. Workloads</text>
+  <text x="640" y="68" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">mTLS · mesh · policy</text>
+  <rect x="740" y="20" width="140" height="70" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="810" y="48" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">5. Dados</text>
+  <text x="810" y="68" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">KMS · HSM · LGPD</text>
+  <rect x="20" y="150" width="160" height="70" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="100" y="178" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">6. Segredos + APIs</text>
+  <text x="100" y="198" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">HMAC · anti-replay</text>
+  <rect x="200" y="150" width="160" height="70" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="280" y="178" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">7. Antifraude</text>
+  <text x="280" y="198" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">sinais · decisão</text>
+  <rect x="380" y="150" width="160" height="70" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="460" y="178" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">8. Insider</text>
+  <text x="460" y="198" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">quatro olhos · JIT</text>
+  <rect x="560" y="150" width="160" height="70" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="640" y="178" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">9. Auditoria</text>
+  <text x="640" y="198" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">imutável · provável</text>
+  <rect x="740" y="150" width="140" height="70" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="810" y="178" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">10. Resposta</text>
+  <text x="810" y="198" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">incidente · testes</text>
+  <line x1="180" y1="55" x2="198" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#a9m-arrow)"/>
+  <line x1="360" y1="55" x2="378" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#a9m-arrow)"/>
+  <line x1="540" y1="55" x2="558" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#a9m-arrow)"/>
+  <line x1="720" y1="55" x2="738" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#a9m-arrow)"/>
+  <line x1="810" y1="90" x2="810" y2="120" stroke="#888" stroke-width="1.5"/>
+  <line x1="810" y1="120" x2="100" y2="120" stroke="#888" stroke-width="1.5"/>
+  <line x1="100" y1="120" x2="100" y2="148" stroke="#888" stroke-width="1.5" marker-end="url(#a9m-arrow)"/>
+  <line x1="180" y1="185" x2="198" y2="185" stroke="#4338ca" stroke-width="2" marker-end="url(#a9m-arrow)"/>
+  <line x1="360" y1="185" x2="378" y2="185" stroke="#4338ca" stroke-width="2" marker-end="url(#a9m-arrow)"/>
+  <line x1="540" y1="185" x2="558" y2="185" stroke="#4338ca" stroke-width="2" marker-end="url(#a9m-arrow)"/>
+  <line x1="720" y1="185" x2="738" y2="185" stroke="#4338ca" stroke-width="2" marker-end="url(#a9m-arrow)"/>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Dez camadas, uma tese: nenhuma delas basta sozinha — segurança é defesa em profundidade, com cada camada assumindo que a anterior pode ter falhado.</p>
+</div><hr>
+<h2>1. Antes de defender: modelar a ameaça</h2>
+<p>O erro clássico de quem começa em segurança é abrir o catálogo de tecnologias — OAuth, mTLS, WAF, criptografia — e ir &quot;aplicando&quot;. Isso produz sistema com muita tecnologia e buracos exatamente onde ninguém olhou. O ofício sério começa com uma pergunta de arquitetura, não de ferramenta: <strong>o que estamos protegendo, de quem, e por onde esse alguém consegue entrar?</strong> Esse exercício se chama <strong>modelagem de ameaças</strong> (<em>threat modeling</em>), e é a fundação da aula.</p>
+<h3>1.1 O que a TechPix protege (os ativos)</h3>
+<p>Em ordem decrescente do que faz uma diretoria perder o sono:</p>
+<ol>
+<li><strong>O dinheiro dos clientes</strong> — o saldo no ledger e a capacidade de movimentá-lo. Ativo nº 1: quem controla uma ordem de pagamento controla dinheiro.</li>
+<li><strong>A integridade do ledger</strong> — se um registro pode ser alterado sem rastro, nada mais é confiável. Um ledger adulterado não vaza dinheiro: ele <em>apaga a verdade</em>.</li>
+<li><strong>Dados pessoais e financeiros</strong> — CPF, chaves Pix, extratos, padrões de gasto. Protegidos pela LGPD; valiosos no mercado clandestino.</li>
+<li><strong>Credenciais e chaves</strong> — a chave que assina mensagens para o SPI, as credenciais do banco de dados. Comprometer uma dessas é comprometer <em>tudo que ela protege</em> de uma vez.</li>
+<li><strong>A disponibilidade e a confiança</strong> — o sistema fora do ar viola metas regulatórias; o sistema fraudado perde a licença de operar na confiança do cliente e do regulador.</li>
+</ol>
+<h3>1.2 Quem ataca (os adversários)</h3>
+<p>Não existe &quot;o hacker&quot;. Existem perfis com <strong>capacidades e motivações diferentes</strong>, e cada um exige uma defesa diferente. Vale nomeá-los, porque o Bruno lá do início é só o primeiro:</p>
+<table>
+<thead>
+<tr>
+<th>Adversário</th>
+<th>Como entra</th>
+<th>O que quer</th>
+<th>Defesa principal</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Cliente malicioso</strong> (o Bruno)</td>
+<td>Conta legítima; manipula requisições</td>
+<td>Dinheiro de outras contas, burlar limites</td>
+<td>Autorização por recurso, limites, antifraude</td>
+</tr>
+<tr>
+<td><strong>Fraudador externo</strong></td>
+<td>Phishing, credenciais vazadas, <em>SIM swap</em></td>
+<td>Assumir a conta de uma vítima (<em>account takeover</em>)</td>
+<td>MFA, device binding, análise comportamental</td>
+</tr>
+<tr>
+<td><strong>Golpista de engenharia social</strong></td>
+<td>Convence a <em>própria vítima</em> a pagar</td>
+<td>Dinheiro autorizado sob coação/engano</td>
+<td>Fricção inteligente, limites noturnos, alertas</td>
+</tr>
+<tr>
+<td><strong>Conta laranja (mula)</strong></td>
+<td>Conta real, aberta para receber e dispersar</td>
+<td>Lavar o produto da fraude</td>
+<td>Análise de grafo, monitoramento do destino</td>
+</tr>
+<tr>
+<td><strong>Insider</strong> (funcionário, terceirizado)</td>
+<td>Acesso legítimo, usado além da necessidade</td>
+<td>Dinheiro, dados, sabotagem</td>
+<td>Menor privilégio, quatro olhos, auditoria</td>
+</tr>
+<tr>
+<td><strong>Atacante da cadeia de suprimentos</strong></td>
+<td>Dependência ou imagem de container comprometida</td>
+<td>Executar código dentro do perímetro</td>
+<td>SBOM, assinatura de artefatos, isolamento</td>
+</tr>
+<tr>
+<td><strong>Workload comprometido</strong></td>
+<td>Vulnerabilidade em um serviço</td>
+<td>Movimento lateral para outros serviços</td>
+<td>Identidade de workload, mTLS, policies</td>
+</tr>
+</tbody></table>
+<p>Reparem em duas linhas que <strong>não</strong> se resolvem com criptografia nem com token. O <strong>golpista de engenharia social</strong> é o caso mais perverso: a vítima está autenticada, a operação está autorizada, o token é impecável — e o dinheiro sai errado. Nenhum controle &quot;clássico&quot; de identidade detecta isso; quem detecta é o antifraude (§7). E o <strong>insider</strong> já <em>tem</em> credencial legítima — o modelo de ameaça dele é o oposto do de um invasor externo, e é por isso que ele ganha uma seção própria (§8).</p>
+<h3>1.3 Fronteiras de confiança: onde a desconfiança precisa acontecer</h3>
+<p>Uma <strong>fronteira de confiança</strong> (<em>trust boundary</em>) é uma linha no diagrama onde mudam o nível de confiança e quem controla o dado. A regra de ouro do modelo de ameaças: <strong>tudo que cruza uma fronteira de confiança é entrada não confiável até ser validada do lado de dentro.</strong> Não porque o outro lado seja &quot;mau&quot;, mas porque <em>você não controla o que ele envia</em>.</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 400" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9t-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a9t-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <!-- Zona 0: Internet -->
+  <rect x="10" y="10" width="170" height="380" rx="10" fill="#fef2f2" stroke="#b91c1c" stroke-width="2" stroke-dasharray="7 4"/>
+  <text x="95" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#991b1b">ZONA 0 · Internet (hostil)</text>
+  <rect x="30" y="60" width="130" height="50" rx="6" fill="#fff" stroke="#991b1b"/>
+  <text x="95" y="90" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">App / Web do cliente</text>
+  <rect x="30" y="130" width="130" height="50" rx="6" fill="#fff" stroke="#991b1b"/>
+  <text x="95" y="160" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Atacante externo</text>
+  <rect x="30" y="200" width="130" height="50" rx="6" fill="#fff" stroke="#991b1b"/>
+  <text x="95" y="230" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Parceiro (webhook)</text>
+  <!-- Zona 1: Edge -->
+  <rect x="200" y="10" width="150" height="380" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2" stroke-dasharray="7 4"/>
+  <text x="275" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">ZONA 1 · Edge (DMZ)</text>
+  <rect x="220" y="60" width="110" height="50" rx="6" fill="#fff" stroke="#d4a017"/>
+  <text x="275" y="82" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">WAF / DDoS</text>
+  <text x="275" y="98" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">rate limit</text>
+  <rect x="220" y="130" width="110" height="60" rx="6" fill="#fff" stroke="#d4a017"/>
+  <text x="275" y="155" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">API Gateway</text>
+  <text x="275" y="172" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">valida JWT (AuthN)</text>
+  <!-- Zona 2: Cluster -->
+  <rect x="370" y="10" width="330" height="380" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2" stroke-dasharray="7 4"/>
+  <text x="535" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">ZONA 2 · Cluster (workloads)</text>
+  <rect x="390" y="60" width="130" height="60" rx="6" fill="#fff" stroke="#4338ca"/>
+  <text x="455" y="88" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Pagamentos</text>
+  <text x="455" y="105" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">AuthZ do domínio</text>
+  <rect x="550" y="60" width="130" height="60" rx="6" fill="#fff" stroke="#4338ca"/>
+  <text x="615" y="88" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Antifraude</text>
+  <text x="615" y="105" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">e Limites</text>
+  <rect x="390" y="160" width="130" height="60" rx="6" fill="#fff" stroke="#4338ca"/>
+  <text x="455" y="188" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Contas e Ledger</text>
+  <rect x="550" y="160" width="130" height="60" rx="6" fill="#fff" stroke="#4338ca"/>
+  <text x="615" y="188" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Identidade</text>
+  <text x="615" y="205" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">(OIDC / MFA)</text>
+  <rect x="390" y="260" width="130" height="50" rx="6" fill="#fff" stroke="#4338ca"/>
+  <text x="455" y="290" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Kafka</text>
+  <rect x="550" y="260" width="130" height="50" rx="6" fill="#fff" stroke="#4338ca"/>
+  <text x="615" y="290" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Bancos (PostgreSQL)</text>
+  <text x="535" y="345" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3730a3">tráfego leste-oeste: workload ↔ workload</text>
+  <!-- Zona 3: Externo regulado -->
+  <rect x="720" y="10" width="170" height="380" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2" stroke-dasharray="7 4"/>
+  <text x="805" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">ZONA 3 · Externo regulado</text>
+  <rect x="740" y="80" width="130" height="50" rx="6" fill="#fff" stroke="#166534"/>
+  <text x="805" y="110" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">DICT / SPI (BACEN)</text>
+  <rect x="740" y="160" width="130" height="50" rx="6" fill="#fff" stroke="#166534"/>
+  <text x="805" y="190" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">KMS / HSM</text>
+  <rect x="740" y="240" width="130" height="50" rx="6" fill="#fff" stroke="#166534"/>
+  <text x="805" y="270" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Provedores / SaaS</text>
+  <!-- Fluxos -->
+  <line x1="160" y1="85" x2="218" y2="85" stroke="#4338ca" stroke-width="2" marker-end="url(#a9t-arrow)"/>
+  <line x1="160" y1="155" x2="218" y2="155" stroke="#b91c1c" stroke-width="2" marker-end="url(#a9t-red)"/>
+  <line x1="275" y1="110" x2="275" y2="128" stroke="#4338ca" stroke-width="2" marker-end="url(#a9t-arrow)"/>
+  <line x1="330" y1="160" x2="388" y2="100" stroke="#4338ca" stroke-width="2" marker-end="url(#a9t-arrow)"/>
+  <line x1="520" y1="90" x2="548" y2="90" stroke="#4338ca" stroke-width="2" marker-end="url(#a9t-arrow)"/>
+  <line x1="455" y1="120" x2="455" y2="158" stroke="#4338ca" stroke-width="2" marker-end="url(#a9t-arrow)"/>
+  <line x1="680" y1="105" x2="738" y2="105" stroke="#4338ca" stroke-width="2" marker-end="url(#a9t-arrow)"/>
+  <line x1="680" y1="185" x2="738" y2="185" stroke="#4338ca" stroke-width="2" marker-end="url(#a9t-arrow)"/>
+  <line x1="160" y1="225" x2="218" y2="165" stroke="#b91c1c" stroke-width="2" marker-end="url(#a9t-red)"/>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Modelo de fronteiras da TechPix. Cada linha tracejada é um lugar onde a confiança muda — e onde a validação precisa acontecer. As setas vermelhas são tráfego que a TechPix não controla.</p>
+</div><p>Duas observações sobre esse mapa, porque elas organizam o resto da aula. Primeira: existem <strong>dois eixos de tráfego</strong> com problemas de segurança diferentes. O tráfego <strong>norte-sul</strong> (de fora para dentro: cliente → Gateway → serviço) exige <em>autenticar e autorizar pessoas</em>. O tráfego <strong>leste-oeste</strong> (dentro do cluster: Pagamentos → Antifraude → Ledger) exige <em>autenticar e autorizar máquinas</em> — e é aí que muita empresa é surpreendida, porque tratou o interior da rede como território amigo. Segunda: a Zona 3 mostra que a TechPix também <strong>depende</strong> de partes que não controla (o BACEN, o provedor de chaves): elas são fronteiras de confiança no sentido inverso — a gente precisa provar quem <em>somos</em> para elas, e desconfiar do que elas devolvem.</p>
+<p>Essa desconfiança do interior tem nome: <strong>Zero Trust</strong>. A premissa antiga era &quot;perímetro forte, interior confiável&quot; — o castelo com fosso. O problema do castelo é que, uma vez que alguém cruza o fosso (com uma credencial roubada, uma dependência infectada, um workload comprometido), ele circula livre. A premissa Zero Trust inverte: <strong>&quot;nunca confie, sempre verifique&quot;</strong> — nenhum chamador é confiável só por estar dentro da rede; toda requisição, em toda fronteira, carrega uma identidade verificada e passa por uma decisão explícita de autorização. Mais à frente veremos que isso não é um produto que se compra: é um conjunto de decisões de design, e cada uma tem custo.</p>
+<h3>1.4 STRIDE: um roteiro para não esquecer categorias de ameaça</h3>
+<p>Para não depender da criatividade de quem está na sala, existe um mnemônico clássico. <strong>STRIDE</strong> lista seis categorias de ameaça, cada uma violando uma propriedade de segurança. Aplicado a um único fluxo — &quot;cliente envia um Pix&quot; —, ele vira uma checklist de perguntas incômodas:</p>
+<table>
+<thead>
+<tr>
+<th>Ameaça</th>
+<th>Propriedade violada</th>
+<th>No fluxo do Pix da TechPix</th>
+<th>Controle que responde</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>S</strong>poofing (falsificar identidade)</td>
+<td>Autenticidade</td>
+<td>Alguém se passa por cliente (token roubado) ou por <em>Pagamentos</em> (workload falso)</td>
+<td>MFA + device binding; identidade de workload + mTLS</td>
+</tr>
+<tr>
+<td><strong>T</strong>ampering (adulterar)</td>
+<td>Integridade</td>
+<td>Trocar <code>valor</code> ou <code>contaOrigemId</code> em trânsito ou no body; alterar registro no ledger</td>
+<td>TLS; assinatura da transação; autorização por recurso; ledger append-only</td>
+</tr>
+<tr>
+<td><strong>R</strong>epudiation (negar autoria)</td>
+<td>Não-repúdio</td>
+<td>&quot;Eu não fiz esse Pix&quot; — e ninguém consegue provar o contrário</td>
+<td>Trilha de auditoria imutável; assinatura de transação</td>
+</tr>
+<tr>
+<td><strong>I</strong>nformation disclosure (vazar)</td>
+<td>Confidencialidade</td>
+<td>CPF no log; extrato de outro cliente (BOLA de leitura); backup sem criptografia</td>
+<td>Criptografia; mascaramento; autorização por recurso</td>
+</tr>
+<tr>
+<td><strong>D</strong>enial of service (indisponibilizar)</td>
+<td>Disponibilidade</td>
+<td>Inundar <code>/pix</code> para estourar a capacidade e derrubar o SLA regulatório</td>
+<td>Rate limiting; WAF; limites por identidade; isolamento (bulkhead)</td>
+</tr>
+<tr>
+<td><strong>E</strong>levation of privilege (escalar)</td>
+<td>Autorização</td>
+<td>Cliente age como operador; workload de leitura escreve no ledger</td>
+<td>Menor privilégio; policies; separação de funções</td>
+</tr>
+</tbody></table>
+<p>O valor do STRIDE não é a sigla: é que ele <strong>força a olhar cada aresta do diagrama seis vezes</strong>, com seis lentes. E o incidente do Bruno cai na linha do meio: é <em>Tampering</em> do body (ele adulterou um campo) que vira <em>Elevation of privilege</em> (agiu com poder que não tinha) — duas células da tabela para um único bug. Nenhum controle isolado o cobriria; por isso o desenho é em camadas.</p>
+<hr>
+<h2>2. Quem é você? Identidade, autenticação e o que um token realmente diz</h2>
+<p>Vamos separar duas perguntas que o incidente do Bruno mostrou serem completamente diferentes — e que quase todo bug de segurança de API confunde:</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 860 200" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9a-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <rect x="20" y="30" width="380" height="140" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="210" y="60" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#3730a3">AUTENTICAÇÃO (AuthN)</text>
+  <text x="210" y="88" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#333">"Quem é você?"</text>
+  <text x="210" y="112" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#555">senha · biometria · token · certificado</text>
+  <text x="210" y="138" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">Bruno provou ser o Bruno ✔</text>
+  <rect x="460" y="30" width="380" height="140" rx="10" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="650" y="60" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#991b1b">AUTORIZAÇÃO (AuthZ)</text>
+  <text x="650" y="88" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#333">"Pode fazer ESTA ação sobre ESTE recurso?"</text>
+  <text x="650" y="112" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#555">ownership · política · contexto</text>
+  <text x="650" y="138" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">Bruno pode mexer em acc-2207? ✘ (ninguém perguntou)</text>
+  <line x1="402" y1="100" x2="458" y2="100" stroke="#4338ca" stroke-width="2" marker-end="url(#a9a-arrow)"/>
+  <text x="430" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">≠</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A pergunta que o sistema do Bruno respondeu (esquerda) não é a pergunta que o Bruno violou (direita). Autenticação forte não corrige autorização ausente.</p>
+</div><p>Autenticação estabelece <strong>identidade</strong>. Autorização limita <strong>poder</strong>. Uma sem a outra é ou inútil (sei quem é, deixo fazer tudo) ou impossível (sei o que pode, mas não sei quem está pedindo). E existe uma terceira, esquecida: a <strong>prestação de contas</strong> (<em>accountability</em>) — conseguir provar depois quem fez o quê. As três juntas são o que os profissionais chamam de <strong>AAA</strong>.</p>
+<h3>2.1 Um token por dentro: o que o JWT afirma — e o que ele não pode afirmar</h3>
+<p>O token que o Bruno carregava era um <strong>JWT</strong> (<em>JSON Web Token</em>): um envelope em três partes, separadas por ponto, cada uma codificada em Base64URL. Vale abrir o envelope, porque a maior parte da confusão de segurança nasce de achar que ele diz mais do que diz.</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9j-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <rect x="20" y="20" width="250" height="150" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="145" y="44" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">HEADER</text>
+  <text x="35" y="70" font-family="monospace" font-size="12" fill="#333">{ "alg": "RS256",</text>
+  <text x="35" y="90" font-family="monospace" font-size="12" fill="#333">  "typ": "JWT",</text>
+  <text x="35" y="110" font-family="monospace" font-size="12" fill="#333">  "kid": "chave-2026-09" }</text>
+  <text x="145" y="145" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">como foi assinado; qual chave</text>
+  <rect x="290" y="20" width="330" height="150" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="455" y="44" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">PAYLOAD (claims)</text>
+  <text x="305" y="68" font-family="monospace" font-size="12" fill="#333">"iss": "https://id.techpix.com"</text>
+  <text x="305" y="86" font-family="monospace" font-size="12" fill="#333">"sub": "cli-5519"      ← quem</text>
+  <text x="305" y="104" font-family="monospace" font-size="12" fill="#333">"aud": "api.techpix.com"</text>
+  <text x="305" y="122" font-family="monospace" font-size="12" fill="#333">"exp": 1790000000     ← validade</text>
+  <text x="305" y="140" font-family="monospace" font-size="12" fill="#333">"scope": "pix:create"</text>
+  <text x="305" y="158" font-family="monospace" font-size="12" fill="#333">"acr": "mfa"          ← força do login</text>
+  <rect x="640" y="20" width="240" height="150" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="760" y="44" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">SIGNATURE</text>
+  <text x="655" y="72" font-family="monospace" font-size="11" fill="#333">RSA-SHA256(</text>
+  <text x="655" y="90" font-family="monospace" font-size="11" fill="#333">  base64(header) + "." +</text>
+  <text x="655" y="108" font-family="monospace" font-size="11" fill="#333">  base64(payload),</text>
+  <text x="655" y="126" font-family="monospace" font-size="11" fill="#333">  chavePrivadaDoEmissor)</text>
+  <text x="760" y="153" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">prova: ninguém alterou 1 e 2</text>
+  <rect x="20" y="200" width="860" height="110" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="450" y="226" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">O que a assinatura GARANTE</text>
+  <text x="450" y="248" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#166534">✔ o emissor (iss) escreveu estes claims  ·  ✔ nada foi alterado desde então  ·  ✔ ainda não expirou</text>
+  <text x="450" y="272" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#991b1b">O que ela NÃO GARANTE</text>
+  <text x="450" y="294" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">✘ que o "contaOrigemId" do BODY pertence ao "sub"  ·  ✘ que o token não foi roubado  ·  ✘ que a operação é sensata</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A assinatura protege as três partes do token — não o corpo da requisição que viaja ao lado dele. O body é input controlado pelo cliente, sempre.</p>
+</div><p>Percorram os campos (<em>claims</em>), porque cada um tem uma armadilha própria:</p>
+<ul>
+<li><strong><code>iss</code> (issuer)</strong> — quem emitiu. O validador precisa checar que é <em>o emissor que ele espera</em>, não qualquer emissor com assinatura válida.</li>
+<li><strong><code>aud</code> (audience)</strong> — para quem o token foi emitido. Um token feito para <code>api.techpix.com</code> <strong>não deve</strong> ser aceito por um serviço interno que é outra audiência; sem essa checagem, um token de baixo poder, roubado num lugar, é usado noutro (<em>token confusion</em>).</li>
+<li><strong><code>sub</code> (subject)</strong> — o sujeito: aqui, <code>cli-5519</code>, o Bruno. <strong>Este é o ponto exato de que o incidente dependia.</strong> O <code>sub</code> diz quem chamou; o <code>contaOrigemId</code> no body diz <em>sobre quem</em> a chamada quer agir. Ninguém cruzou os dois.</li>
+<li><strong><code>exp</code></strong> — validade. Token de vida curta limita o estrago de um roubo; por isso access tokens duram minutos, não dias.</li>
+<li><strong><code>scope</code> / <code>acr</code></strong> — o que o token permite fazer (escopos) e com que <strong>força</strong> o usuário se autenticou (<code>acr</code>: <em>authentication context class</em> — login por senha só, ou senha + biometria?). O segundo será decisivo no <em>step-up</em> (§2.4).</li>
+</ul>
+<p>E uma propriedade que precisa ficar gravada: <strong>um JWT é <em>stateless</em> — o validador confere a assinatura sem consultar ninguém.</strong> Isso é o que o torna barato e escalável (nenhuma ida ao banco por requisição); é também o que o torna <strong>difícil de revogar</strong>: um token válido continua válido até o <code>exp</code>, mesmo que o cliente tenha bloqueado o cartão, trocado a senha ou sido banido um minuto atrás. É um <em>trade-off</em> clássico — escala versus revogação — e a saída de engenharia é a combinação: <strong>access token curto (5–15 min)</strong> + <strong>refresh token revogável</strong> guardado do lado do servidor de identidade + <strong>lista de revogação / introspecção</strong> para operações de alto valor. Note o custo: cada checagem online reintroduz uma dependência de rede que o JWT queria evitar. Onde pagar esse preço é decisão de arquitetura, não de biblioteca.</p>
+<h3>2.2 OAuth 2.0 e OIDC: dois protocolos, duas perguntas</h3>
+<p>Toda documentação mistura os dois, então vamos separá-los com a régua das perguntas:</p>
+<ul>
+<li><strong>OAuth 2.0</strong> resolve <strong>delegação de acesso</strong>: <em>&quot;como eu deixo o aplicativo X agir em meu nome sobre a API Y, sem entregar minha senha a X?&quot;</em> Ele emite <strong>access tokens</strong> (autorização para chamar APIs). Não diz quem é o usuário — diz <em>o que o portador do token pode fazer</em>.</li>
+<li><strong>OIDC (OpenID Connect)</strong> é uma camada em cima do OAuth que resolve <strong>identidade</strong>: <em>&quot;quem é o usuário que acabou de se autenticar?&quot;</em> Ele emite o <strong>ID token</strong> (um JWT que afirma &quot;este é o cli-5519, autenticado agora, com este nível de força&quot;).</li>
+</ul>
+<p>A confusão perigosa é tomar um pelo outro: usar ID token para chamar API, ou usar access token para afirmar identidade. E a confusão mais perigosa de todas é achar que <strong>qualquer um dos dois resolve autorização de domínio</strong>. O OAuth entrega <em>escopos</em> — <code>pix:create</code> — que são granulares em <em>tipo de operação</em>, não em <em>instância de recurso</em>. Um escopo diz &quot;pode criar Pix&quot;; <strong>não</strong> diz &quot;pode criar Pix a partir da conta acc-8841 e não da acc-2207&quot;. Essa pergunta — a única que importava no incidente — nunca esteve no protocolo. Ela pertence ao domínio, e é a §3.</p>
+<p><strong>O fluxo que aplicativos móveis e web devem usar hoje</strong> é o <em>Authorization Code com PKCE</em>. Vale entender o porquê de cada passo, porque é um dos desenhos mais elegantes da área:</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 400" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9p-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <rect x="30" y="15" width="150" height="40" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="105" y="40" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">App (cliente)</text>
+  <rect x="375" y="15" width="150" height="40" rx="6" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="450" y="40" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">Servidor de Identidade</text>
+  <rect x="720" y="15" width="150" height="40" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="795" y="40" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">API (Pix)</text>
+  <line x1="105" y1="55" x2="105" y2="385" stroke="#bbb" stroke-dasharray="4 3"/>
+  <line x1="450" y1="55" x2="450" y2="385" stroke="#bbb" stroke-dasharray="4 3"/>
+  <line x1="795" y1="55" x2="795" y2="385" stroke="#bbb" stroke-dasharray="4 3"/>
+  <text x="115" y="80" font-family="sans-serif" font-size="11" fill="#555">① gera segredo aleatório (code_verifier)</text>
+  <text x="115" y="94" font-family="sans-serif" font-size="11" fill="#555">   e seu hash (code_challenge)</text>
+  <line x1="105" y1="112" x2="448" y2="112" stroke="#4338ca" stroke-width="2" marker-end="url(#a9p-arrow)"/>
+  <text x="277" y="106" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">② /authorize + code_challenge</text>
+  <text x="460" y="140" font-family="sans-serif" font-size="11" fill="#555">③ usuário se autentica (senha + MFA)</text>
+  <line x1="448" y1="162" x2="107" y2="162" stroke="#4338ca" stroke-width="2" marker-end="url(#a9p-arrow)"/>
+  <text x="277" y="156" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">④ authorization code (curto, uso único)</text>
+  <line x1="105" y1="204" x2="448" y2="204" stroke="#4338ca" stroke-width="2" marker-end="url(#a9p-arrow)"/>
+  <text x="277" y="198" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">⑤ /token: code + code_verifier</text>
+  <text x="460" y="232" font-family="sans-serif" font-size="11" fill="#555">⑥ confere: hash(verifier) == challenge?</text>
+  <line x1="448" y1="254" x2="107" y2="254" stroke="#4338ca" stroke-width="2" marker-end="url(#a9p-arrow)"/>
+  <text x="277" y="248" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">⑦ access token (curto) + refresh token + ID token</text>
+  <line x1="105" y1="306" x2="793" y2="306" stroke="#4338ca" stroke-width="2" marker-end="url(#a9p-arrow)"/>
+  <text x="450" y="300" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">⑧ POST /pix  Authorization: Bearer &lt;access token&gt;</text>
+  <text x="640" y="340" font-family="sans-serif" font-size="11" fill="#555">⑨ API valida assinatura, iss, aud, exp</text>
+  <text x="640" y="358" font-family="sans-serif" font-size="11" fill="#b91c1c">   …e AGORA a pergunta que faltou: pode agir neste recurso?</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Authorization Code + PKCE. O segredo nasce no cliente e nunca viaja antes da troca — interceptar o "code" no passo ④ é inútil sem o verifier do passo ⑤.</p>
+</div><p><strong>Por que PKCE existe:</strong> num app móvel, o <em>authorization code</em> do passo ④ volta por um redirecionamento (esquema de URL) que outro app instalado no aparelho pode interceptar. Sem proteção, o atacante trocaria o code por token. Com PKCE, o app gera um segredo aleatório (o <em>verifier</em>) e envia só o <strong>hash</strong> dele no passo ②. O servidor guarda o hash; no passo ⑤ o app apresenta o verifier original, e o servidor confere. Quem interceptou o code no ④ <strong>não tem o verifier</strong>, porque ele nunca viajou. É prova de posse construída com uma função de hash — sem nenhum segredo pré-compartilhado, algo que app público (que não consegue guardar segredo) não teria de outro jeito.</p>
+<h3>2.3 O que autenticação forte realmente significa em dinheiro</h3>
+<p>Autenticar &quot;com senha&quot; em sistema financeiro é confessar antecipadamente que você aceita <em>account takeover</em>. Senha vaza, é reutilizada, é fisgada por phishing. A resposta é combinar <strong>fatores independentes</strong> — algo que você sabe (senha/PIN), algo que você tem (o aparelho, uma chave criptográfica) e algo que você é (biometria). <strong>MFA</strong> só ajuda se os fatores forem realmente independentes: um SMS, por exemplo, é um segundo fator fraco, porque o <em>SIM swap</em> (o golpista convence a operadora a transferir seu número) o derrota sem tocar no aparelho.</p>
+<p>O padrão que hoje resolve melhor o problema é o <strong>device binding</strong>: no cadastro do aparelho, o app gera um par de chaves criptográficas dentro do enclave seguro do hardware (a chave privada <strong>nunca sai</strong>), e registra a chave pública no servidor. Dali em diante, &quot;este aparelho&quot; deixa de ser uma afirmação vaga e vira uma <strong>prova criptográfica</strong>: o servidor envia um desafio, o aparelho o assina com a chave privada, e a biometria local só <em>destrava o uso da chave</em>. O roubo da senha, sozinho, deixa de bastar — o atacante precisaria do aparelho <em>e</em> da biometria.</p>
+<h3>2.4 Step-up e a assinatura da transação: autenticar a <em>operação</em>, não só a sessão</h3>
+<p>Aqui aparece uma ideia que separa segurança financeira de segurança de aplicação comum. Estar autenticado na sessão às 14h não prova que <strong>a pessoa quis</strong> aquela transferência de R$ 4.800 às 14h22 — a sessão pode ter sido sequestrada, o app pode ter malware que muda o destino na tela. Por isso, operações de risco pedem <strong>autenticação em nível de operação</strong>:</p>
+<ul>
+<li><strong>Step-up authentication:</strong> o sistema exige um fator adicional <em>no momento</em> da operação sensível. O claim <code>acr</code> do token (§2.1) diz com que força o usuário logou; a API, ao receber um Pix acima de R$ 1.000 ou para destinatário novo, <strong>exige <code>acr</code> mais alto</strong> — e, se o token só carrega <code>acr=senha</code>, responde &quot;faça step-up&quot; em vez de executar.</li>
+<li><strong>Assinatura da transação (<em>transaction signing</em>):</strong> o aparelho assina criptograficamente <strong>os detalhes da operação</strong> — destino, valor, conta de origem — com a chave ligada ao device. O servidor verifica a assinatura sobre <em>exatamente esses campos</em>. Se um malware trocar o destino no caminho, a assinatura não confere. O princípio tem nome: <strong>WYSIWYS</strong> (<em>what you see is what you sign</em>) — o usuário confirma, numa tela confiável, os mesmos dados que serão assinados.</li>
+</ul>
+<p>Percebam o efeito colateral elegante disso: uma assinatura sobre <code>{contaOrigemId, chaveDestino, valor, nonce}</code> <strong>também teria barrado o Bruno</strong>, mas por outro caminho — ele não consegue produzir uma assinatura válida da chave do dono da <code>acc-2207</code>. É uma segunda defesa independente contra o mesmo ataque, e ilustra o princípio da aula: <em>defesa em profundidade</em> significa que <strong>cada camada pega uma variante do ataque que a outra deixaria passar</strong>. Também é o que fornece <strong>não-repúdio</strong> (o R do STRIDE): &quot;eu não fiz esse Pix&quot; passa a ser refutável com a assinatura, que só aquele aparelho poderia ter gerado.</p>
+<hr>
+<h2>3. Autorização: o bug do Bruno tem nome e cura</h2>
+<h3>3.1 BOLA/IDOR: a vulnerabilidade nº 1 de APIs</h3>
+<p>O incidente da abertura é o exemplar de livro-texto de uma classe de falha chamada <strong>BOLA</strong> (<em>Broken Object Level Authorization</em>) — também conhecida, em versões mais antigas do jargão, como <strong>IDOR</strong> (<em>Insecure Direct Object Reference</em>). A descrição cabe numa frase: <strong>o usuário autenticado troca o identificador de um objeto na requisição (<code>contaOrigemId</code>, <code>/contas/2207/extrato</code>, <code>/pix/E123...</code>) e o servidor entrega ou executa sem checar se aquele objeto pertence a ele.</strong> Ela lidera há anos a lista de riscos de segurança de APIs justamente por ser fácil de cometer: todo endpoint que recebe um ID é candidato, e o desenvolvedor, com o token validado, tem a falsa sensação de que &quot;a segurança já foi feita&quot;.</p>
+<p>Note que BOLA <strong>não é um ataque sofisticado</strong>. Não usa criptografia quebrada, nem injeção, nem exploit. É uma requisição legítima com um valor diferente. Por isso ferramenta de varredura genérica raramente acha: só quem entende <em>o que cada objeto significa no domínio</em> sabe que aquele valor está errado. Corolário incômodo: <strong>BOLA não se resolve com infraestrutura; resolve-se com código de domínio e com teste.</strong></p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 340" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9b-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a9b-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+    <marker id="a9b-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <text x="225" y="22" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#991b1b">ANTES: valida o token, confia no body</text>
+  <text x="675" y="22" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#166534">DEPOIS: valida o token E o recurso</text>
+  <rect x="20" y="50" width="90" height="46" rx="6" fill="#fff" stroke="#333"/>
+  <text x="65" y="70" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Bruno</text>
+  <text x="65" y="85" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">sub=cli-5519</text>
+  <rect x="150" y="50" width="100" height="46" rx="6" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="200" y="70" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Gateway</text>
+  <text x="200" y="85" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">token ✔</text>
+  <rect x="290" y="50" width="110" height="46" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="345" y="70" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Pagamentos</text>
+  <text x="345" y="85" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">lê body, executa</text>
+  <rect x="290" y="180" width="110" height="46" rx="6" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+  <text x="345" y="200" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Ledger</text>
+  <text x="345" y="215" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#b91c1c">debita acc-2207 ✘</text>
+  <line x1="110" y1="73" x2="148" y2="73" stroke="#b91c1c" stroke-width="2" marker-end="url(#a9b-red)"/>
+  <line x1="250" y1="73" x2="288" y2="73" stroke="#b91c1c" stroke-width="2" marker-end="url(#a9b-red)"/>
+  <line x1="345" y1="96" x2="345" y2="178" stroke="#b91c1c" stroke-width="2" marker-end="url(#a9b-red)"/>
+  <text x="225" y="270" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">200 OK — dinheiro de terceiro sai</text>
+  <rect x="470" y="50" width="90" height="46" rx="6" fill="#fff" stroke="#333"/>
+  <text x="515" y="70" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Bruno</text>
+  <text x="515" y="85" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">sub=cli-5519</text>
+  <rect x="600" y="50" width="90" height="46" rx="6" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="645" y="70" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Gateway</text>
+  <text x="645" y="85" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#166534">token ✔</text>
+  <rect x="730" y="50" width="150" height="46" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="805" y="70" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Pagamentos</text>
+  <text x="805" y="85" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">PEP: consulta a política</text>
+  <rect x="730" y="150" width="150" height="46" rx="6" fill="#fff" stroke="#166534" stroke-width="2"/>
+  <text x="805" y="170" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Policy (PDP)</text>
+  <text x="805" y="185" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">dono(acc-2207) == cli-5519?</text>
+  <rect x="730" y="235" width="150" height="46" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="805" y="255" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#166534">403 Forbidden</text>
+  <text x="805" y="270" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">+ evento de auditoria</text>
+  <line x1="560" y1="73" x2="598" y2="73" stroke="#4338ca" stroke-width="2" marker-end="url(#a9b-arrow)"/>
+  <line x1="690" y1="73" x2="728" y2="73" stroke="#4338ca" stroke-width="2" marker-end="url(#a9b-arrow)"/>
+  <line x1="805" y1="96" x2="805" y2="148" stroke="#4338ca" stroke-width="2" marker-end="url(#a9b-arrow)"/>
+  <line x1="805" y1="196" x2="805" y2="233" stroke="#166534" stroke-width="2" marker-end="url(#a9b-green)"/>
+  <text x="470" y="330" font-family="sans-serif" font-size="11" fill="#666">PEP = Policy Enforcement Point (quem aplica) · PDP = Policy Decision Point (quem decide)</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">A cura é uma pergunta a mais, no lugar certo: o serviço dono do recurso compara o sujeito do token com o dono do objeto — e nega, com registro, quando não bate.</p>
+</div><h3>3.2 A cura: cinco passos, na ordem certa</h3>
+<p>A <strong>autorização por recurso</strong> (<em>resource-level authorization</em>) é um procedimento, e a ordem importa:</p>
+<ol>
+<li><strong>Validar o token</strong> — assinatura, <code>iss</code>, <code>aud</code>, <code>exp</code>. (Isso o sistema já fazia.)</li>
+<li><strong>Extrair o sujeito do <em>token</em></strong> — nunca do body. <code>sub</code> é a única fonte confiável de &quot;quem&quot;.</li>
+<li><strong>Identificar o recurso alvo</strong> — o <code>contaOrigemId</code> que o cliente <em>afirma</em>.</li>
+<li><strong>Verificar ownership/política</strong> — &quot;o sujeito tem direito de executar <em>esta ação</em> sobre <em>este recurso</em>?&quot;, decidido a partir de <strong>dados que o servidor controla</strong> (a tabela que liga conta ao titular), não de dados que o cliente enviou.</li>
+<li><strong>Só então executar a regra de negócio</strong> — e registrar a decisão.</li>
+</ol>
+<p>Em Java com Spring Security, o passo 4 costuma virar uma anotação no método — o ponto é que a decisão seja <strong>declarativa, testável e impossível de esquecer</strong> dentro do caso de uso:</p>
+<pre><code class="language-java">// Ruim: confia no body. O token foi validado no filtro, e é tudo.
+public Pagamento criar(CriarPixRequest req) {
+    return ledger.debitar(req.contaOrigemId(), req.valor());
+}
+
+// Bom: o &quot;dono&quot; vem do token; a conta vem do banco; a comparação é do servidor.
+@PreAuthorize(&quot;@contaPolicy.podeMovimentar(authentication, #req.contaOrigemId())&quot;)
+public Pagamento criar(CriarPixRequest req) {
+    return ledger.debitar(req.contaOrigemId(), req.valor());
+}
+
+@Component
+class ContaPolicy {
+    boolean podeMovimentar(Authentication auth, String contaId) {
+        String titular = contas.titularDe(contaId);          // dado do servidor
+        return titular != null &amp;&amp; titular.equals(auth.getName()); // sub do token
+    }
+}
+</code></pre>
+<p>Um refinamento importante de desenho: <strong>a melhor defesa contra BOLA é não aceitar o ID do cliente quando ele não é necessário.</strong> Se o cliente só tem uma conta, a API pode nem pedir <code>contaOrigemId</code> — deriva a conta do <code>sub</code>. O que o cliente não envia, o cliente não pode adulterar. Onde o ID é inevitável (cliente com várias contas), aplica-se a checagem do passo 4 sem exceção. E uma dica de resposta: retornar <strong>403</strong> (proibido) ou <strong>404</strong> (não encontrado) para recurso alheio é decisão consciente — 404 evita que o atacante <em>enumere</em> quais IDs existem; 403 é mais honesto para o cliente legítimo confuso. Escolham e sejam consistentes.</p>
+<h3>3.3 RBAC não resolve tudo: um espectro de modelos de autorização</h3>
+<p>A primeira reação de muita equipe é &quot;vamos criar um papel <code>CLIENTE</code> que pode transferir&quot;. Isso é <strong>RBAC</strong> (<em>Role-Based Access Control</em>): permissões atreladas a <strong>papéis</strong>, papéis atrelados a usuários. É simples, auditável, ótimo para perguntas do tipo &quot;operadores de suporte podem ver extrato&quot;. Mas repare no que o RBAC <strong>não expressa</strong>: <code>CLIENTE pode transferir</code> — <em>de qual conta?</em> O papel é o mesmo para o Bruno e para o dono da <code>acc-2207</code>; a diferença entre os dois é <strong>a relação com o objeto</strong>, e papel não modela relação.</p>
+<p>Existe um espectro de modelos, e a escolha certa é <em>o mais simples que exprime a regra</em>, não o mais poderoso:</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 290" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9r-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <line x1="40" y1="30" x2="860" y2="30" stroke="#4338ca" stroke-width="2" marker-end="url(#a9r-arrow)"/>
+  <text x="40" y="20" font-family="sans-serif" font-size="11" fill="#666">mais simples · barato · menos expressivo</text>
+  <text x="860" y="20" text-anchor="end" font-family="sans-serif" font-size="11" fill="#666">mais expressivo · caro · mais difícil de auditar</text>
+  <rect x="20" y="55" width="200" height="215" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="120" y="80" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#166534">RBAC</text>
+  <text x="120" y="100" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">papel → permissão</text>
+  <text x="32" y="130" font-family="sans-serif" font-size="11" fill="#333">Ex.: SUPORTE lê extrato.</text>
+  <text x="32" y="152" font-family="sans-serif" font-size="11" fill="#333">Bom: acesso de equipes,</text>
+  <text x="32" y="168" font-family="sans-serif" font-size="11" fill="#333">back-office.</text>
+  <text x="32" y="198" font-family="sans-serif" font-size="11" fill="#b91c1c">Falha: "de qual conta?"</text>
+  <text x="32" y="216" font-family="sans-serif" font-size="11" fill="#b91c1c">Explosão de papéis.</text>
+  <rect x="245" y="55" width="200" height="215" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="345" y="80" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#3730a3">Ownership</text>
+  <text x="345" y="100" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">dono(recurso) == sujeito</text>
+  <text x="257" y="130" font-family="sans-serif" font-size="11" fill="#333">Ex.: só o titular movimenta</text>
+  <text x="257" y="146" font-family="sans-serif" font-size="11" fill="#333">a própria conta.</text>
+  <text x="257" y="176" font-family="sans-serif" font-size="11" fill="#333">Resolve o BOLA clássico</text>
+  <text x="257" y="192" font-family="sans-serif" font-size="11" fill="#333">com uma comparação.</text>
+  <text x="257" y="222" font-family="sans-serif" font-size="11" fill="#b91c1c">Falha: conta conjunta,</text>
+  <text x="257" y="238" font-family="sans-serif" font-size="11" fill="#b91c1c">procurador, empresa.</text>
+  <rect x="470" y="55" width="200" height="215" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="570" y="80" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#7a5c00">ReBAC</text>
+  <text x="570" y="100" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">grafo de relações</text>
+  <text x="482" y="130" font-family="sans-serif" font-size="11" fill="#333">Ex.: "Ana é PROCURADORA</text>
+  <text x="482" y="146" font-family="sans-serif" font-size="11" fill="#333">da empresa E, dona da</text>
+  <text x="482" y="162" font-family="sans-serif" font-size="11" fill="#333">conta C".</text>
+  <text x="482" y="192" font-family="sans-serif" font-size="11" fill="#333">Modela conta conjunta,</text>
+  <text x="482" y="208" font-family="sans-serif" font-size="11" fill="#333">delegação, hierarquia.</text>
+  <text x="482" y="238" font-family="sans-serif" font-size="11" fill="#b91c1c">Custo: infra de grafo.</text>
+  <rect x="695" y="55" width="185" height="215" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="787" y="80" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#991b1b">ABAC</text>
+  <text x="787" y="100" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">atributos + contexto</text>
+  <text x="707" y="130" font-family="sans-serif" font-size="11" fill="#333">Ex.: Pix &gt; R$ 1.000 só</text>
+  <text x="707" y="146" font-family="sans-serif" font-size="11" fill="#333">com acr=mfa, de device</text>
+  <text x="707" y="162" font-family="sans-serif" font-size="11" fill="#333">conhecido, das 6h às 20h.</text>
+  <text x="707" y="192" font-family="sans-serif" font-size="11" fill="#333">Regra depende de valor,</text>
+  <text x="707" y="208" font-family="sans-serif" font-size="11" fill="#333">hora, risco, dispositivo.</text>
+  <text x="707" y="238" font-family="sans-serif" font-size="11" fill="#b91c1c">Custo: política complexa.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Não é uma escada a subir: os modelos se combinam. A TechPix usa RBAC para pessoas internas, ownership como base do Pix, e ABAC para os limites contextuais.</p>
+</div><p>A TechPix combina três, cada um onde faz sentido: <strong>RBAC</strong> para o back-office (papéis de suporte, risco, conciliação); <strong>ownership/ReBAC</strong> como piso de todo endpoint que recebe ID de conta (a relação titular–conta, incluindo conta conjunta e procurador); e <strong>ABAC</strong> para as regras contextuais — &quot;Pix acima de R$ 1.000 exige <code>acr=mfa</code>&quot;, &quot;limite noturno de R$ 1.000 entre 20h e 6h&quot;, &quot;destinatário novo pede confirmação&quot;. Um aviso de engenharia: <strong>política complexa demais vira o próprio risco</strong> — regra que ninguém entende não é auditada, e regra não auditada não protege. Comecem com o ownership; adicionem contexto só onde a regra de negócio realmente pede.</p>
+<h3>3.4 Onde autorizar: o Gateway não conhece o negócio</h3>
+<p>Uma tentação arquitetural recorrente: &quot;o Gateway já valida o JWT; por que não centralizar <em>toda</em> a autorização nele?&quot; A resposta é uma pergunta: <strong>o Gateway sabe que a <code>acc-2207</code> pertence ao <code>cli-8420</code>?</strong> Não sabe — e não <em>deve</em> saber. Ownership é dado de domínio, vive no serviço de Contas, muda com regras de negócio (conta conjunta, procuração, encerramento). Levar esse conhecimento para o Gateway o transforma num monólito de regras — o mesmo acoplamento que a decomposição em serviços tentou evitar.</p>
+<p>A divisão saudável de responsabilidades:</p>
+<table>
+<thead>
+<tr>
+<th>Camada</th>
+<th>Autoriza o quê</th>
+<th>Não deve tentar</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Edge (WAF + Gateway)</strong></td>
+<td>Token válido, <code>aud</code> correta, escopo grosso (<code>pix:create</code>), rate limit, tamanho de payload, formato</td>
+<td>Ownership, regras de valor/limite, qualquer coisa que exija dado de domínio</td>
+</tr>
+<tr>
+<td><strong>Serviço de domínio (Pagamentos)</strong></td>
+<td>Ownership do recurso, limites, step-up por valor, estado do objeto (a conta está ativa?)</td>
+<td>Reautenticar do zero — confia no que o edge verificou, <em>mas nunca no body</em></td>
+</tr>
+<tr>
+<td><strong>Plataforma (mesh/policy)</strong></td>
+<td>Quais <em>workloads</em> podem chamar quais (§4)</td>
+<td>Decidir se <em>aquele usuário</em> pode <em>aquele objeto</em></td>
+</tr>
+</tbody></table>
+<p>E o corolário que responde à pergunta clássica — <em>&quot;o JWT validado no Gateway torna o <code>accountId</code> do body confiável?&quot;</em> — é: <strong>não, nunca.</strong> O edge autentica o portador; o serviço dono do dado autoriza a ação. Isso é <strong>defesa em profundidade</strong> na sua forma mais pura: o serviço de Pagamentos <strong>não pode assumir</strong> que o Gateway fez tudo certo (o Gateway pode ter bug, ser contornado por um workload interno comprometido, ou estar mal configurado numa rota nova). Cada camada valida o que lhe compete <em>como se a camada anterior pudesse ter falhado</em>.</p>
+<h3>3.5 Como provar que a vulnerabilidade não volta: testes adversariais</h3>
+<p>Segurança que só existe na cabeça de quem a implementou desaparece na próxima refatoração. A cura do BOLA precisa virar <strong>teste automatizado que falha se alguém a remover</strong>. O teste é curto e sempre da mesma forma — <em>o atacante é um usuário legítimo tentando o objeto do outro</em>:</p>
+<pre><code class="language-java">@Test
+void usuarioAnaoPodeMovimentarContaDoBruno() {
+    var tokenDeAna = tokens.para(&quot;cli-1001&quot;);           // token legítimo e válido
+    var resposta = api.post(&quot;/pix&quot;, tokenDeAna,
+        Map.of(&quot;contaOrigemId&quot;, &quot;acc-2207&quot;,              // conta do Bruno
+               &quot;chaveDestino&quot;, &quot;x@email.com&quot;, &quot;valor&quot;, 10.00));
+
+    assertThat(resposta.status()).isEqualTo(403);        // negado
+    assertThat(ledger.saldo(&quot;acc-2207&quot;)).isEqualTo(saldoAntes);  // nada se moveu
+    assertThat(auditoria.ultimo()).matches(negacaoDe(&quot;cli-1001&quot;, &quot;acc-2207&quot;)); // rastro
+}
+</code></pre>
+<p>Três asserções, três garantias: a resposta é negativa, <strong>o efeito colateral não ocorreu</strong> (o teste mais importante — um 403 que ainda assim debitou é o pior dos mundos), e <strong>a tentativa foi registrada</strong> (voltaremos em §9). Esse teste deve rodar em CI para <strong>cada endpoint que recebe um identificador de objeto</strong>; e aqui a arquitetura ajuda: se a autorização é uma anotação declarativa, é possível escrever um teste de arquitetura que <em>falha o build</em> quando um método público de controller recebe um <code>*Id</code> sem anotação de política. Isso é uma <strong>fitness function de segurança</strong>, e voltamos a ela em §10.3.</p>
+<hr>
+<h2>4. Quem é <em>esse</em> serviço? Segurança leste-oeste</h2>
+<p>Consertamos o usuário. Agora olhem para dentro do cluster. Pagamentos chama Antifraude; Pagamentos chama Ledger; um job de conciliação lê o banco; consumidores leem o Kafka. São <strong>dezenas de instâncias de dezenas de workloads</strong>, conversando pela rede interna, em pods que nascem e morrem o dia inteiro.</p>
+<p>A pergunta: <strong>quando uma requisição chega ao Antifraude dizendo &quot;sou o Pagamentos&quot;, como o Antifraude sabe que é verdade?</strong> Em muita empresa a resposta honesta é <em>&quot;porque veio de dentro da rede&quot;</em>. É a premissa do castelo com fosso — e basta <strong>um</strong> pod comprometido (uma dependência infectada, uma vulnerabilidade de execução remota) para o atacante herdar essa confiança e chamar <em>qualquer</em> serviço como se fosse legítimo. Chama-se <strong>movimento lateral</strong>, e é como um incidente pequeno vira um grande.</p>
+<h3>4.1 Identidade de usuário ≠ identidade de workload</h3>
+<p>Existem <strong>dois tipos de sujeito</strong> no sistema, e misturá-los é fonte de incidentes:</p>
+<ul>
+<li><strong>Usuário</strong> (o Bruno): pessoa, autenticada por MFA, com vida útil de sessão, agindo <em>por vontade própria</em>.</li>
+<li><strong>Workload</strong> (o serviço Pagamentos): software, sem MFA, sem &quot;sessão&quot;, que <strong>age em nome próprio</strong> <em>ou</em> <strong>em nome de um usuário</strong> — e essa distinção é sutil e importante.</li>
+</ul>
+<p>Dois erros clássicos aparecem aqui. O primeiro é a <strong>credencial global &quot;backend-admin&quot;</strong>: uma senha ou chave única que todos os serviços usam para falar entre si, com poder total. Quando ela vaza (e vaza), o atacante tem o cluster inteiro — e, pior, o log não distingue <em>qual</em> serviço fez o quê. O segundo é o <strong>token pessoal reutilizado</strong>: Pagamentos repassa o token do usuário para o Ledger &quot;porque já está na mão&quot;. Isso parece prático e cria um problema chamado <strong>confused deputy</strong> (o <em>deputado confuso</em>): o Ledger recebe um token de usuário e não tem como saber se o Pagamentos está agindo <em>legitimamente</em> ou sendo <em>usado</em> por um atacante para ampliar acesso.</p>
+<p>A solução são identidades separadas, com dois padrões para dois casos:</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 330" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9w-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <text x="225" y="22" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#3730a3">A) O serviço age em nome PRÓPRIO</text>
+  <text x="675" y="22" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#7a5c00">B) O serviço age em nome do USUÁRIO</text>
+  <rect x="20" y="50" width="120" height="50" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="80" y="80" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Pagamentos</text>
+  <rect x="180" y="50" width="120" height="50" rx="6" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="240" y="70" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Servidor de</text>
+  <text x="240" y="85" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Identidade</text>
+  <rect x="330" y="50" width="120" height="50" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="390" y="80" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Antifraude</text>
+  <line x1="140" y1="68" x2="178" y2="68" stroke="#4338ca" stroke-width="2" marker-end="url(#a9w-arrow)"/>
+  <text x="160" y="62" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">①</text>
+  <line x1="180" y1="86" x2="142" y2="86" stroke="#4338ca" stroke-width="2" marker-end="url(#a9w-arrow)"/>
+  <text x="160" y="100" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#666">②</text>
+  <path d="M80 100 L80 140 L390 140 L390 102" fill="none" stroke="#4338ca" stroke-width="2" marker-end="url(#a9w-arrow)"/>
+  <text x="235" y="134" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">③ chama com o token do PRÓPRIO serviço</text>
+  <text x="20" y="180" font-family="sans-serif" font-size="11" fill="#333">① Client Credentials: "sou pagamentos-svc" + credencial</text>
+  <text x="20" y="198" font-family="sans-serif" font-size="11" fill="#333">② token M2M (máquina-a-máquina), escopo mínimo:</text>
+  <text x="20" y="216" font-family="monospace" font-size="11" fill="#166534">   scope = "risco:avaliar"   (não "*")</text>
+  <text x="20" y="248" font-family="sans-serif" font-size="11" fill="#333">Uso: chamada de sistema que independe do usuário</text>
+  <text x="20" y="264" font-family="sans-serif" font-size="11" fill="#333">(o Antifraude avalia risco, seja quem for o cliente).</text>
+  <rect x="470" y="50" width="100" height="50" rx="6" fill="#fff" stroke="#333"/>
+  <text x="520" y="80" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Usuário</text>
+  <rect x="610" y="50" width="120" height="50" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="670" y="80" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Pagamentos</text>
+  <rect x="770" y="50" width="110" height="50" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="825" y="80" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Ledger</text>
+  <line x1="570" y1="75" x2="608" y2="75" stroke="#4338ca" stroke-width="2" marker-end="url(#a9w-arrow)"/>
+  <line x1="730" y1="75" x2="768" y2="75" stroke="#4338ca" stroke-width="2" marker-end="url(#a9w-arrow)"/>
+  <text x="750" y="122" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">token com DUAS identidades:</text>
+  <text x="750" y="137" text-anchor="middle" font-family="monospace" font-size="10" fill="#7a5c00">sub = cli-5519   act = pagamentos-svc</text>
+  <text x="470" y="180" font-family="sans-serif" font-size="11" fill="#333">Token Exchange: Pagamentos troca o token do usuário</text>
+  <text x="470" y="198" font-family="sans-serif" font-size="11" fill="#333">por um novo, de audiência = Ledger, que registra</text>
+  <text x="470" y="216" font-family="sans-serif" font-size="11" fill="#333">TANTO quem é o usuário (sub) QUANTO quem age por ele (act).</text>
+  <text x="470" y="248" font-family="sans-serif" font-size="11" fill="#333">Uso: a operação só existe por vontade do usuário.</text>
+  <text x="470" y="264" font-family="sans-serif" font-size="11" fill="#333">O Ledger vê a cadeia e autoriza ambas as pontas.</text>
+  <rect x="20" y="285" width="860" height="35" rx="6" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="450" y="308" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#1a1a1a">Nos dois casos: o token é <tspan font-weight="bold">estreito</tspan> (escopo mínimo), <tspan font-weight="bold">curto</tspan> (minutos) e <tspan font-weight="bold">com audiência</tspan> (só vale para o destino).</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Dois padrões para dois casos. Nenhum deles é "reaproveitar o token do usuário" nem "usar a senha de admin do backend".</p>
+</div><p>O padrão <strong>A</strong>, o <strong>Client Credentials</strong>, dá ao <em>serviço</em> uma identidade própria e um token com <strong>escopos mínimos</strong> — <code>risco:avaliar</code>, não <code>pagamentos:*</code>. O padrão <strong>B</strong>, o <strong>Token Exchange</strong>, resolve o <em>confused deputy</em>: o token novo carrega <strong>as duas</strong> identidades (o usuário em <code>sub</code>, o serviço intermediário em <code>act</code>), e o Ledger autoriza <em>ambas as pontas</em> — &quot;o usuário <code>cli-5519</code> pode debitar esta conta <em>e</em> o <code>pagamentos-svc</code> pode agir em nome de usuários&quot;. Se um pod comprometido tentar usar esse token para outra coisa, a audiência e o escopo não deixam.</p>
+<h3>4.2 Client Credentials é identidade — mas ainda não resolve &quot;quem está no fio&quot;</h3>
+<p>O Client Credentials entrega um <em>token</em>, mas o token é um segredo portátil — e todo segredo portátil pode ser roubado e usado por outro. A pergunta seguinte é natural: <strong>o que impede uma máquina qualquer da rede de apresentar esse token, ou de simplesmente fingir ser o Antifraude ao receber a chamada?</strong> Precisamos autenticar <strong>o próprio canal</strong> — provar, em cada conexão, que os dois pontas são quem dizem ser. É o papel do <strong>mTLS</strong>.</p>
+<p>Para entendê-lo, comecem pelo TLS comum, que vocês usam todo dia no HTTPS. No <strong>TLS</strong> o <em>cliente</em> verifica o <em>servidor</em>: o servidor apresenta um certificado, assinado por uma autoridade em que o cliente confia, e o cliente confere &quot;este é mesmo o <code>api.techpix.com</code>&quot;. O servidor <strong>não</strong> verifica o cliente — qualquer um pode conectar. No <strong>mTLS</strong> (<em>mutual</em> TLS) a verificação é <strong>nos dois sentidos</strong>: o cliente também apresenta um certificado, e o servidor só aceita a conexão se ele for válido e emitido pela autoridade da organização.</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 400" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9k-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a9k-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <rect x="330" y="10" width="240" height="70" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="450" y="34" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">CA interna (PKI da TechPix)</text>
+  <text x="450" y="52" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">emite certificados de curta duração</text>
+  <text x="450" y="68" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">(horas), um por workload</text>
+  <rect x="40" y="150" width="200" height="70" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="140" y="178" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">Pagamentos</text>
+  <text x="140" y="196" text-anchor="middle" font-family="monospace" font-size="10" fill="#333">cert: spiffe://techpix/pagamentos</text>
+  <rect x="660" y="150" width="200" height="70" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="760" y="178" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">Antifraude</text>
+  <text x="760" y="196" text-anchor="middle" font-family="monospace" font-size="10" fill="#333">cert: spiffe://techpix/antifraude</text>
+  <line x1="380" y1="80" x2="180" y2="148" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a9k-arrow)"/>
+  <line x1="520" y1="80" x2="720" y2="148" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a9k-arrow)"/>
+  <text x="250" y="105" font-family="sans-serif" font-size="10" fill="#7a5c00">assina</text>
+  <text x="640" y="105" font-family="sans-serif" font-size="10" fill="#7a5c00">assina</text>
+  <line x1="240" y1="170" x2="658" y2="170" stroke="#4338ca" stroke-width="2" marker-end="url(#a9k-arrow)"/>
+  <text x="450" y="164" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">① "olá" + meu certificado</text>
+  <line x1="658" y1="192" x2="242" y2="192" stroke="#4338ca" stroke-width="2" marker-end="url(#a9k-arrow)"/>
+  <text x="450" y="186" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">② meu certificado + prova de posse da chave</text>
+  <text x="450" y="216" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">③ cada lado valida o outro contra a CA · negocia chaves de sessão</text>
+  <rect x="240" y="235" width="420" height="34" rx="6" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+  <text x="450" y="257" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">canal cifrado + AMBAS as identidades verificadas</text>
+  <rect x="40" y="310" width="190" height="60" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="135" y="335" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#991b1b">Pod invasor</text>
+  <text x="135" y="353" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">sem certificado emitido pela CA</text>
+  <line x1="230" y1="340" x2="640" y2="205" stroke="#b91c1c" stroke-width="2" marker-end="url(#a9k-red)"/>
+  <text x="450" y="322" font-family="sans-serif" font-size="12" font-weight="bold" fill="#991b1b">✘ handshake recusado</text>
+  <text x="450" y="340" font-family="sans-serif" font-size="11" fill="#666">não chega nem a enviar uma requisição HTTP</text>
+  <text x="450" y="390" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">Certificado de vida curta: se vazar, envelhece sozinho em horas — a rotação é parte do desenho, não um projeto anual.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">mTLS: uma CA interna emite a cada workload um certificado com identidade verificável. O handshake autentica os dois lados antes de trafegar qualquer byte de aplicação.</p>
+</div><p>O que o mTLS entrega, em três propriedades: <strong>confidencialidade</strong> (o tráfego interno vai cifrado — quem espiona a rede vê ruído), <strong>integridade</strong> (não dá para adulterar bytes no meio) e <strong>autenticação mútua</strong> (cada lado sabe <em>quem</em> é o outro, criptograficamente). A identidade que o certificado carrega costuma seguir um padrão aberto chamado <strong>SPIFFE</strong> (<code>spiffe://techpix/pagamentos</code>): um nome estável de workload, independente de IP — o que importa num cluster em que IPs mudam a cada reinício de pod.</p>
+<p>E agora a pergunta que o roteiro dessa aula insiste em fazer, porque o erro de resposta é comum e caro: <strong>&quot;mTLS resolve autorização?&quot;</strong> <strong>Não.</strong> O mTLS prova <em>quem</em> está do outro lado; <strong>não diz o que ele pode fazer.</strong> Um Antifraude autenticado por mTLS pode ainda assim chamar <code>POST /pix</code> no serviço de Pagamentos e criar transferência — a menos que uma <em>política de autorização</em> diga que ele não pode. Autenticação de peer é o <em>pré-requisito</em> da autorização de peer; não a substitui. Mesma tese da aula, agora no eixo leste-oeste: <strong>identidade estabelece quem; política limita o quê.</strong></p>
+<h3>4.3 O custo de repetir isso em todo serviço — e o service mesh</h3>
+<p>Considerem o que mTLS exige de <strong>cada</strong> serviço, em <strong>cada</strong> linguagem: obter certificado da CA, renová-lo antes de expirar sem derrubar conexões, validar a cadeia do peer, rejeitar cifras fracas, expor telemetria da conexão — e ainda os retries, timeouts e políticas de autorização. Multipliquem por 30 serviços em 3 linguagens. Cada time reimplementando, cada um com um bug diferente, cada renovação de certificado uma bomba-relógio de &quot;esquecemos de rotacionar, e às 3h da manhã metade dos serviços parou de se falar&quot;. A pergunta que a plataforma precisa fazer é: <strong>isso é lógica de negócio de cada serviço, ou é infraestrutura transversal que devia sair do código?</strong></p>
+<p>A resposta arquitetural é o <strong>service mesh</strong>: mover essas preocupações para uma camada de plataforma, com duas partes.</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 380" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9s-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a9s-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <rect x="250" y="10" width="400" height="80" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="450" y="36" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#7a5c00">CONTROL PLANE (ex.: Istio)</text>
+  <text x="450" y="56" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">CA interna · distribui certificados e políticas</text>
+  <text x="450" y="74" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">"quem pode falar com quem" declarado uma vez, em YAML versionado</text>
+  <rect x="30" y="150" width="380" height="180" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2" stroke-dasharray="7 4"/>
+  <text x="220" y="172" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Pod: Pagamentos</text>
+  <rect x="50" y="190" width="140" height="60" rx="6" fill="#fff" stroke="#4338ca"/>
+  <text x="120" y="218" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">app Pagamentos</text>
+  <text x="120" y="236" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">só regra de negócio</text>
+  <rect x="235" y="190" width="155" height="60" rx="6" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+  <text x="312" y="212" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">proxy (sidecar)</text>
+  <text x="312" y="228" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">mTLS · retry · métricas</text>
+  <text x="312" y="242" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">policy · rotação de cert</text>
+  <line x1="190" y1="220" x2="233" y2="220" stroke="#4338ca" stroke-width="2" marker-end="url(#a9s-arrow)"/>
+  <text x="220" y="285" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">app fala HTTP simples com o proxy local (localhost)</text>
+  <text x="220" y="305" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#666">o proxy é quem "fala mTLS" com o mundo</text>
+  <rect x="490" y="150" width="380" height="180" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2" stroke-dasharray="7 4"/>
+  <text x="680" y="172" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Pod: Antifraude</text>
+  <rect x="510" y="190" width="155" height="60" rx="6" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+  <text x="587" y="212" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">proxy (sidecar)</text>
+  <text x="587" y="228" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">termina mTLS · aplica</text>
+  <text x="587" y="242" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">AuthorizationPolicy</text>
+  <rect x="710" y="190" width="140" height="60" rx="6" fill="#fff" stroke="#166534"/>
+  <text x="780" y="218" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">app Antifraude</text>
+  <line x1="665" y1="220" x2="708" y2="220" stroke="#4338ca" stroke-width="2" marker-end="url(#a9s-arrow)"/>
+  <line x1="390" y1="215" x2="508" y2="215" stroke="#166534" stroke-width="3" marker-end="url(#a9s-green)"/>
+  <text x="450" y="205" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#166534">mTLS</text>
+  <line x1="350" y1="90" x2="312" y2="188" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a9s-arrow)"/>
+  <line x1="550" y1="90" x2="587" y2="188" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a9s-arrow)"/>
+  <rect x="30" y="345" width="840" height="28" rx="6" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="450" y="364" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#1a1a1a">O código de negócio <tspan font-weight="bold">não reinventa PKI</tspan>: a plataforma entrega identidade e canal seguro "de graça" para cada workload.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Data plane (proxies ao lado de cada app) + control plane (cérebro que emite certificados e distribui políticas). O tráfego entre proxies é mTLS; a aplicação nem sabe.</p>
+</div><p>O <strong>data plane</strong> são os proxies (o <em>sidecar</em> — um contêiner que acompanha cada aplicação no mesmo pod) que interceptam todo tráfego de entrada e saída. O <strong>control plane</strong> é o cérebro central: opera a CA interna, entrega e <strong>rotaciona</strong> certificados automaticamente, e distribui as políticas. O ganho não é só segurança: os mesmos proxies dão <strong>telemetria uniforme, retries e timeouts padronizados</strong> — o motivo pelo qual o mesh costuma ser vendido como plataforma, não como &quot;feature de segurança&quot;.</p>
+<p>Mas eu preciso ser honesto sobre o preço, porque service mesh é uma das tecnologias mais super-vendidas da área. <strong>Ele não é obrigatório, e muitas vezes é prematuro.</strong> Cada pod ganha um proxy — mais memória, mais CPU, <strong>alguns milissegundos por salto</strong> (que num orçamento de latência apertado, como o do Pix, importa), e uma camada inteira de operação nova: atualizar o mesh é atualizar a infra de rede de tudo. Há alternativas com menos peso — <em>mesh sem sidecar</em> (modo ambient), políticas de rede do próprio Kubernetes, ou bibliotecas de mTLS em poucos serviços críticos. A regra de decisão honesta: <strong>o mesh faz sentido quando o custo transversal (certificados, rotação, políticas, telemetria em N serviços) já dói mais do que o custo de operar a plataforma.</strong> Com 4 serviços, provavelmente não; com 40, provavelmente sim. A ordem correta é <em>primeiro sentir a dor da repetição, depois comprar a plataforma</em> — e não o contrário.</p>
+<h3>4.4 Políticas de autorização entre workloads — e o mínimo privilégio</h3>
+<p>Com identidade de workload garantida pelo mTLS, a plataforma pode responder em <strong>política declarativa</strong> à pergunta que o mTLS sozinho não responde. Em Istio isso é uma <code>AuthorizationPolicy</code> — um documento YAML versionado no repositório, revisado como código, aplicado por GitOps:</p>
+<pre><code class="language-yaml">apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: antifraude-aceita-somente-pagamentos, namespace: techpix }
+spec:
+  selector: { matchLabels: { app: antifraude } }
+  action: ALLOW
+  rules:
+  - from:
+    - source: { principals: [&quot;cluster.local/ns/techpix/sa/pagamentos&quot;] }
+    to:
+    - operation: { methods: [&quot;POST&quot;], paths: [&quot;/v1/avaliar&quot;] }
+</code></pre>
+<p>Leiam em português: <em>&quot;Antifraude só aceita chamadas vindas da identidade <code>pagamentos</code>, e apenas <code>POST /v1/avaliar</code>.&quot;</em> Todo o resto — o serviço de Notificações tentando chamar, o próprio Pagamentos tentando acessar outro endpoint — é <strong>negado por padrão</strong>. Essa é a postura <strong>default deny</strong>: o que não foi explicitamente permitido está proibido. Ela inverte a lógica frágil do &quot;libera tudo, bloqueia o que a gente lembrar&quot;.</p>
+<p>Isso é o <strong>princípio do menor privilégio</strong> aplicado a workloads, e a régua para revisar cada permissão é uma pergunta desconfortável: <strong>&quot;esse serviço realmente precisa disso?&quot;</strong> O Antifraude precisa <em>ler</em> contexto de risco; ele <strong>precisa escrever no Ledger?</strong> Quase certamente não — então sua identidade não tem essa permissão, e se um atacante o comprometer, o <strong>raio de explosão</strong> (<em>blast radius</em>: o estrago máximo de um comprometimento) fica limitado a <em>avaliar risco</em>, e não a movimentar dinheiro. Toda permissão que um workload tem e não usa é dívida de segurança.</p>
+<p>Uma distinção que vale enfatizar, porque é onde times se confundem: a policy de plataforma diz <strong>&quot;o workload Pagamentos pode chamar <code>/v1/avaliar</code> do Antifraude&quot;</strong>. Ela <strong>não</strong> diz <strong>&quot;o usuário Bruno pode avaliar a conta 2207&quot;</strong>. As duas camadas respondem perguntas diferentes e <strong>se complementam</strong>: a regra de plataforma limita <em>quais máquinas</em> falam com quais; a regra de domínio limita <em>quais sujeitos</em> agem sobre <em>quais objetos</em>. Policy de mesh nunca substitui autorização de negócio — só a torna mais difícil de contornar.</p>
+<p>O mesmo raciocínio vale para o <strong>Kafka</strong>, que é outra fronteira: produtores e consumidores têm identidade, e <strong>ACLs por tópico</strong> dizem <em>quem publica onde e quem lê o quê</em>. O Antifraude consome <code>pagamentos.iniciados</code>; não deveria poder publicar em <code>ledger.lancamentos</code> nem ler <code>identidade.documentos</code>. Um tópico é uma superfície de ataque: quem publica nele pode <em>forjar eventos que outros serviços tratam como verdade</em>.</p>
+<hr>
+<h2>5. Proteger o dado: criptografia, chaves e o conflito com a lei</h2>
+<p>Até aqui protegemos <em>quem acessa</em>. Mas todo controle de acesso tem um limite: se alguém contorna a aplicação e chega <strong>direto ao disco, ao backup ou à réplica do banco</strong>, a autorização de domínio nunca é consultada. A última linha de defesa é o <strong>próprio dado</strong>: se ele estiver ilegível para quem não deveria lê-lo, o vazamento do armazenamento deixa de ser vazamento de informação.</p>
+<h3>5.1 Três estados do dado, três defesas</h3>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Onde o dado está</th>
+<th>Risco</th>
+<th>Defesa</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Em trânsito</strong></td>
+<td>Na rede (cliente ↔ edge; serviço ↔ serviço)</td>
+<td>Espionagem, adulteração</td>
+<td>TLS 1.2+ (preferencialmente 1.3); mTLS interno</td>
+</tr>
+<tr>
+<td><strong>Em repouso</strong></td>
+<td>Disco, backup, snapshot, réplica</td>
+<td>Vazamento do armazenamento; disco descartado</td>
+<td>Criptografia de volume + criptografia de campo</td>
+</tr>
+<tr>
+<td><strong>Em uso</strong></td>
+<td>Memória do processo, logs, traces, dumps</td>
+<td>Vazamento por observabilidade; memória extraída</td>
+<td>Minimização, mascaramento, não logar o que é sensível</td>
+</tr>
+</tbody></table>
+<p>O terceiro estado é o mais esquecido — e é o que mais vaza na prática. O CPF que aparece no log de erro, o cabeçalho <code>Authorization</code> inteiro num trace de depuração, o payload de pagamento indexado numa ferramenta de logs que 200 pessoas consultam: nenhum criptógrafo salva isso. A defesa é disciplina de engenharia — <strong>nunca logue o que você não poderia mostrar num telão</strong>: filtros de mascaramento na saída do log, listas de campos proibidos e, de novo, um teste que falha o build se um token ou documento aparecer numa saída de log (§10.3).</p>
+<h3>5.2 Criptografia em repouso: por que só criptografar o disco não basta</h3>
+<p><strong>Criptografia de volume</strong> (o disco inteiro cifrado) protege contra um cenário específico: alguém roubar fisicamente o disco ou o snapshot. Mas o banco, quando está rodando, vê os dados em claro — e <strong>qualquer pessoa ou aplicação com acesso ao banco</strong> também vê. Para o CPF, o número da conta, o extrato, o padrão exige uma camada adicional: <strong>criptografia de campo</strong> (<em>field-level</em>), em que o dado sensível é cifrado <em>pela aplicação</em> antes de chegar ao banco. Agora o DBA que faz uma consulta, ou um atacante com dump do banco, vê <code>CPF: 8fA3x...</code> — ruído — e só o serviço autorizado, que tem acesso à chave, decifra.</p>
+<p>E aí entra a pergunta que define a maturidade de um sistema criptográfico: <strong>onde estão as chaves?</strong> Porque criptografia move o problema de <em>proteger o dado</em> para <em>proteger a chave</em> — e uma chave guardada ao lado do dado (no mesmo servidor, no mesmo <code>application.yml</code>) é uma porta trancada com a chave pendurada na maçaneta.</p>
+<h3>5.3 KMS, HSM e envelope encryption</h3>
+<p>Duas peças de infraestrutura resolvem isso, e vale distinguir:</p>
+<ul>
+<li><strong>HSM</strong> (<em>Hardware Security Module</em>): um hardware dedicado e resistente a violação física que <strong>gera, guarda e usa chaves sem nunca as revelar</strong>. Você pede &quot;assine isto&quot; ou &quot;cifre isto&quot;, e o HSM devolve o resultado; a chave em si <strong>não sai</strong> do equipamento. É o cofre de verdade — e é o que reguladores esperam para as chaves mais críticas (como a que assina mensagens para o SPI).</li>
+<li><strong>KMS</strong> (<em>Key Management Service</em>): o serviço de gestão de chaves — geralmente apoiado por HSM — que oferece a API de &quot;criar chave, cifrar, decifrar, rotacionar, revogar, auditar quem usou&quot;. Serviços de nuvem oferecem isso gerenciado.</li>
+</ul>
+<p>Uma dificuldade prática: o HSM/KMS é remoto e relativamente lento. Cifrar <strong>cada campo de cada registro</strong> com uma chamada ao KMS seria proibitivo — e enviar gigabytes de dados para &quot;cifrar no cofre&quot; seria absurdo. A solução é um padrão elegante chamado <strong>envelope encryption</strong>:</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 380" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9e-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <rect x="20" y="20" width="250" height="110" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="145" y="46" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">KMS / HSM</text>
+  <rect x="45" y="60" width="200" height="50" rx="6" fill="#fff" stroke="#166534"/>
+  <text x="145" y="82" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">KEK — chave-mestra</text>
+  <text x="145" y="98" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">(Key Encryption Key) NUNCA sai</text>
+  <rect x="330" y="20" width="250" height="110" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="455" y="46" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">Serviço (Contas)</text>
+  <rect x="355" y="60" width="200" height="50" rx="6" fill="#fff" stroke="#4338ca"/>
+  <text x="455" y="82" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">DEK — chave de dados</text>
+  <text x="455" y="98" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">(Data Encryption Key) vive em RAM</text>
+  <rect x="640" y="20" width="240" height="110" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="760" y="46" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">Banco de dados</text>
+  <text x="760" y="72" text-anchor="middle" font-family="monospace" font-size="10" fill="#333">cpf_cifrado   = AES(DEK, cpf)</text>
+  <text x="760" y="90" text-anchor="middle" font-family="monospace" font-size="10" fill="#333">dek_cifrada   = KEK(DEK)</text>
+  <text x="760" y="112" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">a DEK só é guardada CIFRADA</text>
+  <text x="20" y="165" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">Escrever:</text>
+  <text x="20" y="188" font-family="sans-serif" font-size="12" fill="#333">① serviço pede ao KMS uma DEK nova   ② KMS devolve DEK em claro + a mesma DEK cifrada pela KEK</text>
+  <text x="20" y="208" font-family="sans-serif" font-size="12" fill="#333">③ serviço cifra o dado com a DEK (rápido, local)   ④ grava dado cifrado + DEK cifrada   ⑤ descarta a DEK em claro</text>
+  <text x="20" y="245" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">Ler:</text>
+  <text x="20" y="268" font-family="sans-serif" font-size="12" fill="#333">① lê o dado cifrado + a DEK cifrada   ② pede ao KMS para decifrar a DEK (KMS confere: este serviço PODE?)</text>
+  <text x="20" y="288" font-family="sans-serif" font-size="12" fill="#333">③ decifra o dado localmente   ④ usa   ⑤ descarta</text>
+  <rect x="20" y="315" width="860" height="52" rx="6" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="450" y="337" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#1a1a1a"><tspan font-weight="bold">Por que funciona:</tspan> só uma chamada minúscula (a DEK) vai ao cofre — o volume de dados fica local e rápido.</text>
+  <text x="450" y="356" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#1a1a1a">Vazou o banco? Só há dado cifrado e DEKs cifradas. Sem acesso ao KMS, é ruído. E cada uso da KEK fica <tspan font-weight="bold">auditado</tspan>.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Envelope encryption: uma chave-mestra (KEK) que nunca sai do cofre protege chaves de dados (DEKs) que protegem o dado. Dois níveis dão rapidez, rotação barata e trilha de auditoria.</p>
+</div><p>Duas consequências práticas valiosas. <strong>Rotação barata:</strong> para trocar a chave-mestra, você não re-cifra terabytes — só re-cifra as DEKs (pequenas) com a KEK nova. E <strong>revogação de acesso por política</strong>: se um serviço é comprometido, você revoga a permissão dele <em>no KMS</em> e ele perde a capacidade de decifrar — sem tocar em um único byte do banco.</p>
+<h3>5.4 Tokenização versus criptografia: substituir em vez de esconder</h3>
+<p>Existe uma alternativa à criptografia para dados muito sensíveis, como número de cartão: a <strong>tokenização</strong>. Em vez de guardar o dado cifrado, o sistema guarda um <strong>substituto sem valor</strong> (o <em>token</em>, ex.: <code>tok_9f31...</code>) e o dado real vive <strong>num cofre único, isolado</strong>. A diferença conceitual é fina e importante: dado cifrado ainda é <em>o dado</em>, matematicamente reversível por quem tiver a chave; um token não tem relação matemática com o original — só o cofre sabe o mapeamento.</p>
+<p>O benefício regulatório é enorme: no padrão de segurança da indústria de cartões (<strong>PCI DSS</strong>), quanto <strong>menos</strong> sistemas tocam o dado real, <strong>menor o escopo</strong> de auditoria e de conformidade. Se só o cofre de tokens vê o número do cartão, os 40 outros serviços operam com <code>tok_9f31...</code> e ficam <strong>fora do escopo</strong>. Isso é <strong>redução da superfície de ataque por desenho</strong>: a melhor proteção para um dado é <em>não tê-lo</em>. (Observação: o Pix em si não usa cartão; mas uma fintech com conta digital quase sempre também emite ou processa cartões — e o princípio vale igual para CPF, número de conta e qualquer identificador sensível.)</p>
+<h3>5.5 A tensão que ninguém conta: LGPD versus ledger imutável</h3>
+<p>Aqui mora um dos conflitos mais interessantes de arquitetura financeira — e é o tipo de coisa que separa quem leu a lei de quem só leu o tutorial. Duas obrigações legais <strong>apontam em direções opostas</strong>:</p>
+<ul>
+<li>A <strong>LGPD</strong> (Lei Geral de Proteção de Dados) dá ao titular o <strong>direito à eliminação</strong> de seus dados pessoais e obriga a <strong>minimização</strong> — não guardar mais do que o necessário.</li>
+<li>A regulação financeira exige <strong>retenção</strong>: registros de transações precisam ser mantidos por anos (com prazos definidos por normas do setor e do BACEN) e, por natureza, o ledger é <strong>append-only</strong> — você não apaga nem reescreve o passado.</li>
+</ul>
+<p>O cliente pede &quot;apaguem meus dados&quot;; o ledger imutável diz &quot;eu não posso apagar&quot;. Como sair? Não com um <code>DELETE</code>. A saída de engenharia é uma técnica chamada <strong>crypto-shredding</strong> (<em>destruição criptográfica</em>): os dados pessoais do titular são cifrados com uma <strong>chave dedicada àquele titular</strong> (uma DEK por cliente). Quando chega o pedido de eliminação — e a base legal de retenção já expirou —, você <strong>destrói a chave</strong>. Os registros continuam no ledger (a integridade contábil e a trilha estão preservadas), mas os dados pessoais dentro deles viraram <strong>ruído irrecuperável</strong>.</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 320" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9c-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <text x="225" y="22" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#3730a3">ANTES do pedido de eliminação</text>
+  <text x="675" y="22" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#991b1b">DEPOIS (a chave do titular destruída)</text>
+  <rect x="20" y="40" width="410" height="150" rx="8" fill="#fff" stroke="#4338ca" stroke-width="2"/>
+  <text x="35" y="66" font-family="monospace" font-size="11" fill="#333">lancamento #88231</text>
+  <text x="35" y="86" font-family="monospace" font-size="11" fill="#333">  valor: 4.800,00      hash: a91f…</text>
+  <text x="35" y="106" font-family="monospace" font-size="11" fill="#333">  data:  2026-09-30T14:22Z</text>
+  <text x="35" y="126" font-family="monospace" font-size="11" fill="#166534">  titular: AES(DEK-cli-5519, "Bruno S., CPF …")</text>
+  <text x="35" y="150" font-family="sans-serif" font-size="11" fill="#666">DEK-cli-5519 existe no KMS → decifrável por serviço autorizado</text>
+  <text x="35" y="172" font-family="sans-serif" font-size="11" fill="#666">valor, data e hash: dado contábil, NÃO pessoal</text>
+  <rect x="470" y="40" width="410" height="150" rx="8" fill="#fff" stroke="#991b1b" stroke-width="2"/>
+  <text x="485" y="66" font-family="monospace" font-size="11" fill="#333">lancamento #88231</text>
+  <text x="485" y="86" font-family="monospace" font-size="11" fill="#333">  valor: 4.800,00      hash: a91f…</text>
+  <text x="485" y="106" font-family="monospace" font-size="11" fill="#333">  data:  2026-09-30T14:22Z</text>
+  <text x="485" y="126" font-family="monospace" font-size="11" fill="#b91c1c">  titular: AES(DEK-cli-5519, "▓▓▓▓▓▓▓▓")  ← ruído</text>
+  <text x="485" y="150" font-family="sans-serif" font-size="11" fill="#666">DEK-cli-5519 DESTRUÍDA → irrecuperável, por qualquer um</text>
+  <text x="485" y="172" font-family="sans-serif" font-size="11" fill="#166534">hash da cadeia intacto → integridade contábil preservada</text>
+  <line x1="432" y1="115" x2="468" y2="115" stroke="#4338ca" stroke-width="2" marker-end="url(#a9c-arrow)"/>
+  <rect x="20" y="215" width="860" height="85" rx="6" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="450" y="238" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Pré-requisito de desenho (tem que existir DESDE O DIA 1):</text>
+  <text x="450" y="259" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">separar o que é dado contábil (imutável, retido) do que é dado pessoal (cifrado por titular, eliminável).</text>
+  <text x="450" y="279" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Não dá para "consertar" isso depois num ledger que já misturou os dois no mesmo campo.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Crypto-shredding: o dado pessoal é cifrado com uma chave por titular; destruir a chave "apaga" o dado sem tocar num ledger append-only.</p>
+</div><p>Duas ressalvas de honestidade. Primeira: <strong>crypto-shredding não é decisão só de engenharia</strong> — quando a lei <em>exige retenção</em> de um dado identificável (para fins de prevenção à fraude ou obrigação regulatória), a eliminação simplesmente <strong>não é devida</strong> naquele momento; o jurídico define o que pode ser eliminado e quando. A arquitetura oferece a <em>capacidade</em>; o direito diz <em>se e quando usar</em>. Segunda: o desenho só funciona se a separação <strong>contábil vs. pessoal</strong> foi feita <strong>no modelo de dados desde o início</strong> — um ledger que gravou o nome do titular em texto claro dentro do lançamento não tem correção elegante depois. Este é um exemplo perfeito de por que segurança e privacidade são <strong>decisões de arquitetura inicial</strong>, não camadas que se colam no fim.</p>
+<hr>
+<h2>6. Segredos, APIs e a cadeia de suprimentos</h2>
+<h3>6.1 O incidente do segredo vazado</h3>
+<p>Sexta-feira, 17h40. Um desenvolvedor, depurando uma integração, coloca a credencial de produção do serviço de Pagamentos num <code>application.yml</code> e faz o commit — num repositório que, dois meses antes, foi aberto para colaboradores externos. Ou: a credencial entrou num <em>stack trace</em> impresso num log que uma ferramenta de observabilidade indexou. Não importa o caminho: <strong>o segredo vazou</strong>. Em minutos, bots que varrem repositórios públicos por padrões de credencial (isso é automático, contínuo e rápido) a encontram.</p>
+<p>A pergunta que separa equipes maduras das demais: <strong>qual é o raio de explosão, e em quanto tempo o segredo pode ser tornado inútil?</strong> Se a credencial é estática, de vida longa, com poder total, e trocá-la exige reimplantar dez serviços com uma janela de manutenção — o incidente dura dias. Se é dinâmica, de vida curta e com poder mínimo, ele dura minutos e o estrago é limitado.</p>
+<h3>6.2 Ciclo de vida de um segredo</h3>
+<p>Um segredo (senha de banco, chave de API, certificado, chave de assinatura) tem um ciclo de vida, e cada etapa precisa de dono e de controle:</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 300" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9v-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <rect x="20" y="30" width="150" height="80" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="95" y="58" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">1. Emitir</text>
+  <text x="95" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">gerado pelo cofre,</text>
+  <text x="95" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">nunca escolhido por humano</text>
+  <rect x="200" y="30" width="150" height="80" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="275" y="58" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">2. Entregar</text>
+  <text x="275" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">injetado em runtime,</text>
+  <text x="275" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">só p/ a identidade certa</text>
+  <rect x="380" y="30" width="150" height="80" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="455" y="58" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">3. Usar</text>
+  <text x="455" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">em memória, nunca em</text>
+  <text x="455" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">código, imagem ou log</text>
+  <rect x="560" y="30" width="150" height="80" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="635" y="58" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">4. Rotacionar</text>
+  <text x="635" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">automático, periódico,</text>
+  <text x="635" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">sem downtime</text>
+  <rect x="740" y="30" width="140" height="80" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="810" y="58" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#991b1b">5. Revogar</text>
+  <text x="810" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">em minutos, ao vazar</text>
+  <text x="810" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">ou ao mudar a equipe</text>
+  <line x1="170" y1="70" x2="198" y2="70" stroke="#4338ca" stroke-width="2" marker-end="url(#a9v-arrow)"/>
+  <line x1="350" y1="70" x2="378" y2="70" stroke="#4338ca" stroke-width="2" marker-end="url(#a9v-arrow)"/>
+  <line x1="530" y1="70" x2="558" y2="70" stroke="#4338ca" stroke-width="2" marker-end="url(#a9v-arrow)"/>
+  <line x1="710" y1="70" x2="738" y2="70" stroke="#4338ca" stroke-width="2" marker-end="url(#a9v-arrow)"/>
+  <rect x="20" y="145" width="420" height="130" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="230" y="168" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#991b1b">O que produz vazamento</text>
+  <text x="35" y="192" font-family="sans-serif" font-size="11" fill="#333">✘ segredo em application.yml / código / imagem Docker</text>
+  <text x="35" y="210" font-family="sans-serif" font-size="11" fill="#333">✘ mesma credencial em todos os ambientes</text>
+  <text x="35" y="228" font-family="sans-serif" font-size="11" fill="#333">✘ credencial estática de vida longa, poder total</text>
+  <text x="35" y="246" font-family="sans-serif" font-size="11" fill="#333">✘ segredo em variável de ambiente impressa em erro</text>
+  <text x="35" y="264" font-family="sans-serif" font-size="11" fill="#333">✘ ninguém sabe quem usa nem quando expira</text>
+  <rect x="460" y="145" width="420" height="130" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="670" y="168" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">O que limita o dano</text>
+  <text x="475" y="192" font-family="sans-serif" font-size="11" fill="#333">✔ cofre de segredos (Vault, KMS, Secrets Manager)</text>
+  <text x="475" y="210" font-family="sans-serif" font-size="11" fill="#333">✔ credenciais DINÂMICAS: geradas sob demanda, TTL de minutos</text>
+  <text x="475" y="228" font-family="sans-serif" font-size="11" fill="#333">✔ acesso por identidade do workload (não por senha)</text>
+  <text x="475" y="246" font-family="sans-serif" font-size="11" fill="#333">✔ scanner de segredos no commit (pre-commit + CI)</text>
+  <text x="475" y="264" font-family="sans-serif" font-size="11" fill="#333">✔ rotação automática testada regularmente</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O ciclo de vida do segredo. Equipe madura não "guarda bem" segredos — ela reduz o tempo de vida e o poder de cada um até que o vazamento seja um non-event.</p>
+</div><p>O salto conceitual está na palavra <strong>dinâmicas</strong>. Em vez de um usuário de banco fixo, com senha guardada em algum lugar, o serviço se autentica ao cofre <strong>com sua identidade de workload</strong> (a mesma do mTLS!) e o cofre <strong>cria, na hora, um usuário de banco temporário</strong> com TTL de uma hora e só as permissões necessárias. Ninguém &quot;conhece&quot; a senha; ela nasce e morre com o pod. O vazamento de uma credencial dessas é quase inofensivo: ela expira sozinha antes de alguém usá-la. E note o encaixe com o resto da aula: <strong>identidade de workload é o que permite eliminar segredos estáticos</strong> — é a raiz de confiança do cofre.</p>
+<p>Três ressalvas: a chave &quot;zero&quot; (a credencial que autentica o workload ao cofre) precisa vir de algo que não seja um segredo digitado — do certificado do próprio pod, do token de conta de serviço do Kubernetes; um scanner de segredos no <em>pre-commit</em> e no CI é barato e pega o erro mais comum antes que ele chegue ao repositório; e o <strong>Secret nativo do Kubernetes</strong> é apenas Base64 — codificado, não cifrado — então só é seguro com criptografia de repouso do <em>etcd</em> habilitada e acesso restrito por RBAC.</p>
+<h3>6.3 Integridade e replay: proteger a mensagem, não só o canal</h3>
+<p>TLS protege o <em>canal</em>. Mas há mensagens que atravessam vários saltos, ficam armazenadas em filas, ou chegam de parceiros externos — e para elas o canal seguro não basta. Precisamos que <strong>a própria mensagem</strong> prove sua origem e sua integridade. O caso canônico é o <strong>webhook</strong>: o provedor de pagamentos avisa a TechPix &quot;o Pix E123 foi liquidado&quot; via <code>POST</code> para uma URL pública. Como a TechPix sabe que a chamada veio <em>mesmo</em> do provedor — e não de um atacante que descobriu a URL e forjou &quot;liquidado&quot;?</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 400" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9h-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a9h-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <rect x="20" y="15" width="180" height="50" rx="6" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="110" y="38" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">Provedor (emissor)</text>
+  <text x="110" y="54" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">compartilha segredo S</text>
+  <rect x="700" y="15" width="180" height="50" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="790" y="38" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">TechPix (receptor)</text>
+  <text x="790" y="54" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">também conhece S</text>
+  <rect x="20" y="90" width="420" height="120" rx="8" fill="#fff" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="35" y="112" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Emissor monta e assina:</text>
+  <text x="35" y="134" font-family="monospace" font-size="11" fill="#333">t   = 1790000123           (timestamp)</text>
+  <text x="35" y="152" font-family="monospace" font-size="11" fill="#333">id  = evt_77a1             (único)</text>
+  <text x="35" y="170" font-family="monospace" font-size="11" fill="#333">body= {"e2e":"E123...","st":"LIQUIDADO"}</text>
+  <text x="35" y="192" font-family="monospace" font-size="11" fill="#166534">sig = HMAC-SHA256(S, t + "." + id + "." + body)</text>
+  <line x1="440" y1="150" x2="700" y2="150" stroke="#4338ca" stroke-width="2" marker-end="url(#a9h-arrow)"/>
+  <text x="570" y="142" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">POST + headers: t, id, sig</text>
+  <rect x="20" y="230" width="860" height="150" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="35" y="254" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Receptor valida — nesta ordem:</text>
+  <text x="35" y="276" font-family="sans-serif" font-size="12" fill="#333">① recalcula HMAC(S, t + "." + id + "." + body) e compara em tempo constante  →  integridade + autenticidade</text>
+  <text x="35" y="298" font-family="sans-serif" font-size="12" fill="#333">② |agora − t| ≤ 5 minutos?  →  rejeita mensagem antiga (janela de replay curta)</text>
+  <text x="35" y="320" font-family="sans-serif" font-size="12" fill="#333">③ id já foi processado?  →  descarta duplicata (anti-replay dentro da janela) — mesma ideia da idempotência</text>
+  <text x="35" y="342" font-family="sans-serif" font-size="12" fill="#333">④ só então processa o efeito de negócio</text>
+  <text x="35" y="366" font-family="sans-serif" font-size="11" fill="#b91c1c">Sem ②③, um atacante que capturou UMA mensagem legítima a reenvia mil vezes: assinatura perfeita, efeito duplicado.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Webhook assinado com HMAC, timestamp e id único. A assinatura prova origem e integridade; timestamp e id impedem o replay de mensagens legítimas capturadas.</p>
+</div><p><strong>HMAC</strong> (<em>Hash-based Message Authentication Code</em>) é uma assinatura construída com um segredo compartilhado: só quem conhece <code>S</code> consegue produzir um <code>sig</code> válido para aquele conteúdo, e qualquer alteração de um byte muda o <code>sig</code>. Duas sutilezas de implementação que já derrubaram sistemas de verdade: <strong>comparar o <code>sig</code> em tempo constante</strong> (uma comparação <code>==</code> normal termina no primeiro byte diferente, e o tempo de resposta vaza informação byte a byte — o <em>timing attack</em>); e <strong>assinar o timestamp junto</strong>, porque um <code>sig</code> que cobre só o body permite que o atacante reenvie a mensagem <em>para sempre</em>. O <strong>replay</strong> — reenviar uma mensagem legítima capturada — é o ataque que a criptografia sozinha não vê, porque a mensagem <em>é</em> autêntica; só o contexto (tempo e unicidade) a denuncia. Percebam o parentesco com o mecanismo de <strong>chave de idempotência</strong>, que impede que uma mesma intenção produza efeito duplo: aqui, a mesma ideia serve à segurança.</p>
+<p>Quando o parceiro é regulatório (o SPI), o padrão sobe de nível: em vez de segredo compartilhado, usa-se <strong>assinatura digital com certificado</strong> — a mensagem é assinada com a chave privada da TechPix (guardada no HSM) e o BACEN verifica com o certificado público. A diferença é o <strong>não-repúdio</strong>: com segredo compartilhado, qualquer das duas partes <em>poderia</em> ter gerado o HMAC; com assinatura assimétrica, só o dono da chave privada poderia — o que vale como prova.</p>
+<p>Por fim, <strong>limitação de taxa</strong> (<em>rate limiting</em>) é controle de segurança e de disponibilidade ao mesmo tempo: limita quantas requisições cada <em>identidade</em> (não só cada IP) pode fazer numa janela, protegendo contra força bruta em login, enumeração de chaves Pix e esgotamento de capacidade. O algoritmo clássico é o <em>token bucket</em>: cada cliente tem um balde com N fichas que se reabastece a taxa fixa; cada requisição gasta uma; balde vazio, requisição recusada com <code>429</code>. Um detalhe específico de fintech: limitar por <strong>identidade autenticada e por operação</strong> (5 tentativas de consulta de chave Pix por minuto, por exemplo) e não só por IP — o atacante distribuído troca de IP, mas não troca de conta.</p>
+<h3>6.4 A cadeia de suprimentos: o código que você não escreveu</h3>
+<p>Um serviço moderno é 10% código próprio e 90% dependências — bibliotecas, imagens de container base, ferramentas de build. Cada uma é código <strong>de terceiros rodando com os privilégios do seu serviço</strong>, dentro da sua fronteira de confiança. Um atacante que compromete uma biblioteca popular — ou publica uma com nome parecido (<em>typosquatting</em>) — executa código dentro do Pagamentos sem tocar em uma linha da TechPix. As defesas são de processo e de artefato:</p>
+<ul>
+<li><strong>SBOM</strong> (<em>Software Bill of Materials</em>): o inventário de tudo que compõe cada imagem. Quando uma vulnerabilidade nova é anunciada numa biblioteca, a pergunta &quot;estamos expostos?&quot; passa a ser uma consulta de segundos, e não uma caça de dias.</li>
+<li><strong>Assinatura e verificação de artefatos:</strong> a imagem é assinada no pipeline de build, e o cluster <strong>só executa imagem com assinatura válida</strong> da sua própria cadeia. Uma imagem adulterada ou fabricada por fora do pipeline é recusada na admissão.</li>
+<li><strong>Versões fixadas e repositório interno:</strong> dependências com versão e <em>hash</em> travados, vindas de um espelho interno, sem &quot;puxe a mais recente&quot; em produção.</li>
+<li><strong>Menor imagem possível:</strong> menos software na imagem, menos superfície de ataque (imagens <em>distroless</em>, sem shell nem gerenciador de pacotes).</li>
+<li><strong>Isolamento como rede de segurança:</strong> se, apesar de tudo, um workload é comprometido, as políticas de §4 e o mínimo privilégio limitam o alcance.</li>
+</ul>
+<p>Repare que esta seção termina exatamente onde a §4 começou: <strong>você não consegue impedir todo comprometimento — você desenha para que ele custe pouco.</strong> É a mudança de mentalidade de &quot;impedir a invasão&quot; para &quot;assumir a invasão&quot; (<em>assume breach</em>), e ela organiza o resto da aula.</p>
+<hr>
+<h2>7. O antifraude como controle de segurança</h2>
+<p>Até aqui, todos os controles respondem a uma pergunta binária sobre <strong>permissão</strong>: <em>&quot;este sujeito pode fazer isto?&quot;</em> Mas a linha mais perigosa do nosso quadro de adversários não viola nenhuma permissão. O <strong>golpista de engenharia social</strong> convence a própria Ana a fazer um Pix &quot;urgente&quot; para uma &quot;conta segura&quot; — a Ana está autenticada com MFA, é dona da conta, o valor está dentro do limite, a assinatura da transação é impecável. <strong>Todos os controles da §2 à §6 dizem &quot;sim&quot;, e o dinheiro está sendo roubado.</strong> O que falta é um controle que faça uma pergunta diferente: não <em>&quot;pode?&quot;</em>, mas <em>&quot;isso parece certo?&quot;</em>. É o <strong>antifraude</strong>: uma camada de decisão baseada em <strong>risco</strong>, não em permissão.</p>
+<h3>7.1 O que ele enxerga: sinais</h3>
+<p>Antifraude é um sistema de inferência sobre <strong>sinais</strong> — evidências de contexto, cada uma fraca sozinha, forte em combinação:</p>
+<table>
+<thead>
+<tr>
+<th>Família de sinal</th>
+<th>Exemplos</th>
+<th>O que denuncia</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Dispositivo</strong></td>
+<td>Aparelho novo, emulador, root/jailbreak, app adulterado</td>
+<td>Account takeover; automação</td>
+</tr>
+<tr>
+<td><strong>Comportamento</strong></td>
+<td>Velocidade de digitação, padrão de navegação, hora habitual</td>
+<td>Sessão operada por outra pessoa ou por script</td>
+</tr>
+<tr>
+<td><strong>Velocidade (<em>velocity</em>)</strong></td>
+<td>N Pix em M minutos; soma nas últimas horas</td>
+<td>Esvaziamento rápido de conta</td>
+</tr>
+<tr>
+<td><strong>Relacionamento</strong></td>
+<td>Destinatário novo, primeiro Pix, valor atípico para o histórico</td>
+<td>Golpe; conta laranja</td>
+</tr>
+<tr>
+<td><strong>Grafo</strong></td>
+<td>Destinatário recebe de dezenas de contas novas e repassa imediatamente</td>
+<td>Conta laranja (mula) numa rede de dispersão</td>
+</tr>
+<tr>
+<td><strong>Contexto da sessão</strong></td>
+<td>Chamada de telefone ativa durante o Pix, acesso remoto ao aparelho, cola de chave</td>
+<td>Coação / engenharia social em curso</td>
+</tr>
+</tbody></table>
+<h3>7.2 Como decide: do sinal à ação</h3>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 380" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9f-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a9f-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+    <marker id="a9f-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d4a017"/>
+    </marker>
+    <marker id="a9f-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <rect x="20" y="20" width="140" height="70" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="90" y="50" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Pedido de Pix</text>
+  <text x="90" y="68" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">valor, destino, sessão</text>
+  <rect x="200" y="20" width="200" height="70" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="300" y="46" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Enriquecimento (features)</text>
+  <text x="300" y="64" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">histórico 24h · device · grafo</text>
+  <text x="300" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">leitura em cache (~ms)</text>
+  <rect x="440" y="20" width="190" height="70" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="535" y="46" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">Motor de decisão</text>
+  <text x="535" y="64" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">regras (determinísticas)</text>
+  <text x="535" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">+ modelo (score 0–1)</text>
+  <rect x="670" y="20" width="210" height="70" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="775" y="46" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#1a1a1a">Decisão em ~100 ms</text>
+  <text x="775" y="64" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">tem que caber no orçamento</text>
+  <text x="775" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">de latência do Pix</text>
+  <line x1="160" y1="55" x2="198" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#a9f-arrow)"/>
+  <line x1="400" y1="55" x2="438" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#a9f-arrow)"/>
+  <line x1="630" y1="55" x2="668" y2="55" stroke="#4338ca" stroke-width="2" marker-end="url(#a9f-arrow)"/>
+  <line x1="775" y1="90" x2="775" y2="130" stroke="#888" stroke-width="1.5"/>
+  <line x1="150" y1="130" x2="775" y2="130" stroke="#888" stroke-width="1.5"/>
+  <line x1="150" y1="130" x2="150" y2="160" stroke="#166534" stroke-width="2" marker-end="url(#a9f-green)"/>
+  <line x1="450" y1="130" x2="450" y2="160" stroke="#d4a017" stroke-width="2" marker-end="url(#a9f-amber)"/>
+  <line x1="750" y1="130" x2="750" y2="160" stroke="#b91c1c" stroke-width="2" marker-end="url(#a9f-red)"/>
+  <rect x="30" y="162" width="240" height="90" rx="8" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+  <text x="150" y="188" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">ALLOW · risco baixo</text>
+  <text x="150" y="208" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">segue direto, sem fricção</text>
+  <text x="150" y="226" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">(a grande maioria do tráfego)</text>
+  <rect x="330" y="162" width="240" height="90" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="450" y="188" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">STEP-UP / RETER · risco médio</text>
+  <text x="450" y="208" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">pede biometria, alerta anti-golpe,</text>
+  <text x="450" y="226" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">atraso de segurança, revisão humana</text>
+  <rect x="630" y="162" width="240" height="90" rx="8" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="750" y="188" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#991b1b">DENY · risco alto</text>
+  <text x="750" y="208" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">recusa, bloqueia a sessão,</text>
+  <text x="750" y="226" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">abre caso para a equipe de fraude</text>
+  <rect x="20" y="280" width="860" height="85" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="450" y="304" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#1a1a1a">O trade-off que não some: fricção × perda</text>
+  <text x="450" y="326" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Falso positivo (bloqueia cliente legítimo) custa confiança e churn. Falso negativo (deixa passar fraude) custa dinheiro irreversível.</text>
+  <text x="450" y="346" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">O limiar do "amarelo" é uma decisão de NEGÓCIO com dado por trás, revisada continuamente — não uma constante no código.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Pipeline de decisão de risco. A saída não é só sim/não: o meio-termo (step-up, reter, alertar) é o que separa antifraude bom de antifraude que ou incomoda todo mundo ou deixa tudo passar.</p>
+</div><p><strong>Regras versus modelo</strong> é uma falsa dicotomia — os dois convivem, por razões diferentes. <strong>Regras</strong> são determinísticas, explicáveis e instantâneas de mudar: &quot;bloqueie Pix acima de R$ 5.000 de aparelho novo nas primeiras 24h&quot; pode entrar em produção em minutos, quando surge um golpe novo, e um auditor consegue ler a regra. <strong>Modelos de aprendizado de máquina</strong> capturam padrões sutis e combinações que ninguém escreveria como regra, mas são probabilísticos, exigem dado rotulado e se degradam quando o comportamento dos golpistas muda (<em>concept drift</em> — o adversário se adapta ao modelo). Na prática: regras cobrem o conhecido e o urgente; o modelo cobre o difuso; e cada decisão precisa ser <strong>explicável</strong> — um bloqueio que a empresa não consegue justificar ao cliente ou ao regulador é um problema jurídico, não só técnico.</p>
+<p>Duas armadilhas específicas de arquitetura. <strong>Primeira: o antifraude está no caminho crítico do pagamento</strong>, então sua latência e disponibilidade entram na conta do orçamento do Pix. Isso leva a uma decisão de projeto que todo sistema financeiro enfrenta, e que precisa ser explícita: quando o antifraude <strong>não responde</strong> a tempo, o sistema <strong>falha aberto</strong> (<em>fail-open</em>: deixa o pagamento passar sem avaliação, aceitando risco de fraude) ou <strong>falha fechado</strong> (<em>fail-closed</em>: recusa, aceitando risco de perder negócio legítimo)? Não existe resposta universal — a saída madura é <strong>graduar por valor</strong>: para valores baixos, fail-open com limite agregado (o risco máximo é conhecido e pequeno); para valores altos, fail-closed. <strong>Segunda: o próprio antifraude é alvo.</strong> Um atacante que descobre o limiar (&quot;abaixo de R$ 1.000 não há step-up&quot;) fraciona o valor em várias transações (<em>structuring</em> / <em>smurfing</em>) — daí a importância de sinais agregados por janela, não só por operação isolada, e de manter as regras exatas fora do alcance de quem sonda.</p>
+<h3>7.3 Limites como controle de dano</h3>
+<p>Complementando o antifraude, os <strong>limites transacionais</strong> funcionam como <strong>disjuntores de prejuízo</strong>: mesmo que tudo o mais falhe, o dano máximo por janela é conhecido. Limite por transação, limite diário, <strong>limite noturno reduzido</strong> (golpes e sequestros se concentram à noite, quando a vítima está menos alerta e mais difícil de contatar) e <strong>limite para conta nova</strong> (contas laranja e fraudes de identidade são mais frequentes nas primeiras semanas). É o mesmo princípio do raio de explosão aplicado ao dinheiro: se um atacante toma uma conta, ele só consegue esvaziar até o limite, e o cliente ganha tempo para reagir. Além disso, permitir que <strong>o próprio cliente reduza seus limites</strong> é um controle de segurança barato e eficaz.</p>
+<p>E, num sistema em que o dinheiro não se recupera sozinho, a defesa <strong>posterior</strong> também é parte do desenho: detecção rápida de padrões de dispersão (a conta laranja que recebe e repassa em segundos), integração com o mecanismo regulatório de devolução em caso de fraude, e cooperação entre instituições. A segurança financeira não termina no &quot;bloquear&quot;: termina no &quot;<strong>recuperar o que der</strong>&quot;.</p>
+<hr>
+<h2>8. O adversário que já tem a chave: insiders e controles humanos</h2>
+<p>Todo o desenho até aqui assume, no fundo, um invasor que precisa <em>entrar</em>. O <strong>insider</strong> — um engenheiro, um operador de suporte, um DBA, um terceirizado — <strong>já está dentro</strong>, com credenciais legítimas, conhecimento do sistema e, muitas vezes, acesso maior que o necessário. Pode ser malicioso (desviar dinheiro), coagido (um golpista o subornou ou ameaçou) ou apenas descuidado (rodou o script errado em produção). Em sistema financeiro, <em>o estrago do descuidado e do malicioso é idêntico</em>: dinheiro que sai sem que devesse.</p>
+<p>Aqui a criptografia e o mTLS pouco ajudam — o insider é uma identidade autêntica. A defesa é <strong>desenhar o processo para que nenhuma pessoa, sozinha, consiga causar dano grave sem ser notada</strong>. São quatro controles complementares:</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 420" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9i-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a9i-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#166534"/>
+    </marker>
+  </defs>
+  <rect x="20" y="15" width="420" height="185" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="230" y="40" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#3730a3">1. Maker-checker (quatro olhos)</text>
+  <rect x="40" y="60" width="110" height="46" rx="6" fill="#fff" stroke="#4338ca"/>
+  <text x="95" y="80" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Operador A</text>
+  <text x="95" y="95" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">PROPÕE (maker)</text>
+  <rect x="180" y="60" width="90" height="46" rx="6" fill="#fef9e7" stroke="#d4a017"/>
+  <text x="225" y="80" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Pendente</text>
+  <text x="225" y="95" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">nada executa</text>
+  <rect x="300" y="60" width="120" height="46" rx="6" fill="#fff" stroke="#166534"/>
+  <text x="360" y="80" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#333">Operador B</text>
+  <text x="360" y="95" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">APROVA (checker)</text>
+  <line x1="150" y1="83" x2="178" y2="83" stroke="#4338ca" stroke-width="2" marker-end="url(#a9i-arrow)"/>
+  <line x1="270" y1="83" x2="298" y2="83" stroke="#4338ca" stroke-width="2" marker-end="url(#a9i-arrow)"/>
+  <text x="35" y="135" font-family="sans-serif" font-size="11" fill="#333">Regra dura: B ≠ A, verificado pelo sistema,</text>
+  <text x="35" y="151" font-family="sans-serif" font-size="11" fill="#333">não por combinação verbal.</text>
+  <text x="35" y="177" font-family="sans-serif" font-size="11" fill="#333">Para: ajuste manual de saldo, alteração de limite,</text>
+  <text x="35" y="192" font-family="sans-serif" font-size="11" fill="#333">liberação de valor retido, mudança de chave de assinatura.</text>
+  <rect x="460" y="15" width="420" height="185" rx="10" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="670" y="40" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#166534">2. Acesso JIT (just-in-time)</text>
+  <text x="475" y="68" font-family="sans-serif" font-size="11" fill="#333">Ninguém tem acesso permanente à produção.</text>
+  <text x="475" y="90" font-family="sans-serif" font-size="11" fill="#333">Precisa? Pede → justifica (ticket) → aprovador → recebe</text>
+  <text x="475" y="106" font-family="sans-serif" font-size="11" fill="#333">credencial com TTL de 1h → expira sozinha → tudo gravado.</text>
+  <text x="475" y="136" font-family="sans-serif" font-size="11" fill="#333">O privilégio "de repouso" é zero; o de trabalho é temporário.</text>
+  <text x="475" y="162" font-family="sans-serif" font-size="11" fill="#b91c1c">Sem isso, cada conta de engenheiro é um alvo de valor</text>
+  <text x="475" y="178" font-family="sans-serif" font-size="11" fill="#b91c1c">permanente — e a única coisa entre o atacante e produção.</text>
+  <rect x="20" y="215" width="420" height="190" rx="10" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="230" y="240" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#7a5c00">3. Segregação de funções</text>
+  <text x="35" y="268" font-family="sans-serif" font-size="11" fill="#333">Quem escreve o código ≠ quem aprova o deploy.</text>
+  <text x="35" y="288" font-family="sans-serif" font-size="11" fill="#333">Quem opera o ledger ≠ quem concilia o ledger.</text>
+  <text x="35" y="308" font-family="sans-serif" font-size="11" fill="#333">Quem administra o banco ≠ quem administra as chaves.</text>
+  <text x="35" y="328" font-family="sans-serif" font-size="11" fill="#333">Quem cria um usuário ≠ quem lhe atribui permissão.</text>
+  <text x="35" y="356" font-family="sans-serif" font-size="11" fill="#666">Princípio: para cometer fraude interna,</text>
+  <text x="35" y="372" font-family="sans-serif" font-size="11" fill="#666">seria preciso o CONLUIO de pessoas de funções distintas —</text>
+  <text x="35" y="388" font-family="sans-serif" font-size="11" fill="#666">o que sobe o custo e o risco de ser descoberto.</text>
+  <rect x="460" y="215" width="420" height="190" rx="10" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="670" y="240" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#991b1b">4. Break-glass (vidro de emergência)</text>
+  <text x="475" y="268" font-family="sans-serif" font-size="11" fill="#333">Sempre haverá um incidente às 3h em que o fluxo</text>
+  <text x="475" y="284" font-family="sans-serif" font-size="11" fill="#333">normal de aprovação é lento demais. A saída NÃO é</text>
+  <text x="475" y="300" font-family="sans-serif" font-size="11" fill="#333">manter uma conta-mestra permanente. É um acesso de</text>
+  <text x="475" y="316" font-family="sans-serif" font-size="11" fill="#333">emergência que:</text>
+  <text x="475" y="336" font-family="sans-serif" font-size="11" fill="#333">• dispara alerta imediato para a segurança</text>
+  <text x="475" y="352" font-family="sans-serif" font-size="11" fill="#333">• grava a sessão inteira (comandos, telas)</text>
+  <text x="475" y="368" font-family="sans-serif" font-size="11" fill="#333">• expira em minutos e exige revisão obrigatória depois</text>
+  <text x="475" y="388" font-family="sans-serif" font-size="11" fill="#666">Usá-lo é possível — usá-lo em silêncio, não.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Quatro controles humanos. Todos tratam pessoas como o que elas são: identidades com poder, sujeitas a erro, coação e má-fé — e por isso vigiadas pelo desenho, não pela confiança.</p>
+</div><p><strong>Uma observação de honestidade cultural.</strong> Esses controles têm um custo real: fricção, lentidão, ressentimento (&quot;vocês não confiam em mim?&quot;). A resposta madura é reenquadrar: o quatro-olhos não é desconfiança <em>da pessoa</em> — é proteção <em>da pessoa</em>. Num sistema sem ele, se um valor some, <strong>todos</strong> os que tinham acesso são suspeitos; num sistema com ele, a trilha mostra exatamente quem fez o quê e quem aprovou. Os controles protegem o inocente tanto quanto barram o culpado.</p>
+<hr>
+<h2>9. Auditoria: provar, não apenas registrar</h2>
+<p>Chegamos à pergunta que amarra tudo: <strong>&quot;como provamos que o <code>cli-5519</code> tentou usar a <code>acc-2207</code>, e que o sistema o barrou?&quot;</strong> — ou, no caso ruim, <strong>&quot;como provamos quem aprovou aquele ajuste de saldo de R$ 80.000?&quot;</strong> Se a resposta depende de &quot;vamos olhar os logs&quot;, provavelmente não há prova nenhuma.</p>
+<h3>9.1 Log de aplicação não é trilha de auditoria</h3>
+<p>São artefatos com propósitos diferentes, e confundi-los é um erro clássico:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Log de aplicação</strong></th>
+<th><strong>Trilha de auditoria</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Serve para</strong></td>
+<td>Depurar, operar, entender falhas</td>
+<td>Provar quem fez o quê, quando, com que resultado</td>
+</tr>
+<tr>
+<td><strong>Público</strong></td>
+<td>Engenheiros, plantão</td>
+<td>Segurança, compliance, reguladores, jurídico</td>
+</tr>
+<tr>
+<td><strong>Conteúdo</strong></td>
+<td>O que o programador achou útil imprimir</td>
+<td>Estrutura <em>obrigatória</em>: sujeito, ação, recurso, decisão, resultado</td>
+</tr>
+<tr>
+<td><strong>Garantias</strong></td>
+<td>Nenhuma — pode ser truncado, rotacionado, perdido</td>
+<td><strong>Completo, ordenado, imutável, retido por anos</strong></td>
+</tr>
+<tr>
+<td><strong>Amostragem</strong></td>
+<td>Comum (por custo)</td>
+<td><strong>Proibida</strong> — falta um evento, falta a prova</td>
+</tr>
+<tr>
+<td><strong>Pode vazar dado?</strong></td>
+<td>Não deveria; mas acontece</td>
+<td>Contém identificadores; acesso restrito e ele próprio auditado</td>
+</tr>
+</tbody></table>
+<p>Uma trilha de auditoria não é &quot;mais logs&quot;. É um <strong>registro estruturado, obrigatório, com garantias</strong> — e cada evento responde a sete perguntas: <strong>quem</strong> (sujeito e, quando houver, o workload intermediário), <strong>o quê</strong> (ação), <strong>sobre o quê</strong> (recurso), <strong>quando</strong> (timestamp confiável), <strong>de onde</strong> (dispositivo, IP, sessão), <strong>qual foi a decisão</strong> (permitido/negado e <em>por qual regra</em>) e <strong>qual foi o resultado</strong>. Reparem que <strong>negativas são eventos de primeira classe</strong>: o <code>403</code> do Bruno é a evidência mais valiosa de todo o incidente — é a <em>tentativa</em> de ataque, e ela só existe na trilha se alguém decidiu registrá-la.</p>
+<pre><code class="language-json">{
+  &quot;evento&quot;: &quot;PIX_NEGADO_AUTORIZACAO&quot;,
+  &quot;quando&quot;: &quot;2026-09-30T14:22:01.482Z&quot;,
+  &quot;sujeito&quot;: { &quot;id&quot;: &quot;cli-5519&quot;, &quot;acr&quot;: &quot;mfa&quot;, &quot;device&quot;: &quot;dev-a41&quot; },
+  &quot;atuando_via&quot;: &quot;pagamentos-svc&quot;,
+  &quot;acao&quot;: &quot;pix:criar&quot;,
+  &quot;recurso&quot;: { &quot;tipo&quot;: &quot;conta&quot;, &quot;id&quot;: &quot;acc-2207&quot; },
+  &quot;decisao&quot;: &quot;NEGAR&quot;,
+  &quot;regra&quot;: &quot;ContaPolicy.podeMovimentar: titular(acc-2207)=cli-8420 ≠ sujeito&quot;,
+  &quot;correlacao&quot;: { &quot;trace_id&quot;: &quot;9f2c…&quot;, &quot;e2e_id&quot;: null },
+  &quot;seq&quot;: 88231409,
+  &quot;hash_anterior&quot;: &quot;a91f…c3d2&quot;
+}
+</code></pre>
+<h3>9.2 Tornar a trilha à prova de adulteração</h3>
+<p>Uma trilha só tem valor de prova se <strong>ninguém consegue alterá-la sem que se perceba</strong> — inclusive quem administra o sistema. Um invasor esperto (ou um insider) que fez algo indevido tenta, antes de sair, <strong>apagar a própria pegada</strong>. Duas técnicas trabalham juntas:</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 340" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9u-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <text x="450" y="22" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="bold" fill="#3730a3">Cadeia de hashes: cada evento "sela" o anterior</text>
+  <rect x="20" y="40" width="200" height="100" rx="8" fill="#fff" stroke="#4338ca" stroke-width="2"/>
+  <text x="120" y="62" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Evento #1</text>
+  <text x="32" y="84" font-family="monospace" font-size="10" fill="#333">dados: PIX_OK …</text>
+  <text x="32" y="102" font-family="monospace" font-size="10" fill="#333">prev:  0000…</text>
+  <text x="32" y="124" font-family="monospace" font-size="10" fill="#166534">hash1 = H(dados+prev)</text>
+  <rect x="350" y="40" width="200" height="100" rx="8" fill="#fff" stroke="#4338ca" stroke-width="2"/>
+  <text x="450" y="62" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Evento #2</text>
+  <text x="362" y="84" font-family="monospace" font-size="10" fill="#333">dados: NEGADO …</text>
+  <text x="362" y="102" font-family="monospace" font-size="10" fill="#333">prev:  hash1</text>
+  <text x="362" y="124" font-family="monospace" font-size="10" fill="#166534">hash2 = H(dados+hash1)</text>
+  <rect x="680" y="40" width="200" height="100" rx="8" fill="#fff" stroke="#4338ca" stroke-width="2"/>
+  <text x="780" y="62" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#3730a3">Evento #3</text>
+  <text x="692" y="84" font-family="monospace" font-size="10" fill="#333">dados: AJUSTE …</text>
+  <text x="692" y="102" font-family="monospace" font-size="10" fill="#333">prev:  hash2</text>
+  <text x="692" y="124" font-family="monospace" font-size="10" fill="#166534">hash3 = H(dados+hash2)</text>
+  <line x1="220" y1="90" x2="348" y2="90" stroke="#4338ca" stroke-width="2" marker-end="url(#a9u-arrow)"/>
+  <line x1="550" y1="90" x2="678" y2="90" stroke="#4338ca" stroke-width="2" marker-end="url(#a9u-arrow)"/>
+  <rect x="20" y="170" width="860" height="70" rx="8" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="450" y="194" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#991b1b">Se alguém altera ou apaga o Evento #2…</text>
+  <text x="450" y="214" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">hash2 muda → o "prev" do #3 deixa de bater → a cadeia quebra dali em diante.</text>
+  <text x="450" y="230" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Adulteração vira detectável — e o ponto exato da quebra aponta o que foi mexido.</text>
+  <rect x="20" y="260" width="860" height="70" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="450" y="284" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#166534">…e o último hash é ANCORADO fora do alcance do administrador</text>
+  <text x="450" y="304" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">armazenamento WORM (write-once, read-many) · conta separada · carimbo de tempo de terceiro · publicação periódica do hash.</text>
+  <text x="450" y="320" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">Sem âncora externa, quem controla o sistema recalcula a cadeia inteira e ninguém vê.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Trilha inviolável: encadeamento por hash torna a adulteração evidente; ancoragem externa (WORM) impede que o próprio dono do sistema reescreva a história.</p>
+</div><p>A <strong>cadeia de hashes</strong> torna a adulteração <em>evidente</em>: como cada evento inclui o hash do anterior, mexer no passado obriga a recalcular tudo dali em diante. Mas quem administra o sistema pode recalcular. Por isso a segunda peça: <strong>ancorar</strong> o estado da cadeia num lugar que o administrador não controla — armazenamento <strong>WORM</strong> (<em>write once, read many</em>, que fisicamente recusa sobrescrita), numa conta separada da operação, com verificação periódica automatizada. Note o encaixe com a §8: a <strong>segregação de funções</strong> vale também aqui — <em>quem opera o sistema não administra a trilha de auditoria dele.</em> A mesma cadeia de hashes é, aliás, a base do próprio ledger contábil; auditar a segurança e auditar o dinheiro são o mesmo problema estrutural.</p>
+<p>Um último ponto de tensão, para fechar o ciclo com a §5: a trilha contém identificadores de pessoas, então <strong>ela própria é dado pessoal</strong> — sujeita a acesso restrito, a auditoria dos acessos à auditoria (sim, isso é recursivo e é necessário), e a mascaramento. Registrar <em>que</em> <code>cli-5519</code> fez algo com <code>acc-2207</code> é diferente de registrar o CPF do cliente. <strong>Identificadores estáveis, não dados sensíveis.</strong></p>
+<hr>
+<h2>10. Detectar, responder e transformar decisões em regras que não regridem</h2>
+<h3>10.1 Assumir o comprometimento: detecção e resposta</h3>
+<p>Toda a §4 e §6 terminaram com a mesma ideia: <strong>o comprometimento vai acontecer; o que decide o tamanho do incidente é a rapidez de detecção e a limitação do alcance.</strong> A indústria mede isso em duas métricas: <strong>MTTD</strong> (<em>mean time to detect</em> — quanto tempo um invasor fica lá antes de ser visto) e <strong>MTTR</strong> (<em>mean time to respond</em> — quanto até estar contido). Em incidente financeiro, cada minuto de MTTD é dinheiro que sai; a diferença entre 5 minutos e 5 dias é a diferença entre um incidente e uma falência.</p>
+<p>A detecção se apoia no que já construímos: a <strong>trilha de auditoria</strong> (§9) alimenta um <strong>SIEM</strong> (<em>Security Information and Event Management</em>) — o sistema que correlaciona eventos de todas as fontes e dispara alertas. Exemplos de regras que fazem sentido <em>nesta</em> arquitetura:</p>
+<ul>
+<li>Rajada de <code>PIX_NEGADO_AUTORIZACAO</code> de um mesmo sujeito → alguém está sondando IDs (BOLA em andamento).</li>
+<li>Uso do <strong>break-glass</strong> ou de acesso JIT fora do horário → revisão imediata.</li>
+<li>Um workload fazendo chamada <strong>negada por policy</strong> que nunca fez antes → possível movimento lateral.</li>
+<li>Uso da chave de assinatura no KMS fora do padrão de volume → possível abuso da chave.</li>
+<li>Um segredo <strong>negado</strong> ou uma credencial dinâmica pedida de um IP incomum.</li>
+</ul>
+<p>Note a elegância: os controles de <strong>prevenção</strong> (policy, autorização) geram, ao negar, o <strong>sinal</strong> que a <strong>detecção</strong> consome. Um controle que apenas bloqueia é meio controle; um que bloqueia <em>e</em> alerta é um sensor.</p>
+<h3>10.2 O runbook do incidente</h3>
+<p>Resposta a incidente improvisada às 3h da manhã produz decisões ruins. O processo precisa estar <strong>escrito e ensaiado</strong>:</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 280" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9d-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <rect x="15" y="30" width="150" height="120" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="2"/>
+  <text x="90" y="55" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#7a5c00">1. Detectar</text>
+  <text x="90" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">alerta do SIEM /</text>
+  <text x="90" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">antifraude / cliente</text>
+  <text x="90" y="114" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#666">classifica a gravidade</text>
+  <rect x="185" y="30" width="150" height="120" rx="8" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="260" y="55" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#991b1b">2. Conter</text>
+  <text x="260" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">revogar tokens/sessões,</text>
+  <text x="260" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">isolar workload, travar</text>
+  <text x="260" y="106" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">conta, girar segredo</text>
+  <rect x="355" y="30" width="150" height="120" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="430" y="55" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#3730a3">3. Erradicar</text>
+  <text x="430" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">achar a causa-raiz,</text>
+  <text x="430" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">corrigir a falha,</text>
+  <text x="430" y="106" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">remover persistência</text>
+  <rect x="525" y="30" width="150" height="120" rx="8" fill="#f0fdf4" stroke="#166534" stroke-width="2"/>
+  <text x="600" y="55" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#166534">4. Recuperar</text>
+  <text x="600" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">restaurar serviço,</text>
+  <text x="600" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">acionar devolução dos</text>
+  <text x="600" y="106" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">valores, reconciliar</text>
+  <rect x="695" y="30" width="190" height="120" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="790" y="55" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">5. Comunicar + aprender</text>
+  <text x="790" y="78" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">notificar regulador e</text>
+  <text x="790" y="92" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">titulares nos prazos legais,</text>
+  <text x="790" y="106" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">post-mortem sem culpados,</text>
+  <text x="790" y="120" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#333">virar teste automatizado</text>
+  <line x1="165" y1="90" x2="183" y2="90" stroke="#4338ca" stroke-width="2" marker-end="url(#a9d-arrow)"/>
+  <line x1="335" y1="90" x2="353" y2="90" stroke="#4338ca" stroke-width="2" marker-end="url(#a9d-arrow)"/>
+  <line x1="505" y1="90" x2="523" y2="90" stroke="#4338ca" stroke-width="2" marker-end="url(#a9d-arrow)"/>
+  <line x1="675" y1="90" x2="693" y2="90" stroke="#4338ca" stroke-width="2" marker-end="url(#a9d-arrow)"/>
+  <rect x="15" y="180" width="870" height="85" rx="8" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="450" y="204" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#7a5c00">Contenção só é rápida se foi PROJETADA antes</text>
+  <text x="450" y="224" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">É possível revogar em minutos porque: tokens são curtos, segredos são dinâmicos, policies são código (dá para negar por PR),</text>
+  <text x="450" y="242" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#333">workloads têm identidade própria (dá para isolar um sem parar os outros). Cada decisão das seções anteriores paga aqui.</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">O ciclo de resposta. A velocidade da contenção é decidida meses antes do incidente, no desenho.</p>
+</div><p>Um ponto regulatório, sem entrar em detalhe que muda: instituições financeiras brasileiras estão sujeitas a <strong>normas de política de segurança cibernética</strong> do Conselho Monetário Nacional e do Banco Central, que exigem, entre outras coisas, plano de resposta a incidentes, registro e análise de incidentes relevantes, controles de acesso, testes periódicos e comunicação de incidentes relevantes ao regulador; e a <strong>LGPD</strong> obriga a comunicar incidentes com risco relevante à autoridade (ANPD) e aos titulares em prazo razoável. <strong>Os textos e prazos exatos mudam — consultem a versão vigente e o jurídico</strong>; o que a arquitetura precisa garantir é a <em>capacidade</em>: saber rapidamente <strong>quais dados foram afetados</strong>, <strong>de quem</strong>, <strong>desde quando</strong> — e isso só é possível com trilha de auditoria completa (§9) e inventário de dados (§5).</p>
+<h3>10.3 Segurança que regride não é segurança: security fitness functions</h3>
+<p>Voltamos ao começo. O bug do Bruno foi corrigido — mas o que impede que alguém, seis meses depois, num refactor apressado, crie um endpoint novo <code>POST /pix/agendado</code> que recebe <code>contaOrigemId</code> <strong>sem</strong> a checagem? Nada, exceto a memória de quem viveu o incidente — e pessoas saem da empresa. <strong>Decisão arquitetural que não é verificável automaticamente é uma sugestão.</strong></p>
+<p>Uma <strong>fitness function</strong> é um teste automatizado que verifica se o sistema ainda possui uma propriedade arquitetural desejada. As <strong>security fitness functions</strong> transformam cada decisão desta aula em regra que <strong>quebra o build</strong> quando violada:</p>
+<table>
+<thead>
+<tr>
+<th>Decisão de arquitetura</th>
+<th>Fitness function (roda no CI ou em produção)</th>
+<th>O que falha se regredir</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Todo endpoint com ID de objeto autoriza ownership</td>
+<td>Teste de arquitetura: métodos de controller com parâmetro <code>*Id</code> sem <code>@PreAuthorize</code>/policy → falha</td>
+<td>Novo endpoint sem checagem (BOLA de volta)</td>
+</tr>
+<tr>
+<td>Ownership realmente barra estranhos</td>
+<td>Suíte adversarial: para cada endpoint, &quot;usuário A × objeto de B&quot; deve dar <code>403</code> <strong>e</strong> efeito zero</td>
+<td>Autorização quebrada por refactor</td>
+</tr>
+<tr>
+<td>Token com <code>aud</code>/<code>exp</code>/<code>iss</code> corretos</td>
+<td>Testes: token expirado, audiência errada, emissor desconhecido, <code>alg=none</code> → todos <code>401</code></td>
+<td>Validação de JWT afrouxada</td>
+</tr>
+<tr>
+<td>Escopo mínimo</td>
+<td>Token com escopo insuficiente → <code>403</code></td>
+<td>Endpoint aceitando escopo &quot;*&quot;</td>
+</tr>
+<tr>
+<td>Workload só fala com quem deve</td>
+<td>Teste de policy: Notificações → Antifraude é <strong>negado</strong>; Pagamentos → Antifraude <code>/avaliar</code> é <strong>permitido</strong></td>
+<td>Policy frouxa demais</td>
+</tr>
+<tr>
+<td>Nenhum segredo no repositório</td>
+<td>Scanner de segredos no CI; bloqueia PR</td>
+<td>Credencial em <code>application.yml</code></td>
+</tr>
+<tr>
+<td>Nenhum dado sensível em log</td>
+<td>Teste que dispara fluxo real e varre logs/traces por padrões (CPF, <code>Bearer</code>, número de cartão)</td>
+<td>Vazamento por observabilidade</td>
+</tr>
+<tr>
+<td>Imagem só de origem confiável</td>
+<td>Verificação de assinatura na admissão do cluster; SBOM sem CVE crítica</td>
+<td>Dependência comprometida em produção</td>
+</tr>
+<tr>
+<td>Trilha de auditoria íntegra</td>
+<td>Job periódico verifica a cadeia de hashes e a âncora WORM</td>
+<td>Adulteração do histórico</td>
+</tr>
+<tr>
+<td>Rotação de segredos funciona</td>
+<td>Exercício automatizado: rotaciona em ambiente de teste e verifica que nada quebrou</td>
+<td>Rotação que &quot;nunca foi testada&quot;</td>
+</tr>
+</tbody></table>
+<p>Reparem em algo importante na tabela: <strong>as fitness functions cobrem tanto o que falha <em>silenciosamente</em> quanto o que falha <em>ruidosamente</em>.</strong> O <code>403</code> errado (deveria ser 200) é barulhento; o <code>200</code> errado (deveria ser 403) é silencioso — e é exatamente o perigoso. Por isso a suíte <strong>adversarial</strong> — que assume o papel do atacante e verifica que o ataque <em>falha</em> — é o coração da lista: a maioria dos testes escritos por desenvolvedores verifica que <strong>o caminho feliz funciona</strong>; a segurança vive no <em>caminho infeliz</em>, que ninguém testa por hábito.</p>
+<p>E o último passo do ciclo de incidente (§10.2, etapa 5) fecha o laço: <strong>todo incidente real vira uma linha nesta tabela.</strong> O incidente do Bruno gerou a primeira. É assim que a segurança da TechPix <em>acumula</em> — cada falha vira imunidade permanente, em vez de lembrança.</p>
+<hr>
+<h2>11. Trade-offs: segurança tem custo, e o arquiteto é quem o negocia</h2>
+<p>Seria desonesto encerrar sem a parte que todo material de segurança omite: <strong>cada controle desta aula custa alguma coisa.</strong> Segurança absoluta não existe; existe segurança <em>proporcional ao risco</em>, e a função do arquiteto é tornar os custos visíveis para que sejam escolhidos, não sofridos.</p>
+<table>
+<thead>
+<tr>
+<th>Controle</th>
+<th>Custo real</th>
+<th>Onde dói</th>
+<th>Como mitigar</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>mTLS + mesh</strong></td>
+<td>+1–3 ms por salto; memória/CPU por pod; complexidade operacional</td>
+<td>Caminho crítico com orçamento de latência apertado (Pix)</td>
+<td>Reuso de conexão; mesh <em>ambient</em>; mTLS só nos serviços críticos</td>
+</tr>
+<tr>
+<td><strong>Autorização por recurso</strong></td>
+<td>Uma consulta extra a cada operação</td>
+<td>Endpoints de alto volume</td>
+<td>Cache curto e invalidável do vínculo titular–conta; resposta no mesmo serviço</td>
+</tr>
+<tr>
+<td><strong>Antifraude em linha</strong></td>
+<td>Até ~100 ms no caminho crítico; falsos positivos</td>
+<td>Experiência do cliente; conversão</td>
+<td>Cache de <em>features</em>; graduar por valor; step-up em vez de bloquear</td>
+</tr>
+<tr>
+<td><strong>Step-up / MFA</strong></td>
+<td>Fricção; abandono</td>
+<td>Pagamentos frequentes de baixo valor</td>
+<td>Exigir só acima de risco; confiança em device conhecido</td>
+</tr>
+<tr>
+<td><strong>Token curto</strong></td>
+<td>Mais renovações; carga no servidor de identidade</td>
+<td>Picos de tráfego</td>
+<td>Refresh token; cache de chaves públicas para validação local</td>
+</tr>
+<tr>
+<td><strong>KMS por operação</strong></td>
+<td>Latência e dependência de disponibilidade do KMS</td>
+<td>Cada leitura de campo cifrado</td>
+<td>Envelope encryption; cache curto de DEK em memória</td>
+</tr>
+<tr>
+<td><strong>Quatro olhos / JIT</strong></td>
+<td>Lentidão em operações legítimas; ressentimento</td>
+<td>Resposta a incidente</td>
+<td>Break-glass com alerta; automação da aprovação rotineira</td>
+</tr>
+<tr>
+<td><strong>Auditoria completa</strong></td>
+<td>Volume de armazenamento; retenção de anos</td>
+<td>Custo de infraestrutura</td>
+<td>Camadas quente/fria; compressão; retenção por classe</td>
+</tr>
+</tbody></table>
+<p>E dois <strong>princípios de decisão</strong> que atravessam a tabela:</p>
+<ol>
+<li><strong>Proporcionalidade ao risco.</strong> O rigor de cada controle deve acompanhar o dano possível. Consultar saldo não merece o mesmo peso que criar um Pix de R$ 50.000 para destinatário novo às 3h. Um sistema em que <em>tudo</em> exige step-up treina o usuário a aprovar sem ler — e isso derrota o controle.</li>
+<li><strong>Falhar de forma previsível.</strong> Todo controle precisa ter uma resposta decidida para &quot;e se ele mesmo falhar?&quot; — o <strong>fail-open/fail-closed</strong> da §7 generaliza. O KMS indisponível: recusar a operação (fail-closed) ou operar com DEK em cache por N minutos? A CA do mesh caiu: os pods continuam se falando com certificados ainda válidos, mas quando expirarem…? <strong>Decida antes do incidente, em ADR, com números.</strong></li>
+</ol>
+<h3>11.1 Registrando a decisão: ADR-004</h3>
+<p>Fechando no ritual do curso — uma decisão arquitetural registrada de forma que o próximo engenheiro entenda <em>por quê</em>:</p>
+<pre><code class="language-markdown"># ADR-004 — Modelo de identidade e autorização da TechPix
+
+Status: Aceito · Data: 2026-09-30
+
+## Contexto
+Incidente BOLA: usuário autenticado moveu recurso de terceiro com JWT válido.
+Novo tráfego leste-oeste entre workloads sem autenticação de peer.
+
+## Decisão
+1. Autorização por recurso obrigatória em todo endpoint que aceita ID de objeto
+   (ownership como piso; ABAC para limites contextuais; RBAC só para back-office).
+2. Sujeito SEMPRE derivado do token; nunca do body.
+3. Identidade de workload via certificado de vida curta (SPIFFE); mTLS entre
+   serviços; token M2M com escopo mínimo; Token Exchange quando age em nome de usuário.
+4. Default-deny em policy de plataforma; Kafka com ACL por tópico.
+5. Segredos dinâmicos em cofre; proibido segredo estático em código/imagem/log.
+6. Dados pessoais cifrados por titular (envelope encryption; crypto-shredding).
+7. Trilha de auditoria estruturada, encadeada por hash, ancorada em WORM.
+8. Cada controle acima com fitness function no CI.
+
+## Consequências
++ Raio de explosão de qualquer comprometimento limitado por desenho.
++ Contenção em minutos (tokens curtos, segredos dinâmicos, policy como código).
+− +1–3 ms/salto (mTLS); consulta extra de ownership; operação do mesh/KMS.
+− Fricção de step-up e do quatro-olhos em operações sensíveis.
+
+## Revisão
+Reavaliar o mesh se a latência de p99 do caminho crítico exceder o orçamento
+(alternativa: mTLS via biblioteca só nos serviços críticos), e a cada incidente.
+</code></pre>
+<hr>
+<h2>12. Fechando: um Pix atravessando todas as camadas</h2>
+<p>Para amarrar tudo, sigam um único Pix legítimo — o da irmã do Bruno, R$ 50 — por todos os controles, e depois o Pix malicioso de R$ 4.800. Cada seta é uma pergunta diferente sendo feita, e cada camada assume que a anterior pode ter falhado:</p>
+<div style="margin:24px 0;padding:16px;border:1px solid #ddd;border-radius:10px;background:#fafafa;overflow-x:auto;">
+<svg viewBox="0 0 900 470" style="max-width:100%;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a9z-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+    <marker id="a9z-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <text x="450" y="20" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#1a1a1a">Defesa em profundidade: a mesma requisição, dez perguntas</text>
+  <rect x="20" y="35" width="860" height="42" rx="6" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="35" y="60" font-family="sans-serif" font-size="12" fill="#333"><tspan font-weight="bold">① Edge:</tspan> TLS válido? Rate limit ok? Payload no tamanho e formato esperados?</text>
+  <rect x="20" y="85" width="860" height="42" rx="6" fill="#fef9e7" stroke="#d4a017" stroke-width="1.5"/>
+  <text x="35" y="110" font-family="sans-serif" font-size="12" fill="#333"><tspan font-weight="bold">② Gateway:</tspan> token com assinatura, iss, aud, exp válidos? Escopo grosso pix:create presente?</text>
+  <rect x="20" y="135" width="860" height="42" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="35" y="160" font-family="sans-serif" font-size="12" fill="#333"><tspan font-weight="bold">③ Pagamentos (AuthZ de domínio):</tspan> o sujeito do token é o titular desta conta? (o passo que faltou ao Bruno)</text>
+  <rect x="20" y="185" width="860" height="42" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+  <text x="35" y="210" font-family="sans-serif" font-size="12" fill="#333"><tspan font-weight="bold">④ Pagamentos (contexto):</tspan> valor exige step-up? acr do token basta? assinatura da transação confere?</text>
+  <rect x="20" y="235" width="860" height="42" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="35" y="260" font-family="sans-serif" font-size="12" fill="#333"><tspan font-weight="bold">⑤ Plataforma (mesh):</tspan> Pagamentos apresentou certificado válido? A policy permite Pagamentos → Antifraude /avaliar?</text>
+  <rect x="20" y="285" width="860" height="42" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="35" y="310" font-family="sans-serif" font-size="12" fill="#333"><tspan font-weight="bold">⑥ Antifraude:</tspan> o padrão parece legítimo? device conhecido? destino novo? velocidade normal? → ALLOW / step-up / DENY</text>
+  <rect x="20" y="335" width="860" height="42" rx="6" fill="#f0fdf4" stroke="#166534" stroke-width="1.5"/>
+  <text x="35" y="360" font-family="sans-serif" font-size="12" fill="#333"><tspan font-weight="bold">⑦ Ledger + dados:</tspan> identidade do workload autorizada a debitar? Dado sensível lido via KMS, com uso auditado?</text>
+  <rect x="20" y="385" width="860" height="42" rx="6" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="35" y="410" font-family="sans-serif" font-size="12" fill="#333"><tspan font-weight="bold">⑧ Saída (SPI):</tspan> mensagem assinada com chave do HSM. ⑨ Auditoria: evento imutável, encadeado. ⑩ SIEM: alguma anomalia?</text>
+  <text x="450" y="452" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#b91c1c">O Pix do Bruno de R$ 4.800 morre no ③ com 403 — e, se o ③ tivesse falhado, ainda enfrentaria ④, ⑥ e ⑨/⑩ (limite, antifraude, detecção).</text>
+</svg>
+<p style="text-align:center;color:#777;font-size:13px;margin:8px 0 0;">Nenhuma camada é "a" segurança. Cada uma pega o que a anterior deixaria passar — e o custo de cada uma é aceito porque nenhuma delas é a única barreira.</p>
+</div><p>Para levar para casa, cinco frases:</p>
+<ol>
+<li><strong>Autenticação estabelece identidade; autorização limita poder.</strong> Um token válido diz <em>quem</em>, nunca <em>sobre o quê</em>. O <code>sub</code> vem do token; o objeto, do servidor; a comparação, do domínio.</li>
+<li><strong>Cada workload é um sujeito, com identidade própria e privilégio mínimo.</strong> Credencial global de backend é um único ponto de falha do cluster inteiro; mTLS autentica o canal, policy autoriza a ação — e <strong>nenhum dos dois substitui a regra de negócio</strong>.</li>
+<li><strong>Assuma o comprometimento.</strong> Tokens curtos, segredos dinâmicos, dados cifrados por titular, raio de explosão limitado: você não impede toda invasão, você reduz seu custo e seu tempo de vida.</li>
+<li><strong>Nem toda fraude viola permissão.</strong> O golpe autorizado só cai num controle baseado em <em>risco</em> — e ele é uma decisão de negócio com trade-off explícito entre fricção e perda.</li>
+<li><strong>Provar é mais difícil do que proteger.</strong> Sem trilha imutável, sem fitness functions e sem runbook ensaiado, a segurança é uma crença. <strong>Segurança que não é verificada automaticamente regride.</strong></li>
+</ol>
+<hr>
+<h2>Apêndice — Termos novos desta aula</h2>
+<table>
+<thead>
+<tr>
+<th>Termo</th>
+<th>O que é</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Modelagem de ameaças</strong></td>
+<td>Exercício de mapear ativos, adversários e fronteiras de confiança para decidir onde defender antes de escolher tecnologia.</td>
+</tr>
+<tr>
+<td><strong>Fronteira de confiança</strong></td>
+<td>Linha onde muda o nível de confiança e o controle sobre o dado; tudo que a cruza é entrada não confiável até ser validada.</td>
+</tr>
+<tr>
+<td><strong>Zero Trust</strong></td>
+<td>Premissa de &quot;nunca confie, sempre verifique&quot;: nenhum chamador é confiável só por estar na rede; toda requisição carrega identidade verificada e passa por decisão explícita.</td>
+</tr>
+<tr>
+<td><strong>STRIDE</strong></td>
+<td>Mnemônico de seis categorias de ameaça: Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege.</td>
+</tr>
+<tr>
+<td><strong>AuthN / AuthZ / AAA</strong></td>
+<td>Autenticação (quem é), autorização (o que pode), <em>accountability</em> (prova do que fez).</td>
+</tr>
+<tr>
+<td><strong>JWT</strong></td>
+<td>Token assinado com header, payload (claims) e assinatura; <em>stateless</em>, difícil de revogar antes do <code>exp</code>.</td>
+</tr>
+<tr>
+<td><strong>Claims <code>iss</code>, <code>aud</code>, <code>sub</code>, <code>exp</code>, <code>acr</code></strong></td>
+<td>Emissor, audiência, sujeito, expiração e força da autenticação.</td>
+</tr>
+<tr>
+<td><strong>OAuth 2.0 / OIDC</strong></td>
+<td>OAuth: delegação de acesso a APIs (access token). OIDC: camada de identidade sobre OAuth (ID token).</td>
+</tr>
+<tr>
+<td><strong>PKCE</strong></td>
+<td>Extensão do fluxo <em>authorization code</em> que prova que quem troca o code é quem o pediu, usando um segredo por requisição e seu hash.</td>
+</tr>
+<tr>
+<td><strong>Device binding</strong></td>
+<td>Vincular a sessão a um par de chaves guardado no hardware do aparelho; transforma &quot;este aparelho&quot; em prova criptográfica.</td>
+</tr>
+<tr>
+<td><strong>Step-up authentication</strong></td>
+<td>Exigir autenticação mais forte no momento de uma operação de risco.</td>
+</tr>
+<tr>
+<td><strong>Assinatura de transação / WYSIWYS</strong></td>
+<td>O aparelho assina os campos da operação; o que o usuário vê é o que assina. Dá não-repúdio.</td>
+</tr>
+<tr>
+<td><strong>BOLA / IDOR</strong></td>
+<td>Trocar o identificador de um objeto e acessá-lo sem ser dono; falha de autorização por objeto.</td>
+</tr>
+<tr>
+<td><strong>RBAC / ABAC / ReBAC</strong></td>
+<td>Autorização por papel / por atributos e contexto / por relações entre entidades.</td>
+</tr>
+<tr>
+<td><strong>PEP / PDP</strong></td>
+<td>Ponto que aplica a política / ponto que a decide.</td>
+</tr>
+<tr>
+<td><strong>Confused deputy</strong></td>
+<td>Serviço intermediário usado para ampliar acesso porque o destino não distingue quem realmente pede.</td>
+</tr>
+<tr>
+<td><strong>Client Credentials / Token Exchange</strong></td>
+<td>Identidade M2M própria do serviço / novo token que carrega usuário (<code>sub</code>) e serviço intermediário (<code>act</code>).</td>
+</tr>
+<tr>
+<td><strong>mTLS</strong></td>
+<td>TLS com autenticação nos dois sentidos, por certificados de curta duração.</td>
+</tr>
+<tr>
+<td><strong>SPIFFE</strong></td>
+<td>Padrão de identidade de workload independente de IP (<code>spiffe://dominio/serviço</code>).</td>
+</tr>
+<tr>
+<td><strong>Service mesh</strong></td>
+<td>Plataforma com proxies (data plane) e cérebro (control plane) que entrega mTLS, políticas e telemetria fora do código de negócio.</td>
+</tr>
+<tr>
+<td><strong>Default deny / menor privilégio / raio de explosão</strong></td>
+<td>Tudo proibido até liberado / cada identidade só o necessário / estrago máximo de um comprometimento.</td>
+</tr>
+<tr>
+<td><strong>Envelope encryption (KEK/DEK)</strong></td>
+<td>Chave-mestra que nunca sai do cofre cifra chaves de dados, que cifram o dado.</td>
+</tr>
+<tr>
+<td><strong>HSM / KMS</strong></td>
+<td>Hardware resistente a violação que usa chaves sem revelá-las / serviço de gestão de chaves apoiado nele.</td>
+</tr>
+<tr>
+<td><strong>Tokenização</strong></td>
+<td>Substituir o dado sensível por token sem relação matemática; o real vive num cofre único. Reduz escopo de conformidade.</td>
+</tr>
+<tr>
+<td><strong>Crypto-shredding</strong></td>
+<td>&quot;Apagar&quot; dado pessoal destruindo a chave que o cifra, preservando um ledger imutável.</td>
+</tr>
+<tr>
+<td><strong>Segredo dinâmico</strong></td>
+<td>Credencial gerada sob demanda com TTL curto e acesso mínimo; expira sozinha.</td>
+</tr>
+<tr>
+<td><strong>HMAC / replay / timing attack</strong></td>
+<td>Assinatura por segredo compartilhado / reenvio de mensagem legítima capturada / vazamento por diferença de tempo de comparação.</td>
+</tr>
+<tr>
+<td><strong>SBOM</strong></td>
+<td>Inventário de todos os componentes de uma imagem/artefato.</td>
+</tr>
+<tr>
+<td><strong>Antifraude (score, regras, sinais)</strong></td>
+<td>Decisão por risco em tempo real sobre sinais de dispositivo, comportamento, velocidade e grafo.</td>
+</tr>
+<tr>
+<td><strong>Fail-open / fail-closed</strong></td>
+<td>Quando o controle falha, deixar passar / recusar.</td>
+</tr>
+<tr>
+<td><strong>Conta laranja / structuring</strong></td>
+<td>Conta usada para receber e dispersar produto de fraude / fracionar valores para ficar abaixo de limiares.</td>
+</tr>
+<tr>
+<td><strong>Maker-checker / JIT / segregação / break-glass</strong></td>
+<td>Quatro olhos / acesso temporário sob demanda / funções incompatíveis em pessoas distintas / acesso de emergência ruidoso e temporário.</td>
+</tr>
+<tr>
+<td><strong>Trilha de auditoria / cadeia de hashes / WORM</strong></td>
+<td>Registro estruturado e obrigatório / encadeamento que torna adulteração evidente / armazenamento que recusa sobrescrita.</td>
+</tr>
+<tr>
+<td><strong>SIEM / MTTD / MTTR</strong></td>
+<td>Correlação de eventos e alertas / tempo médio para detectar / tempo médio para conter.</td>
+</tr>
+<tr>
+<td><strong>Security fitness function</strong></td>
+<td>Teste automatizado que verifica que uma propriedade de segurança arquitetural continua valendo; quebra o build quando regride.</td>
+</tr>
+</tbody></table>
+<h2>Apêndice — Fecho e gancho</h2>
+<p>Construímos, nesta aula, uma defesa em camadas para um sistema em que o erro custa dinheiro irreversível: identidade forte, autorização por recurso, identidade de workload, dados cifrados por titular, segredos que expiram, decisão por risco, controle de insiders, auditoria à prova de adulteração e regras automatizadas que impedem a regressão. E, como toda boa arquitetura, cada camada veio com um custo declarado.</p>
+<p>Mas fica um sintoma que <strong>nenhum desses controles resolve</strong> — e que qualquer arquiteto que já operou um sistema com essa quantidade de camadas conhece: agora cada requisição atravessa <strong>proxy, policy, autorização, antifraude, KMS e trilha de auditoria</strong>. Cada uma é rápida. Somadas, são dezenas de saltos e centenas de milissegundos. Quando o cliente disser <em>&quot;o Pix demora&quot;</em>, o painel de segurança estará todo verde — porque segurança verifica se o acesso foi <strong>permitido</strong>, não <strong>quanto tempo cada camada custou</strong>.</p>
+<blockquote>
+<p>Segurança acrescenta camadas. Camadas acrescentam latência. E <strong>latência que ninguém enxerga</strong> não é problema de segurança — é problema de observabilidade.</p>
+</blockquote>
+<hr>
+<p><a href="https://wheslleyrimar.github.io/system-design-fintech/aula8-conteudo-completo">← Aula 8</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/">Índice</a></p>
+
+</main></body></html>
