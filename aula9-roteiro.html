@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aula 9 — Caderno visual de System Design</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+<style>
+:root{
+  --surface-0:#F0EEE6; --surface-1:#ffffff;
+  --text-primary:#1f1e1c; --text-secondary:#5F5E5A; --text-muted:#8a897f;
+  --border:#E4E1D8;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:var(--font-sans);line-height:1.6;}
+.wrap{max-width:920px;margin:0 auto;padding:44px 24px 90px;}
+h1{font-size:36px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em;}
+.sub{color:var(--text-muted);font-size:17px;margin:0 0 18px;}
+h2{font-size:26px;font-weight:600;margin:40px 0 4px;border-top:1px solid var(--border);padding-top:26px;}
+.teach{color:var(--text-secondary);font-size:18px;margin:4px 0 14px;}
+.lead{color:var(--text-secondary);font-size:18px;background:var(--surface-1);border:2px solid var(--border);border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:14px 16px;}
+.fig{margin:6px 0 6px;}
+.cap{font-size:16px;color:var(--text-muted);margin:8px 0 2px;}
+.box{border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:12px;}
+.arrow{display:flex;align-items:center;justify-content:center;color:var(--text-muted);}
+.tag{font-size:17px;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:2px 7px;white-space:nowrap;}
+.chip{font-size:18px;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:5px 9px;display:inline-block;}
+.navlink{font-size:18px;text-decoration:none;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:5px 12px;display:inline-block;border:2px solid var(--border);color:var(--text-secondary);background:var(--surface-1);}
+.navlink:hover{border-color:#534AB7;color:#534AB7;}
+.navlink.active{background:#534AB7;border-color:#534AB7;color:#fff;}
+@media print{ body{background:#fff;} .wrap{padding:0;max-width:none;} .fig,.box{break-inside:avoid;} h2{break-after:avoid;} }
+.grid5{display:grid;grid-template-columns:118px repeat(5,1fr);gap:8px;align-items:stretch;}
+.rowlabel{font-size:17px;color:var(--text-secondary);text-align:right;align-self:center;line-height:1.35;padding-right:6px;}
+.mcard{background:#fff;border:2px solid var(--border);border-radius:3px 9px 5px 8px / 8px 5px 9px 3px;padding:11px;display:flex;flex-direction:column;gap:6px;}
+.mdim{opacity:.55;border-style:dashed;}
+.mactive{border:2px solid #534AB7;}
+.mbadge{width:26px;height:26px;border-radius:50%;background:#D3D1C7;color:#2C2C2A;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:18px;}
+.mtitle{font-size:17px;font-weight:500;line-height:1.25;}
+.gancho{font-style:italic;color:var(--text-secondary);font-size:18px;line-height:1.4;}
+.theme{font-size:17px;color:var(--text-muted);line-height:1.4;}
+.mchip{font-size:18px;line-height:1.35;border-radius:2px 7px 4px 6px / 6px 4px 7px 2px;padding:6px 8px;align-self:center;}
+.chip-fin{background:#E1F5EE;color:#04342C;}
+.chip-ia{background:#EEEDFE;color:#26215C;}
+.lad{display:flex;flex-direction:column;gap:6px;}
+.lrow{display:grid;grid-template-columns:26px 1.3fr 1.7fr auto;gap:10px;align-items:center;background:#fff;border:2px solid var(--border);border-radius:3px 8px 5px 7px / 7px 5px 8px 3px;padding:9px 11px;}
+.lnum{width:22px;height:22px;border-radius:50%;background:#EEEDFE;color:#26215C;font-size:18px;display:flex;align-items:center;justify-content:center;}
+.actors{font-size:18px;color:var(--text-primary);font-weight:500;}
+.act{font-size:18px;color:var(--text-secondary);line-height:1.35;}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   EXCALIDRAW DIAGRAMS — scoped to .fig only
+   v2: page chrome reverted; diagrams get the hand-drawn treatment
+   ================================================================ */
+
+/* ── 1. REVERT PAGE CHROME (undo global bumps) ───────────────── */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important;
+  background-image: none !important;
+}
+h1 { font-size: 27px !important; font-weight: 600 !important;
+     letter-spacing: -.01em !important;
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+h2 { font-size: 20px !important; font-weight: 600 !important;
+     border-top: 1px solid var(--border) !important;
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.sub   { font-size: 14px   !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.teach { font-size: 14.5px !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.lead  { font-size: 15px  !important;
+         border: 1px solid var(--border) !important;
+         border-radius: 12px !important;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important; }
+.lead::before { display: none !important; }
+.navlink {
+  font-size: 12.5px !important;
+  border-radius: 8px !important;
+  border-width: 1px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               Helvetica, Arial, sans-serif !important;
+}
+.navlink.active { background: #534AB7 !important; border-color: #534AB7 !important; color: #fff !important; }
+
+/* Revert .mcard outside .fig (course-map cards in h2/grid area) */
+.mcard          { border: 1px solid var(--border) !important; border-radius: 12px !important; }
+.mcard::before  { display: none !important; }
+.mbadge         { font-size: 12px !important; border: none !important; width: 26px !important; height: 26px !important; }
+.mtitle         { font-size: 14px !important; }
+.gancho         { font-size: 12px !important; }
+.theme          { font-size: 11px !important; }
+.mchip          { font-size: 12px !important; border-radius: 8px !important; border: none !important; }
+.chip-fin       { background: #E1F5EE !important; color: #04342C !important; border: none !important; }
+.chip-ia        { background: #EEEDFE !important; color: #26215C !important; border: none !important; }
+.lrow           { border: 1px solid var(--border) !important; border-radius: 10px !important; background: #fff !important; }
+.lnum           { font-size: 12px !important; border: none !important; width: 22px !important; height: 22px !important; }
+.actors         { font-size: 12.5px !important; font-weight: 500 !important; }
+.act            { font-size: 12.5px !important; }
+.box            { border-radius: 12px !important; }
+.rowlabel       { font-size: 11px !important; }
+.chip           { font-size: 12px !important; border-radius: 8px !important; }
+.tag            { font-size: 11px !important; border-radius: 8px !important; padding: 2px 7px !important; }
+
+/* ── 2. EXCALIDRAW: scoped to .fig ──────────────────────────── */
+
+/* Dot-grid whiteboard container */
+.fig {
+  background: #fdfcf8 !important;
+  background-image: radial-gradient(circle, #c3c0b8 1.3px, transparent 1.3px) !important;
+  background-size: 22px 22px !important;
+  border-radius: 14px !important;
+  padding: 18px !important;
+  margin: 8px 0 18px !important;
+  border: 1.5px solid #dbd8cf !important;
+}
+
+/* Caveat everywhere inside diagrams */
+.fig * { font-family: 'Caveat', cursive !important; }
+
+/* Hand-drawn boxes */
+.fig .box {
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  position: relative !important;
+}
+/* Upgrade inline border to 2px on boxes inside .fig */
+.fig .box[style*="border:2px solid"],
+.fig .box[style*="border: 2px solid"] {
+  /* already 2px from prior script; just ensure radius */
+}
+
+/* Course-map cards inside .fig get the hand-drawn treatment */
+.fig .mcard {
+  border: 2px solid #1a1a1a !important;
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  position: relative !important;
+}
+.fig .mcard::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 3px 2px 2px 3px !important;
+  border: 1.5px solid rgba(26,26,26,0.13) !important;
+  border-radius: 4px 7px 4px 7px / 7px 4px 7px 4px !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+.fig .mcard > * { position: relative !important; z-index: 1 !important; }
+
+.fig .mbadge {
+  font-size: 16px !important; font-weight: 700 !important;
+  border: 2px solid rgba(0,0,0,0.28) !important;
+  width: 28px !important; height: 28px !important;
+}
+.fig .mtitle  { font-size: 19px !important; font-weight: 600 !important; }
+.fig .gancho  { font-size: 16px !important; }
+.fig .theme   { font-size: 15px !important; }
+
+/* Chip colors inside diagrams: stronger stroke */
+.fig .mchip   { font-size: 16px !important; border-radius: 3px 8px 5px 7px / 7px 5px 8px 3px !important; }
+.fig .chip-fin { background: #d5f5e3 !important; color: #0a4f35 !important; border: 2.5px solid #27ae60 !important; }
+.fig .chip-ia  { background: #e8daef !important; color: #4a235a !important; border: 2.5px solid #8e44ad !important; }
+
+/* Ladder rows inside .fig */
+.fig .lrow {
+  border: 2px solid var(--border) !important;
+  border-radius: 3px 9px 5px 8px / 8px 5px 9px 3px !important;
+  background: #fdfcf8 !important;
+}
+.fig .lnum {
+  font-size: 16px !important; font-weight: 700 !important;
+  width: 26px !important; height: 26px !important;
+  border: 2px solid #CECBF6 !important;
+}
+.fig .actors { font-size: 17px !important; font-weight: 700 !important; }
+.fig .act    { font-size: 16px !important; }
+
+/* Tags and chips inside .fig */
+.fig .chip { font-size: 16px !important; border-radius: 2px 7px 4px 6px / 6px 4px 7px 2px !important; }
+.fig .tag  { font-size: 15px !important; border-radius: 2px 7px 4px 6px / 6px 4px 7px 2px !important; padding: 4px 10px !important; }
+
+/* Rowlabel inside .fig */
+.fig .rowlabel { font-size: 15px !important; }
+
+/* Arrow icons inside diagrams: slightly bigger */
+.fig .arrow i { font-size: 22px !important; }
+/* Fix: preserve Tabler icon font inside diagrams */
+.fig i[class*="ti"],
+.fig .ti { font-family: 'tabler-icons' !important; }
+
+/* Stronger box borders inside diagrams for better visibility */
+.fig .box[style*="border:2px solid #"],
+.fig .box[style*="border: 2px solid #"] {
+  box-shadow: 1px 2px 0 rgba(0,0,0,0.08) !important;
+}
+
+/* Remove spurious ::before on plain boxes (keep only on .mcard) */
+.fig .box:not(.mcard)::before { display: none !important; }
+
+
+/* Bar chart labels inside .fig (cotovelo, conta quente) */
+.fig [style*="font-size:13px"] { font-size: 16px !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Aula 9 — Caderno visual de System Design</h1>
+  <nav style="display:flex;gap:8px;margin:2px 0 14px;flex-wrap:wrap;">
+    <a href="aula1-roteiro.html" class="navlink">Aula 1</a>
+    <a href="aula2-roteiro.html" class="navlink">Aula 2</a>
+    <a href="aula3-roteiro.html" class="navlink">Aula 3</a>
+    <a href="aula8-roteiro.html" class="navlink">Aula 8</a>
+    <a href="aula9-roteiro.html" class="navlink active">Aula 9</a>
+    <a href="topologia-progressiva.html" class="navlink">Topologia</a>
+  </nav>
+  <p class="sub">Segurança em Sistemas Financeiros · diagramas para desenhar/projetar ao vivo · aula autocontida (texto integral em <a href="aula9-conteudo-completo.md">aula9-conteudo-completo</a>)</p>
+  <div class="lead">Em sistema comum, um bug de segurança vaza dados. Em sistema financeiro, <b>vaza dinheiro — e dinheiro que sai por Pix não volta por conta própria</b>. Hoje a gente constrói, camada por camada, a defesa da TechPix (uma fintech de Pix sobre ledger, em serviços) — entendendo por que cada camada existe, o que ela <b>não</b> protege e quanto ela custa.</div>
+<div class="fig">
+<div class="box" style="background:#fff;border:2px solid var(--border);">
+      <div style="font-size:18px;color:var(--text-secondary);font-weight:500;margin-bottom:8px;">Legenda de termos — consulte sempre que aparecer</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 16px;font-size:18px;color:var(--text-secondary);line-height:1.4;">
+        <div><b style="color:var(--text-primary);">AuthN / AuthZ</b> — quem é você / o que pode fazer</div>
+        <div><b style="color:var(--text-primary);">JWT</b> — token assinado com claims (sub, iss, aud, exp)</div>
+        <div><b style="color:var(--text-primary);">BOLA / IDOR</b> — trocar o ID de um objeto e acessá-lo sem ser dono</div>
+        <div><b style="color:var(--text-primary);">RBAC / ABAC / ReBAC</b> — autorização por papel / atributos / relações</div>
+        <div><b style="color:var(--text-primary);">mTLS</b> — TLS com autenticação nos dois lados</div>
+        <div><b style="color:var(--text-primary);">Service mesh</b> — proxies + control plane: mTLS e policy fora do código</div>
+        <div><b style="color:var(--text-primary);">KMS / HSM</b> — gestão de chaves / hardware que usa chaves sem revelá-las</div>
+        <div><b style="color:var(--text-primary);">Envelope encryption</b> — KEK (mestra) cifra DEKs (dados)</div>
+        <div><b style="color:var(--text-primary);">Crypto-shredding</b> — apagar dado destruindo a chave</div>
+        <div><b style="color:var(--text-primary);">HMAC / replay</b> — assinatura por segredo / reenvio de mensagem legítima</div>
+        <div><b style="color:var(--text-primary);">Antifraude</b> — decisão por risco: pode? ou "parece certo?"</div>
+        <div><b style="color:var(--text-primary);">Maker-checker / JIT</b> — quatro olhos / acesso temporário</div>
+        <div><b style="color:var(--text-primary);">Trilha de auditoria</b> — registro estruturado, encadeado por hash, imutável</div>
+        <div><b style="color:var(--text-primary);">Fitness function</b> — teste automático que impede a regressão</div>
+      </div>
+    </div>
+</div>
+<h2>1 · O incidente do Bruno <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(o token era válido)</span></h2>
+<p class="teach">Ensina: o ataque mais perigoso em API financeira não quebra nada — é uma requisição legítima com <em>uma string trocada</em>. Cada componente do caminho fez o que foi projetado para fazer, e o dinheiro saiu mesmo assim.</p>
+<div class="lead">Terça-feira, 14h22. O Bruno, cliente da TechPix, manda um Pix de R$ 50 para a irmã pela conta dele (<code>acc-8841</code>). Curioso, copia a requisição no inspetor de rede, troca <b>uma string</b> — <code>contaOrigemId</code> vira <code>acc-2207</code>, a conta de um desconhecido — e reenvia. Resposta: <code>200 OK</code>, R$ 4.800 liquidados no SPI em 2 segundos. <b>O token era válido</b>: assinatura, <code>iss</code>, <code>aud</code>, <code>exp</code>. Pergunta da aula: onde está o bug?</div>
+<div class="fig">
+<div class="lad"><div class="lrow"><div class="lnum">1</div><div class="actors">Cliente</div><div class="act">POST /pix com Bearer válido e <code>contaOrigemId</code> = acc-2207</div><span class="tag" style="background:#FAEEDA;color:#412402;">body adulterado</span></div><div class="lrow"><div class="lnum">2</div><div class="actors">Gateway</div><div class="act">valida assinatura, iss, aud, exp → token ✔</div><span class="tag" style="background:#E1F5EE;color:#04342C;">só AuthN</span></div><div class="lrow" style="border-color:#F7C1C1;"><div class="lnum">3</div><div class="actors">Pagamentos</div><div class="act">lê o body, executa. Ninguém compara sub × dono da conta</div><span class="tag" style="background:#FCEBEB;color:#501313;">falta AuthZ</span></div><div class="lrow" style="border-color:#F7C1C1;"><div class="lnum">4</div><div class="actors">Ledger</div><div class="act">debita acc-2207, SPI liquida em 2 s</div><span class="tag" style="background:#FCEBEB;color:#501313;">irreversível</span></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">No token (confiável)</div><div style="font-size:16px;color:#185FA5;margin-top:5px;"><code>sub = cli-5519</code> — quem chamou. Assinado pelo emissor.</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">No body (input do cliente)</div><div style="font-size:16px;color:#791F1F;margin-top:5px;"><code>contaOrigemId = acc-2207</code> — sobre quem agir. <b>Nunca cruzado com o sub.</b></div></div></div>
+<div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:8px;"><span style="font-weight:600;color:#534AB7;">↯ Insight:</span> Segurança não é ter JWT. É garantir que <b>cada identidade execute apenas as operações permitidas, sobre os recursos permitidos</b> — e conseguir provar depois. Não existe "hacker" de filme aqui: existe uma linha faltando.</div>
+</div>
+
+<h2>2 · Modelagem de ameaças <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(antes de escolher ferramenta)</span></h2>
+<p class="teach">Ensina: decidir onde defender <em>antes</em> de abrir o catálogo de tecnologias: o que protejo, de quem, por onde ele entra? Fronteiras de confiança e STRIDE transformam intuição em checklist.</p>
+<div class="lead">O erro clássico é abrir o catálogo — OAuth, mTLS, WAF — e ir "aplicando". Isso produz muita tecnologia e buracos onde ninguém olhou. O ofício começa por: <b>ativos</b> (dinheiro, ledger, dados, chaves), <b>adversários</b> (não existe "o hacker") e <b>fronteiras de confiança</b> — tudo que cruza uma fronteira é entrada não confiável até ser validada do lado de dentro. Premissa <b>Zero Trust</b>: nunca confie, sempre verifique — estar dentro da rede não é credencial.</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Zona 0 · Internet</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">App/Web, atacante, parceiros (webhook). Hostil.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Zona 1 · Edge</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">WAF, rate limit, API Gateway. Valida token (AuthN).</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Zona 2 · Cluster</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">Pagamentos, Antifraude, Ledger, Identidade, Kafka, bancos. Tráfego <b>leste-oeste</b>.</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">Zona 3 · Externo regulado</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">DICT/SPI (BACEN), KMS/HSM, provedores. Provamos quem <em>somos</em>.</div></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:0px;"><div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#E6F1FB;border:2px solid #B5D4F4;font-size:18px;color:#042C53;"><i class="ti ti-arrows-up-down" aria-hidden="true"></i><span><b>Norte-sul</b>: fora → dentro. Autenticar e autorizar <em>pessoas</em>.</span></div><div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;"><i class="ti ti-arrows-left-right" aria-hidden="true"></i><span><b>Leste-oeste</b>: workload ↔ workload. Autenticar e autorizar <em>máquinas</em>.</span></div></div>
+</div>
+<div class="cap">Quem ataca — cada perfil exige uma defesa diferente</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Cliente malicioso</div><div style="font-size:16px;color:#791F1F;font-style:italic;margin-top:3px;">→ AuthZ por recurso, limites</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">O Bruno. Conta legítima, requisição adulterada.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Fraudador externo</div><div style="font-size:16px;color:#854F0B;font-style:italic;margin-top:3px;">→ MFA, device binding</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Phishing, SIM swap, credencial vazada.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Golpe de engenharia social</div><div style="font-size:16px;color:#854F0B;font-style:italic;margin-top:3px;">→ antifraude por risco</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">A própria vítima paga. Tudo autorizado.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Conta laranja (mula)</div><div style="font-size:16px;color:#854F0B;font-style:italic;margin-top:3px;">→ análise de grafo</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Recebe e dispersa o produto da fraude.</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Insider</div><div style="font-size:16px;color:#534AB7;font-style:italic;margin-top:3px;">→ 4 olhos, JIT, auditoria</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">Já tem a chave: acesso legítimo demais.</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Cadeia de suprimentos</div><div style="font-size:16px;color:#534AB7;font-style:italic;margin-top:3px;">→ SBOM, assinatura</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">Biblioteca/imagem comprometida.</div></div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">Workload comprometido</div><div style="font-size:16px;color:#185FA5;font-style:italic;margin-top:3px;">→ mTLS + policy</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">Pod invadido; movimento lateral.</div></div><div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:18px;color:#2C2C2A;font-weight:500;">Regra de ouro</div><div style="font-size:16px;color:#5F5E5A;margin-top:5px;">Assuma que uma camada vai falhar.</div></div></div>
+</div>
+<div class="cap">STRIDE: seis lentes para cada aresta do diagrama</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">S · Spoofing</div><div style="font-size:16px;color:#791F1F;font-style:italic;margin-top:3px;">MFA + device; mTLS</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">Autenticidade. Token roubado; workload falso.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">T · Tampering</div><div style="font-size:16px;color:#854F0B;font-style:italic;margin-top:3px;">assinatura; AuthZ; ledger append-only</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Integridade. Trocar valor ou contaOrigemId.</div></div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">R · Repudiation</div><div style="font-size:16px;color:#185FA5;font-style:italic;margin-top:3px;">trilha imutável; assinatura de transação</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">"Eu não fiz esse Pix" e ninguém prova.</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">I · Info disclosure</div><div style="font-size:16px;color:#534AB7;font-style:italic;margin-top:3px;">cripto; mascaramento; AuthZ</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">CPF no log; extrato alheio (BOLA de leitura).</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">D · Denial of service</div><div style="font-size:16px;color:#0F6E56;font-style:italic;margin-top:3px;">rate limit; bulkhead</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">Inundar /pix e estourar o SLA.</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">E · Elevation of privilege</div><div style="font-size:16px;color:#791F1F;font-style:italic;margin-top:3px;">menor privilégio; policy</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">Cliente age como operador; leitura escreve no ledger.</div></div></div>
+<div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:8px;"><span style="font-weight:600;color:#534AB7;">↯ Insight:</span> O bug do Bruno ocupa <b>duas células</b>: Tampering do body que vira Elevation of privilege. Nenhum controle isolado o cobriria — por isso o desenho é em camadas.</div>
+</div>
+
+<h2>3 · Identidade: o que um token realmente diz <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(AuthN ≠ AuthZ)</span></h2>
+<p class="teach">Ensina: autenticação responde "quem é você?"; autorização responde "pode fazer <em>esta</em> ação sobre <em>este</em> recurso?". Um JWT prova a primeira e é silencioso sobre a segunda.</p>
+<div class="lead">Um <b>JWT</b> é um envelope de três partes. A assinatura garante que o emissor escreveu os claims, que nada foi alterado e que não expirou. <b>Não garante</b> que o <code>contaOrigemId</code> do body pertença ao <code>sub</code> — o body viaja ao lado, fora da assinatura. E o JWT é <em>stateless</em>: barato de validar, difícil de revogar antes do <code>exp</code>. Saída: access token curto (5–15 min) + refresh revogável + introspecção só para alto valor.</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Header</div><div style="font-size:16px;color:#854F0B;margin-top:5px;"><code>alg=RS256</code>, <code>kid</code>. Como foi assinado; qual chave.</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Payload (claims)</div><div style="font-size:16px;color:#534AB7;margin-top:5px;"><code>iss</code> emissor · <code>aud</code> destino · <code>sub</code> quem · <code>exp</code> validade · <code>scope</code> · <code>acr</code> força do login</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">Signature</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">RSA-SHA256(header.payload, chave privada). Prova: ninguém alterou 1 e 2.</div></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#EAF3DE;border:2px solid #C0DD97;"><div style="font-size:18px;color:#173404;font-weight:500;">A assinatura GARANTE</div><div style="font-size:16px;color:#3B6D11;margin-top:5px;">✔ iss escreveu estes claims · ✔ nada foi alterado · ✔ não expirou</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Ela NÃO garante</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">✘ que o body pertence ao sub · ✘ que o token não foi roubado · ✘ que a operação é sensata</div></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#FAEEDA;border:2px solid #FAC775;font-size:18px;color:#412402;"><i class="ti ti-alert-triangle" aria-hidden="true"></i><span><b>aud</b> errada = <em>token confusion</em>: token de baixo poder roubado num lugar e usado noutro. <b>sub</b> é o ponto exato de que o incidente dependia.</span></div>
+</div>
+<div class="cap">OAuth 2.0 × OIDC: duas perguntas diferentes</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">OAuth 2.0 — delegação</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">"O que o portador do token pode fazer?" Emite access token. Escopo é granular em <b>tipo de operação</b> (<code>pix:create</code>), não em <b>instância de recurso</b>.</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">OIDC — identidade</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">"Quem é o usuário que acabou de se autenticar?" Emite ID token, camada sobre o OAuth.</div></div></div>
+<div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:8px;"><span style="font-weight:600;color:#534AB7;">↯ Insight:</span> Nenhum dos dois resolve autorização de domínio. "Pode criar Pix" ≠ "pode criar Pix <b>a partir desta conta</b>". Essa pergunta nunca esteve no protocolo.</div>
+</div>
+<div class="cap">Authorization Code + PKCE — o segredo nasce no cliente e nunca viaja antes da troca</div>
+<div class="fig">
+<div class="lad"><div class="lrow"><div class="lnum">1</div><div class="actors">App</div><div class="act">gera code_verifier aleatório e seu hash (code_challenge)</div><span class="tag" style="background:#F1EFE8;color:#2C2C2A;">local</span></div><div class="lrow"><div class="lnum">2</div><div class="actors">App → Identidade</div><div class="act">/authorize + code_challenge</div><span class="tag" style="background:#EEEDFE;color:#26215C;">hash só</span></div><div class="lrow"><div class="lnum">3</div><div class="actors">Usuário</div><div class="act">autentica no servidor de identidade (senha + MFA)</div><span class="tag" style="background:#E1F5EE;color:#04342C;">MFA</span></div><div class="lrow"><div class="lnum">4</div><div class="actors">Identidade → App</div><div class="act">authorization code (curto, uso único)</div><span class="tag" style="background:#FAEEDA;color:#412402;">interceptável</span></div><div class="lrow"><div class="lnum">5</div><div class="actors">App → Identidade</div><div class="act">/token: code + code_verifier original</div><span class="tag" style="background:#E1F5EE;color:#04342C;">prova de posse</span></div><div class="lrow"><div class="lnum">6</div><div class="actors">Identidade</div><div class="act">confere hash(verifier) == challenge → access + refresh + ID token</div><span class="tag" style="background:#E1F5EE;color:#04342C;">ok</span></div><div class="lrow" style="border-color:#F7C1C1;"><div class="lnum">7</div><div class="actors">App → API</div><div class="act">Bearer access token · a API valida assinatura, iss, aud, exp</div><span class="tag" style="background:#FCEBEB;color:#501313;">…e agora?</span></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#FCEBEB;border:2px solid #F7C1C1;font-size:18px;color:#501313;"><i class="ti ti-help" aria-hidden="true"></i><span>Passo 7: falta a pergunta que o Bruno violou — <b>pode agir neste recurso?</b> Quem interceptou o code no passo 4 não tem o verifier do passo 5: prova de posse com uma função de hash, sem segredo pré-compartilhado.</span></div>
+</div>
+<div class="cap">Autenticação forte em dinheiro: da sessão à operação</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">MFA de verdade</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Senha + algo que você <b>tem</b> + algo que você <b>é</b>. SMS é fator fraco: SIM swap o derrota.</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Device binding</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">Par de chaves no enclave do aparelho; chave privada <b>nunca sai</b>. Biometria só destrava o uso. "Este aparelho" vira prova criptográfica.</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">Step-up + assinatura da transação</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">Pix alto ou destino novo exige <code>acr</code> mais forte. O aparelho assina {origem, destino, valor, nonce}: <b>WYSIWYS</b> — o que você vê é o que assina.</div></div></div>
+<div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:8px;"><span style="font-weight:600;color:#534AB7;">↯ Insight:</span> A assinatura da transação <b>também barraria o Bruno</b> — por outro caminho: ele não produz assinatura válida da chave do dono da acc-2207. Defesa em profundidade: cada camada pega uma variante que a outra deixaria passar. Dá também <b>não-repúdio</b>.</div>
+</div>
+
+<h2>4 · Autorização: o bug tem nome e cura <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(BOLA / IDOR)</span></h2>
+<p class="teach">Ensina: BOLA não se resolve com infraestrutura: resolve-se com código de domínio e com teste. A cura é uma pergunta a mais, no lugar certo, com dado que o servidor controla.</p>
+<div class="lead"><b>BOLA</b> (<em>Broken Object Level Authorization</em>), ou IDOR: o usuário autenticado troca o identificador de um objeto e o servidor entrega/executa sem checar ownership. Lidera há anos os riscos de API porque todo endpoint que recebe um ID é candidato — e scanner genérico não acha, pois a requisição é bem-formada. O que o cliente não envia, o cliente não pode adulterar: se só há uma conta, derive-a do <code>sub</code>.</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:0px;"><div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">ANTES — valida o token, confia no body</div></div><div style="margin-top:6px;"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:8px 10px;font-size:18px;color:#2C2C2A;">Bruno</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;padding:8px 10px;font-size:18px;color:#412402;">Gateway: token ✔</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;padding:8px 10px;font-size:18px;color:#501313;">Pagamentos: executa</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;padding:8px 10px;font-size:18px;color:#501313;">Ledger debita acc-2207 ✘</div></div></div><div style="margin-top:6px;font-size:17px;color:#791F1F;">200 OK — dinheiro de terceiro sai.</div></div><div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">DEPOIS — valida o token E o recurso</div></div><div style="margin-top:6px;"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:8px 10px;font-size:18px;color:#2C2C2A;">Bruno</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;padding:8px 10px;font-size:18px;color:#412402;">Gateway: token ✔</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;padding:8px 10px;font-size:18px;color:#26215C;">Pagamentos = PEP</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;padding:8px 10px;font-size:18px;color:#042C53;">Policy = PDP: dono(acc-2207) == cli-5519?</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;padding:8px 10px;font-size:18px;color:#04342C;">403 + evento de auditoria</div></div></div><div style="font-size:16px;color:var(--text-muted);margin-top:6px;">PEP aplica a política · PDP decide.</div></div></div>
+</div>
+<div class="cap">Os cinco passos, na ordem certa</div>
+<div class="fig">
+<div class="lad"><div class="lrow"><div class="lnum">1</div><div class="actors">Validar o token</div><div class="act">assinatura, iss, aud, exp</div><span class="tag" style="background:#F1EFE8;color:#2C2C2A;">já existia</span></div><div class="lrow"><div class="lnum">2</div><div class="actors">Sujeito do TOKEN</div><div class="act"><code>sub</code> é a única fonte de "quem" — nunca o body</div><span class="tag" style="background:#E1F5EE;color:#04342C;">crítico</span></div><div class="lrow"><div class="lnum">3</div><div class="actors">Recurso alvo</div><div class="act">o <code>contaOrigemId</code> que o cliente <em>afirma</em></div><span class="tag" style="background:#FAEEDA;color:#412402;">input não confiável</span></div><div class="lrow" style="border-color:#F7C1C1;"><div class="lnum">4</div><div class="actors">Ownership / política</div><div class="act">dono da conta vem do <b>banco do servidor</b>, comparado ao sub</div><span class="tag" style="background:#FCEBEB;color:#501313;">o passo que faltou</span></div><div class="lrow"><div class="lnum">5</div><div class="actors">Regra de negócio</div><div class="act">só então executa — e registra a decisão</div><span class="tag" style="background:#E1F5EE;color:#04342C;">+ auditoria</span></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Ruim</div><div style="font-size:16px;color:#791F1F;margin-top:5px;"><code>ledger.debitar(req.contaOrigemId(), valor)</code> — o token foi validado no filtro, e é tudo.</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">Bom</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;"><code>@PreAuthorize("@contaPolicy.podeMovimentar(authentication, #req.contaOrigemId())")</code> — decisão declarativa, testável, impossível de esquecer.</div></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#FAEEDA;border:2px solid #FAC775;font-size:18px;color:#412402;"><i class="ti ti-info-circle" aria-hidden="true"></i><span><b>403 × 404</b> para recurso alheio é decisão consciente: 404 evita enumerar IDs; 403 é mais honesto com o cliente confuso. Escolha e seja consistente.</span></div>
+</div>
+<div class="cap">RBAC não resolve tudo — um espectro, não uma escada</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#EAF3DE;border:2px solid #C0DD97;"><div style="font-size:18px;color:#173404;font-weight:500;text-decoration:line-through;">RBAC</div><div style="font-size:16px;color:#3B6D11;font-style:italic;margin-top:3px;">function sub() { [native code] }</div><div style="font-size:16px;color:#3B6D11;margin-top:5px;">papel → permissão</div></div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;text-decoration:line-through;">Ownership</div><div style="font-size:16px;color:#185FA5;font-style:italic;margin-top:3px;">function sub() { [native code] }</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">dono(recurso) == sujeito</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;text-decoration:line-through;">ReBAC</div><div style="font-size:16px;color:#854F0B;font-style:italic;margin-top:3px;">function sub() { [native code] }</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">grafo de relações</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;text-decoration:line-through;">ABAC</div><div style="font-size:16px;color:#791F1F;font-style:italic;margin-top:3px;">function sub() { [native code] }</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">atributos + contexto</div></div></div>
+<div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:8px;"><span style="font-weight:600;color:#534AB7;">↯ Insight:</span> A TechPix combina: <b>RBAC</b> no back-office, <b>ownership</b> como piso de todo endpoint com ID de conta, <b>ABAC</b> nos limites contextuais. Política complexa demais vira o próprio risco: regra que ninguém entende não é auditada.</div>
+</div>
+<div class="cap">Onde autorizar: o Gateway não conhece o negócio</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Edge (WAF + Gateway)</div><div style="font-size:16px;color:#854F0B;font-style:italic;margin-top:3px;">não tenta: ownership, limites</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Token válido, aud, escopo grosso, rate limit, tamanho e formato.</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Serviço de domínio</div><div style="font-size:16px;color:#534AB7;font-style:italic;margin-top:3px;">nunca confia no body</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">Ownership, limites, step-up por valor, estado do objeto.</div></div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">Plataforma (mesh/policy)</div><div style="font-size:16px;color:#185FA5;font-style:italic;margin-top:3px;">não decide: usuário × objeto</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">Quais <em>workloads</em> chamam quais.</div></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#FCEBEB;border:2px solid #F7C1C1;font-size:18px;color:#501313;"><i class="ti ti-help" aria-hidden="true"></i><span>"O JWT validado no Gateway torna o <code>accountId</code> do body confiável?" <b>Não, nunca.</b> Cada camada valida o que lhe compete como se a anterior pudesse ter falhado.</span></div>
+</div>
+<div class="cap">Como provar que não volta: teste adversarial</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">1 · Resposta negativa</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">user-A × account-B → <code>403</code></div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">2 · Efeito colateral zero</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">saldo de acc-2207 inalterado. "Um 403 que ainda debitou é o pior dos mundos."</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">3 · Tentativa registrada</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">evento de auditoria: quem, qual recurso, qual regra negou</div></div></div>
+</div>
+
+<h2>5 · Segurança leste-oeste <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(quem é <em>esse</em> serviço?)</span></h2>
+<p class="teach">Ensina: consertar o usuário não protege o interior. Dentro do cluster, identidade de máquina, canal autenticado e política por chamador limitam o movimento lateral e o raio de explosão.</p>
+<div class="lead">Pagamentos chama Antifraude; Antifraude lê contexto; jobs e consumidores Kafka conversam. Quando o Antifraude recebe "sou o Pagamentos", como sabe? Se a resposta é "porque veio de dentro da rede", é o castelo com fosso: <b>um pod comprometido herda a confiança</b> e circula livre — <em>movimento lateral</em>. Dois erros clássicos: a credencial global <code>backend-admin</code> e reaproveitar o token do usuário (o <b>confused deputy</b>).</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:0px;"><div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">A) Serviço age em nome PRÓPRIO — Client Credentials</div></div><div style="margin-top:6px;"><div class="lad"><div class="lrow"><div class="lnum">1</div><div class="actors">Pagamentos → Identidade</div><div class="act">"sou pagamentos-svc" + credencial</div><span class="tag" style="background:#EEEDFE;color:#26215C;">M2M</span></div><div class="lrow"><div class="lnum">2</div><div class="actors">Identidade → Pagamentos</div><div class="act">token com <code>scope=risco:avaliar</code> (não <code>*</code>)</div><span class="tag" style="background:#E1F5EE;color:#04342C;">mínimo</span></div><div class="lrow"><div class="lnum">3</div><div class="actors">Pagamentos → Antifraude</div><div class="act">chama com o token do próprio serviço</div><span class="tag" style="background:#E1F5EE;color:#04342C;">rastreável</span></div></div></div></div><div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">B) Age em nome do USUÁRIO — Token Exchange</div></div><div style="margin-top:6px;"><div class="lad"><div class="lrow"><div class="lnum">1</div><div class="actors">Usuário → Pagamentos</div><div class="act">token do usuário (<code>sub=cli-5519</code>)</div><span class="tag" style="background:#F1EFE8;color:#2C2C2A;">entrada</span></div><div class="lrow"><div class="lnum">2</div><div class="actors">Pagamentos → Identidade</div><div class="act">troca por novo token, <code>aud=Ledger</code></div><span class="tag" style="background:#EEEDFE;color:#26215C;">exchange</span></div><div class="lrow"><div class="lnum">3</div><div class="actors">Ledger recebe</div><div class="act"><code>sub=cli-5519</code> <b>e</b> <code>act=pagamentos-svc</code>: autoriza as duas pontas</div><span class="tag" style="background:#E1F5EE;color:#04342C;">cadeia visível</span></div></div></div></div></div>
+<div class="box" style="margin-top:10px;display:flex;align-items:center;gap:8px;background:#E1F5EE;border:2px solid #9FE1CB;font-size:18px;color:#04342C;"><i class="ti ti-shield-check" aria-hidden="true"></i><span>Nos dois casos o token é <b>estreito</b> (escopo mínimo), <b>curto</b> (minutos) e <b>com audiência</b> (só vale para o destino).</span></div>
+</div>
+<div class="cap">mTLS: autenticar o canal — o que ele entrega e o que não entrega</div>
+<div class="fig">
+<div class="lad"><div class="lrow"><div class="lnum">1</div><div class="actors">CA interna</div><div class="act">emite certificado de vida curta (horas) por workload, identidade SPIFFE: <code>spiffe://techpix/pagamentos</code></div><span class="tag" style="background:#FAEEDA;color:#412402;">PKI</span></div><div class="lrow"><div class="lnum">2</div><div class="actors">Pagamentos → Antifraude</div><div class="act">"olá" + meu certificado</div><span class="tag" style="background:#EEEDFE;color:#26215C;">ClientHello</span></div><div class="lrow"><div class="lnum">3</div><div class="actors">Antifraude → Pagamentos</div><div class="act">meu certificado + prova de posse da chave</div><span class="tag" style="background:#EEEDFE;color:#26215C;">ServerHello</span></div><div class="lrow"><div class="lnum">4</div><div class="actors">Ambos</div><div class="act">validam o outro contra a CA e negociam chaves de sessão</div><span class="tag" style="background:#E1F5EE;color:#04342C;">canal cifrado</span></div><div class="lrow" style="border-color:#F7C1C1;"><div class="lnum">5</div><div class="actors">Pod invasor</div><div class="act">sem certificado emitido pela CA → handshake recusado; nem chega a enviar HTTP</div><span class="tag" style="background:#FCEBEB;color:#501313;">barrado</span></div></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">Confidencialidade</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">Tráfego interno cifrado: quem espiona vê ruído.</div></div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">Integridade</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">Não dá para adulterar bytes no meio.</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Autenticação mútua</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">Cada lado sabe <b>quem</b> é o outro, criptograficamente.</div></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#FCEBEB;border:2px solid #F7C1C1;font-size:18px;color:#501313;"><i class="ti ti-help" aria-hidden="true"></i><span>"mTLS resolve autorização?" <b>Não.</b> Prova <em>quem</em>, não <em>o quê</em>. Um Antifraude autenticado ainda poderia chamar <code>POST /pix</code> — a menos que uma <b>policy</b> diga que não.</span></div>
+</div>
+<div class="cap">A dor da repetição → service mesh (e por que ele não é obrigatório)</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Data plane</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">Um proxy (sidecar) ao lado de cada app: termina mTLS, aplica policy, gira certificado, coleta métricas. O app fala HTTP simples com o proxy local.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Control plane</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Cérebro central: opera a CA, distribui certificados e políticas ("quem fala com quem" em YAML versionado).</div></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">O preço</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">+1–3 ms por salto; memória/CPU por pod; a infra de rede de tudo passa a ser atualizada como plataforma.</div></div><div class="box" style="background:#EAF3DE;border:2px solid #C0DD97;"><div style="font-size:18px;color:#173404;font-weight:500;">Regra de decisão</div><div style="font-size:16px;color:#3B6D11;margin-top:5px;">Adote quando o custo transversal (certificados, rotação, policies em N serviços) dói mais que operar a plataforma. Com 4 serviços, provavelmente não; com 40, sim. <b>Primeiro sinta a dor da repetição, depois compre a plataforma.</b> Alternativas: ambient, network policies, mTLS por biblioteca.</div></div></div>
+</div>
+<div class="cap">Policy de plataforma: default deny e menor privilégio</div>
+<div class="fig">
+<div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:18px;color:#2C2C2A;font-weight:500;">AuthorizationPolicy (Istio) — em português</div><div style="font-size:16px;color:#5F5E5A;margin-top:5px;">"O Antifraude só aceita chamadas da identidade <code>pagamentos</code>, e apenas <code>POST /v1/avaliar</code>." Todo o resto é <b>negado por padrão</b> (default deny).</div></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">Menor privilégio</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">"O Antifraude precisa escrever no Ledger?" Provavelmente não → a identidade dele não tem essa permissão.</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Raio de explosão</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">Comprometido, o Antifraude só consegue <em>avaliar risco</em> — não movimentar dinheiro.</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Kafka também é fronteira</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">Identidade por produtor/consumidor e ACL por tópico. Quem publica num tópico forja "verdade" para quem consome.</div></div></div>
+<div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:8px;"><span style="font-weight:600;color:#534AB7;">↯ Insight:</span> Policy de plataforma diz "o workload Pagamentos pode chamar /v1/avaliar". <b>Não</b> diz "o usuário Bruno pode avaliar a conta 2207". Complementa a regra de negócio; nunca a substitui.</div>
+</div>
+
+<h2>6 · Proteger o dado <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(criptografia, chaves e o conflito com a lei)</span></h2>
+<p class="teach">Ensina: todo controle de acesso tem um limite: se alguém contorna a aplicação e chega ao disco, backup ou réplica, a autorização nunca é consultada. A última linha de defesa é o próprio dado.</p>
+<div class="lead">Três estados, três defesas. E uma verdade incômoda: <b>criptografia move o problema para a chave</b> — chave guardada ao lado do dado é porta trancada com a chave na maçaneta. O estado "em uso" (logs, traces, dumps) é o que mais vaza: <em>nunca logue o que você não mostraria num telão</em>.</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">Em trânsito</div><div style="font-size:16px;color:#185FA5;font-style:italic;margin-top:3px;">TLS 1.2+ / 1.3; mTLS interno</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">Na rede.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Em repouso</div><div style="font-size:16px;color:#854F0B;font-style:italic;margin-top:3px;">volume cifrado + <b>campo</b> cifrado</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Disco, backup, snapshot, réplica.</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Em uso</div><div style="font-size:16px;color:#791F1F;font-style:italic;margin-top:3px;">minimizar, mascarar, não logar</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">Memória, logs, traces, dumps.</div></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#FAEEDA;border:2px solid #FAC775;font-size:18px;color:#412402;"><i class="ti ti-info-circle" aria-hidden="true"></i><span>Cifrar o disco só protege contra roubo do disco. Com o banco rodando, DBA e aplicações veem o claro → <b>criptografia de campo</b> pela aplicação.</span></div>
+</div>
+<div class="cap">Envelope encryption: KEK nunca sai do cofre; DEKs fazem o trabalho</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">KMS / HSM</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;"><b>KEK</b> (chave-mestra). O HSM usa a chave sem nunca revelá-la; o KMS oferece a API de criar, cifrar, rotacionar, revogar e auditar.</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Serviço (Contas)</div><div style="font-size:16px;color:#534AB7;margin-top:5px;"><b>DEK</b> (chave de dados) em RAM. Cifra o dado localmente (rápido) e descarta a DEK em claro.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Banco de dados</div><div style="font-size:16px;color:#854F0B;margin-top:5px;"><code>cpf_cifrado = AES(DEK, cpf)</code><br><code>dek_cifrada = KEK(DEK)</code><br>A DEK só existe cifrada.</div></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">Escrever</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">pede DEK ao KMS → recebe em claro + cifrada pela KEK → cifra o dado → grava dado + DEK cifrada → descarta a DEK em claro</div></div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">Ler</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">lê dado + DEK cifrada → KMS decifra a DEK (<b>confere se este serviço PODE</b>) → decifra local → usa → descarta</div></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#EAF3DE;border:2px solid #C0DD97;font-size:18px;color:#173404;"><i class="ti ti-check" aria-hidden="true"></i><span>Só uma chamada minúscula vai ao cofre. Rotação barata (re-cifra só DEKs), revogação por política (retira a permissão no KMS) e cada uso da KEK <b>auditado</b>.</span></div>
+</div>
+<div class="cap">Tokenização × criptografia</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Criptografar</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">O dado cifrado ainda <b>é</b> o dado, reversível por quem tem a chave.</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">Tokenizar</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">Guarda um substituto sem relação matemática (<code>tok_9f31…</code>); o real vive num cofre único. Menos sistemas veem o dado → <b>menor escopo de conformidade</b> (PCI DSS). A melhor proteção é não ter o dado.</div></div></div>
+</div>
+<div class="cap">O conflito que ninguém conta: LGPD × ledger imutável</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">LGPD</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">Direito à <b>eliminação</b> e minimização do dado pessoal.</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Regulação financeira</div><div style="font-size:16px;color:#791F1F;margin-top:5px;"><b>Retenção</b> por anos; ledger append-only — não se apaga o passado.</div></div></div>
+<div class="lad"><div class="lrow"><div class="lnum">1</div><div class="actors">Antes do pedido</div><div class="act">lançamento #88231: valor, data, hash (contábil) · titular = AES(DEK-cli-5519, "…") (pessoal)</div><span class="tag" style="background:#E1F5EE;color:#04342C;">decifrável</span></div><div class="lrow"><div class="lnum">2</div><div class="actors">Pedido de eliminação</div><div class="act">base legal de retenção expirou → <b>destrói a DEK-cli-5519</b></div><span class="tag" style="background:#FAEEDA;color:#412402;">crypto-shredding</span></div><div class="lrow"><div class="lnum">3</div><div class="actors">Depois</div><div class="act">titular vira ruído irrecuperável; valor, data e hash da cadeia intactos</div><span class="tag" style="background:#E1F5EE;color:#04342C;">integridade ok</span></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Ressalva jurídica</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Quem decide <em>se e quando</em> a eliminação é devida é o jurídico; a arquitetura fornece a capacidade.</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Ressalva de desenho</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">Separar <b>contábil</b> (imutável) de <b>pessoal</b> (cifrado por titular) tem que estar no modelo <b>desde o dia 1</b>.</div></div></div>
+</div>
+
+<h2>7 · Segredos, APIs e cadeia de suprimentos <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(o código e a chave que você não vigia)</span></h2>
+<p class="teach">Ensina: o comprometimento vai acontecer; o que define o tamanho do incidente é o raio de explosão e o tempo até tornar o segredo inútil. Proteja também a <em>mensagem</em>, não só o canal.</p>
+<div class="lead">Sexta, 17h40: credencial de produção num <code>application.yml</code>, commit num repositório aberto a externos. Bots varrem padrões de credencial em minutos. A pergunta que separa equipes maduras: <b>qual o raio de explosão, e em quanto tempo o segredo pode ser tornado inútil?</b> Credencial estática, longa e com poder total = incidente de dias. Dinâmica, curta e mínima = minutos.</div>
+<div class="fig">
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;padding:8px 10px;font-size:18px;color:#26215C;">1 Emitir: gerado pelo cofre</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;padding:8px 10px;font-size:18px;color:#26215C;">2 Entregar: injetado em runtime</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;padding:8px 10px;font-size:18px;color:#26215C;">3 Usar: só em memória</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;padding:8px 10px;font-size:18px;color:#04342C;">4 Rotacionar: automático</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;padding:8px 10px;font-size:18px;color:#501313;">5 Revogar: em minutos</div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">O que produz vazamento</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">✘ segredo em yml/código/imagem · ✘ mesma credencial em todos os ambientes · ✘ estática, longa, poder total · ✘ ninguém sabe quem usa</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">O que limita o dano</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">✔ cofre (Vault, KMS, Secrets Manager) · ✔ credenciais <b>dinâmicas</b> com TTL curto · ✔ acesso pela identidade do workload · ✔ scanner no pre-commit e CI</div></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#EEEDFE;border:2px solid #CECBF6;font-size:18px;color:#26215C;"><i class="ti ti-key" aria-hidden="true"></i><span>O salto: em vez de um usuário de banco fixo, o serviço se autentica ao cofre com sua <b>identidade de workload</b> (a do mTLS!) e o cofre cria um usuário temporário. Ninguém conhece a senha; ela nasce e morre com o pod. Cuidado: Secret do Kubernetes é Base64, não cifra.</span></div>
+</div>
+<div class="cap">Webhook assinado: HMAC + timestamp + id único</div>
+<div class="fig">
+<div class="lad"><div class="lrow"><div class="lnum">0</div><div class="actors">Emissor assina</div><div class="act"><code>sig = HMAC-SHA256(S, t + "." + id + "." + body)</code> e envia t, id, sig</div><span class="tag" style="background:#FAEEDA;color:#412402;">origem</span></div><div class="lrow"><div class="lnum">1</div><div class="actors">Receptor recalcula</div><div class="act">compara em <b>tempo constante</b> (evita timing attack)</div><span class="tag" style="background:#E1F5EE;color:#04342C;">integridade + autenticidade</span></div><div class="lrow"><div class="lnum">2</div><div class="actors">Janela de tempo</div><div class="act">|agora − t| ≤ 5 min; rejeita mensagem antiga</div><span class="tag" style="background:#E1F5EE;color:#04342C;">anti-replay</span></div><div class="lrow"><div class="lnum">3</div><div class="actors">Id já visto?</div><div class="act">descarta duplicata — mesma ideia da idempotência</div><span class="tag" style="background:#E1F5EE;color:#04342C;">anti-replay</span></div><div class="lrow"><div class="lnum">4</div><div class="actors">Só então</div><div class="act">processa o efeito de negócio</div><span></span></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Replay</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">Um atacante que capturou UMA mensagem legítima a reenvia mil vezes: assinatura perfeita, efeito duplicado. A criptografia sozinha não vê — só o contexto (tempo e unicidade) denuncia.</div></div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">HMAC × assinatura assimétrica</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">Segredo compartilhado: qualquer das partes poderia ter gerado. Assinatura com chave no HSM (ex.: SPI): só o dono da chave privada → <b>não-repúdio</b>.</div></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#FAEEDA;border:2px solid #FAC775;font-size:18px;color:#412402;"><i class="ti ti-gauge" aria-hidden="true"></i><span><b>Rate limit</b> por identidade autenticada e por operação (não só IP): o atacante distribuído troca de IP, mas não de conta. Token bucket; balde vazio → 429.</span></div>
+</div>
+<div class="cap">Cadeia de suprimentos: 90% do seu serviço é código de terceiros</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">SBOM</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">Inventário de tudo na imagem. "Estamos expostos?" vira consulta de segundos.</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Assinatura de artefato</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">Cluster só executa imagem assinada pelo seu pipeline.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Versões travadas</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Hash fixo, espelho interno; nada de "a mais recente" em produção.</div></div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">Imagem mínima</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">Distroless: menos software, menos superfície.</div></div></div>
+<div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:8px;"><span style="font-weight:600;color:#534AB7;">↯ Insight:</span> Você não impede todo comprometimento — <b>desenha para que ele custe pouco</b> (<em>assume breach</em>). É a mudança de "impedir a invasão" para "limitar o que ela alcança".</div>
+</div>
+
+<h2>8 · Antifraude: o ataque que não viola permissão <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(a pergunta muda de "pode?" para "parece certo?")</span></h2>
+<p class="teach">Ensina: o golpe em que a própria vítima paga passa por todos os controles de identidade e autorização. Só um controle baseado em <em>risco</em> o enxerga.</p>
+<div class="lead">O golpista de engenharia social convence a Ana a fazer um Pix "urgente" para uma "conta segura". A Ana está autenticada com MFA, é dona da conta, o valor está no limite, a assinatura da transação é impecável. <b>Todos os controles dizem "sim" e o dinheiro está sendo roubado.</b> O antifraude é um sistema de inferência sobre <b>sinais</b>: cada um fraco sozinho, forte em combinação.</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">Dispositivo</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">aparelho novo, emulador, root, app adulterado</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Comportamento</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">digitação, navegação, hora habitual</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Velocidade</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">N Pix em M minutos; soma nas últimas horas</div></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Relacionamento</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">destino novo, valor atípico</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">Grafo</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">recebe de dezenas de contas novas e repassa em segundos → mula</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Contexto da sessão</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">ligação ativa, acesso remoto, chave colada → coação</div></div></div>
+</div>
+<div class="cap">Do sinal à ação, em ~100 ms</div>
+<div class="fig">
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:8px 10px;font-size:18px;color:#2C2C2A;">Pedido de Pix</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;padding:8px 10px;font-size:18px;color:#412402;">Enriquecimento (features em cache)</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;padding:8px 10px;font-size:18px;color:#04342C;">Motor: regras + modelo (score)</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;padding:8px 10px;font-size:18px;color:#26215C;">Decisão ~100 ms</div></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">ALLOW · risco baixo</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">Segue sem fricção — a grande maioria do tráfego.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">STEP-UP / RETER · risco médio</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Biometria, alerta anti-golpe, atraso de segurança, revisão humana.</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">DENY · risco alto</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">Recusa, bloqueia a sessão, abre caso para a equipe de fraude.</div></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Regras × modelo</div><div style="font-size:16px;color:#534AB7;margin-top:5px;"><b>Regras</b>: determinísticas, explicáveis, entram em minutos. <b>Modelo</b>: padrões sutis, mas probabilístico e sujeito a <em>concept drift</em>. Convivem. Todo bloqueio precisa ser explicável.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Fail-open × fail-closed</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Antifraude está no caminho crítico: se não responde, deixa passar ou recusa? <b>Gradue por valor</b>: baixo → fail-open com limite agregado; alto → fail-closed. Decisão em ADR, com números.</div></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Fricção × perda</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">Falso positivo custa confiança e churn; falso negativo custa dinheiro irreversível. O limiar do "amarelo" é decisão de <b>negócio</b>, com dado.</div></div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">O antifraude também é alvo</div><div style="font-size:16px;color:#185FA5;margin-top:5px;"><em>Structuring</em>: fracionar abaixo do limiar. Defesa: sinais agregados por janela; nunca expor as regras exatas.</div></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#E1F5EE;border:2px solid #9FE1CB;font-size:18px;color:#04342C;"><i class="ti ti-coin" aria-hidden="true"></i><span><b>Limites como disjuntor de prejuízo</b>: por transação, diário, <b>noturno</b> reduzido, conta nova; o cliente pode reduzir os próprios. E a segurança não termina no "bloquear": termina no <b>recuperar o que der</b> (devolução regulatória, cooperação).</span></div>
+</div>
+
+<h2>9 · Insiders e auditoria <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(o adversário que já tem a chave, e a prova)</span></h2>
+<p class="teach">Ensina: criptografia e mTLS pouco ajudam contra uma identidade autêntica. A defesa é processo: nenhuma pessoa, sozinha, causa dano grave sem ser notada — e tudo fica provável depois.</p>
+<div class="lead">O insider — engenheiro, suporte, DBA, terceirizado — <b>já está dentro</b>. Malicioso, coagido ou só descuidado (rodou o script errado em produção): o estrago é idêntico. Os controles têm custo real (fricção, ressentimento), então reenquadre: <b>não é desconfiança da pessoa, é proteção da pessoa</b> — num sistema sem trilha, todos que tinham acesso são suspeitos.</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">1 · Maker-checker (quatro olhos)</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">Operador A propõe → fica <b>pendente</b> → Operador B aprova. B ≠ A verificado pelo sistema. Para ajuste de saldo, mudança de limite, chave de assinatura.</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">2 · Acesso JIT</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">Ninguém tem acesso permanente à produção. Pede → justifica → aprovador → credencial com TTL 1 h → expira → tudo gravado.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">3 · Segregação de funções</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Quem escreve ≠ quem faz deploy. Quem opera o ledger ≠ quem concilia. DBA ≠ administrador de chaves. Fraude exige <b>conluio</b>.</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">4 · Break-glass</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">Emergência às 3 h: acesso que dispara alerta, grava a sessão, expira em minutos e exige revisão. Possível — mas nunca em silêncio.</div></div></div>
+</div>
+<div class="cap">Log de aplicação ≠ trilha de auditoria</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;"><div style="font-size:18px;color:#2C2C2A;font-weight:500;">Log de aplicação</div><div style="font-size:16px;color:#5F5E5A;margin-top:5px;">Depurar e operar. Conteúdo livre. Sem garantias (truncável, rotacionável). Amostragem comum.</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">Trilha de auditoria</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">Provar quem fez o quê. Estrutura <b>obrigatória</b>: quem · o quê · sobre o quê · quando · de onde · decisão (e por qual regra) · resultado. Completa, ordenada, imutável, retida por anos. <b>Sem amostragem.</b></div></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#FCEBEB;border:2px solid #F7C1C1;font-size:18px;color:#501313;"><i class="ti ti-shield-x" aria-hidden="true"></i><span><b>Negativas são eventos de primeira classe</b>: o <code>403</code> do Bruno é a evidência mais valiosa do incidente — só existe na trilha se alguém decidiu registrá-la.</span></div>
+</div>
+<div class="cap">Trilha à prova de adulteração: cadeia de hashes + âncora externa</div>
+<div class="fig">
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:8px 10px;font-size:18px;color:#2C2C2A;">Evento #1 · hash1 = H(dados+0)</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:8px 10px;font-size:18px;color:#2C2C2A;">Evento #2 · hash2 = H(dados+hash1)</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:8px 10px;font-size:18px;color:#2C2C2A;">Evento #3 · hash3 = H(dados+hash2)</div></div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Se alguém altera o #2</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">hash2 muda → o "prev" do #3 não bate → a cadeia quebra dali em diante. Adulteração vira <b>detectável</b>, e o ponto da quebra mostra o que foi mexido.</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">…e o último hash é ancorado fora do alcance do admin</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">Armazenamento <b>WORM</b> (write-once), conta separada, carimbo de tempo de terceiro. Sem âncora, quem controla o sistema recalcula tudo e ninguém vê.</div></div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#FAEEDA;border:2px solid #FAC775;font-size:18px;color:#412402;"><i class="ti ti-info-circle" aria-hidden="true"></i><span>A segregação vale aqui: <b>quem opera o sistema não administra a auditoria dele</b>. A trilha é dado pessoal: guarda identificadores estáveis, não o CPF.</span></div>
+</div>
+
+<h2>10 · Detectar, responder e não regredir <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(SIEM, runbook, fitness functions)</span></h2>
+<p class="teach">Ensina: prevenção gera o sinal que a detecção consome; contenção rápida é decidida meses antes, no desenho; e decisão que não é verificada automaticamente é uma sugestão.</p>
+<div class="lead">Assumir o comprometimento é medir <b>MTTD</b> (tempo até detectar) e <b>MTTR</b> (tempo até conter). A trilha alimenta um <b>SIEM</b> com regras nesta arquitetura: rajada de <code>PIX_NEGADO_AUTORIZACAO</code> de um sujeito (BOLA em andamento); break-glass fora de horário; workload com chamada negada por policy que nunca fez; uso anômalo da chave de assinatura. <em>Controle que só bloqueia é meio controle; o que bloqueia e alerta é sensor.</em></div>
+<div class="fig">
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;padding:8px 10px;font-size:18px;color:#412402;">1 Detectar (SIEM, antifraude)</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;padding:8px 10px;font-size:18px;color:#501313;">2 Conter (revogar tokens, isolar workload, girar segredo)</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;padding:8px 10px;font-size:18px;color:#26215C;">3 Erradicar (causa-raiz)</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;padding:8px 10px;font-size:18px;color:#04342C;">4 Recuperar (restaurar, devolução, reconciliar)</div><div class="arrow"><i class="ti ti-arrow-right" aria-hidden="true"></i></div><div class="box" style="background:#F1EFE8;border:2px solid #D3D1C7;padding:8px 10px;font-size:18px;color:#2C2C2A;">5 Comunicar + aprender</div></div>
+<div class="box" style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#FAEEDA;border:2px solid #FAC775;font-size:18px;color:#412402;"><i class="ti ti-clock" aria-hidden="true"></i><span>Contenção só é rápida se foi <b>projetada</b>: tokens curtos, segredos dinâmicos, policy como código, workloads com identidade própria. Comunicação ao regulador (política de segurança cibernética CMN/BACEN) e à ANPD/titulares (LGPD): <b>consulte a versão vigente e o jurídico</b>; a arquitetura garante a capacidade de saber <em>quais dados, de quem, desde quando</em>.</span></div>
+</div>
+<div class="cap">Security fitness functions: cada decisão vira regra que quebra o build</div>
+<div class="fig">
+<div class="lad"><div class="lrow" style="border-color:#F7C1C1;"><div class="lnum">1</div><div class="actors">Endpoint com ID autoriza ownership</div><div class="act">teste de arquitetura: controller com parâmetro <code>*Id</code> sem policy → build falha</div><span class="tag" style="background:#FCEBEB;color:#501313;">BOLA de volta</span></div><div class="lrow" style="border-color:#F7C1C1;"><div class="lnum">2</div><div class="actors">Ownership barra estranhos</div><div class="act">suíte adversarial: A × objeto de B → 403 <b>e</b> efeito zero</div><span class="tag" style="background:#FCEBEB;color:#501313;">AuthZ quebrada</span></div><div class="lrow"><div class="lnum">3</div><div class="actors">JWT validado corretamente</div><div class="act">expirado, aud errada, iss desconhecido, <code>alg=none</code> → 401</div><span class="tag" style="background:#FAEEDA;color:#412402;">JWT frouxo</span></div><div class="lrow"><div class="lnum">4</div><div class="actors">Workload só fala com quem deve</div><div class="act">Notificações → Antifraude negado; Pagamentos → /avaliar permitido</div><span class="tag" style="background:#FAEEDA;color:#412402;">policy frouxa</span></div><div class="lrow"><div class="lnum">5</div><div class="actors">Nenhum segredo no repo</div><div class="act">scanner no CI bloqueia o PR</div><span class="tag" style="background:#FAEEDA;color:#412402;">yml com credencial</span></div><div class="lrow"><div class="lnum">6</div><div class="actors">Nenhum dado sensível em log</div><div class="act">fluxo real + varredura por CPF, <code>Bearer</code>, cartão</div><span class="tag" style="background:#FAEEDA;color:#412402;">vazamento</span></div><div class="lrow"><div class="lnum">7</div><div class="actors">Trilha íntegra</div><div class="act">job verifica cadeia de hashes e âncora WORM</div><span class="tag" style="background:#E1F5EE;color:#04342C;">adulteração</span></div><div class="lrow"><div class="lnum">8</div><div class="actors">Rotação funciona</div><div class="act">exercício automatizado de rotação em teste</div><span class="tag" style="background:#E1F5EE;color:#04342C;">"nunca testada"</span></div></div>
+<div class="box" style="background:#F0EEFF;border:2px solid #534AB7;margin-top:8px;"><span style="font-weight:600;color:#534AB7;">↯ Insight:</span> O <code>200</code> errado (deveria ser 403) é <b>silencioso</b> — exatamente o perigoso. Por isso a suíte é <b>adversarial</b>: assume o papel do atacante e verifica que o ataque <em>falha</em>. E <b>todo incidente real vira uma linha nesta tabela</b>: o do Bruno gerou a primeira.</div>
+</div>
+
+<h2>11 · Trade-offs e ADR-004 <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(segurança tem custo, e o arquiteto o negocia)</span></h2>
+<p class="teach">Ensina: segurança absoluta não existe; existe segurança proporcional ao risco. Tornar os custos visíveis para que sejam escolhidos, não sofridos.</p>
+<div class="lead">Cada controle desta aula custa algo. Dois princípios atravessam a tabela: <b>proporcionalidade ao risco</b> (consultar saldo não merece o peso de um Pix de R$ 50.000 para destinatário novo às 3 h — se tudo exige step-up, o usuário aprende a aprovar sem ler) e <b>falhar de forma previsível</b> (cada controle precisa de resposta decidida para "e se ele mesmo falhar?", em ADR, com números).</div>
+<div class="fig">
+<div class="lad"><div class="lrow"><div class="lnum">1</div><div class="actors">mTLS + mesh</div><div class="act">+1–3 ms/salto; CPU/memória por pod; operação</div><span class="tag" style="background:#FAEEDA;color:#412402;">mitiga: reuso de conexão, ambient, só no crítico</span></div><div class="lrow"><div class="lnum">2</div><div class="actors">Autorização por recurso</div><div class="act">uma consulta extra por operação</div><span class="tag" style="background:#E1F5EE;color:#04342C;">cache curto do vínculo titular–conta</span></div><div class="lrow"><div class="lnum">3</div><div class="actors">Antifraude em linha</div><div class="act">~100 ms no caminho crítico; falsos positivos</div><span class="tag" style="background:#FAEEDA;color:#412402;">cache de features; graduar por valor</span></div><div class="lrow"><div class="lnum">4</div><div class="actors">Step-up / MFA</div><div class="act">fricção; abandono</div><span class="tag" style="background:#E1F5EE;color:#04342C;">só acima de risco; device conhecido</span></div><div class="lrow"><div class="lnum">5</div><div class="actors">KMS por operação</div><div class="act">latência + dependência do KMS</div><span class="tag" style="background:#E1F5EE;color:#04342C;">envelope encryption; cache curto de DEK</span></div><div class="lrow"><div class="lnum">6</div><div class="actors">Quatro olhos / JIT</div><div class="act">lentidão em operações legítimas</div><span class="tag" style="background:#FAEEDA;color:#412402;">break-glass com alerta; automatizar rotina</span></div><div class="lrow"><div class="lnum">7</div><div class="actors">Auditoria completa</div><div class="act">volume e retenção de anos</div><span class="tag" style="background:#E1F5EE;color:#04342C;">camadas quente/fria; compressão</span></div></div>
+</div>
+<div class="cap">ADR-004 — Modelo de identidade e autorização da TechPix</div>
+<div class="fig">
+<div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">Decisão</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">1) AuthZ por recurso obrigatória (ownership como piso; ABAC nos limites; RBAC só no back-office). 2) Sujeito <b>sempre do token</b>, nunca do body. 3) Identidade de workload (SPIFFE), mTLS, token M2M com escopo mínimo, Token Exchange quando age pelo usuário. 4) Default deny; Kafka com ACL por tópico. 5) Segredos dinâmicos em cofre. 6) Dado pessoal cifrado por titular (envelope; crypto-shredding). 7) Trilha estruturada, encadeada por hash, ancorada em WORM. 8) Cada controle com fitness function no CI.</div></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;"><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">Consequências +</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">Raio de explosão limitado por desenho; contenção em minutos.</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">Consequências −</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">+1–3 ms/salto; consulta extra de ownership; operar mesh/KMS; fricção de step-up e 4 olhos.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">Revisão</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">Reavaliar o mesh se o p99 do caminho crítico exceder o orçamento (alternativa: mTLS por biblioteca só nos serviços críticos) e a cada incidente.</div></div></div>
+</div>
+
+<h2>12 · Fecho: um Pix atravessando todas as camadas <span style="font-size:16px;color:var(--text-muted);font-weight:400;">(defesa em profundidade)</span></h2>
+<p class="teach">Ensina: cada seta é uma pergunta diferente, e cada camada assume que a anterior pode ter falhado. O Pix do Bruno de R$ 4.800 morre no ③ — e, se ele falhasse, ainda enfrentaria ④, ⑥ e ⑨/⑩.</p>
+<div class="lead">Sigam um Pix legítimo — o da irmã do Bruno, R$ 50 — por todos os controles, e depois o malicioso.</div>
+<div class="fig">
+<div class="lad"><div class="lrow"><div class="lnum">1</div><div class="actors">Edge</div><div class="act">TLS válido? Rate limit ok? Payload no formato e tamanho esperados?</div><span class="tag" style="background:#FAEEDA;color:#412402;">WAF</span></div><div class="lrow"><div class="lnum">2</div><div class="actors">Gateway</div><div class="act">token: assinatura, iss, aud, exp? escopo <code>pix:create</code>?</div><span class="tag" style="background:#FAEEDA;color:#412402;">AuthN</span></div><div class="lrow" style="border-color:#F7C1C1;"><div class="lnum">3</div><div class="actors">Pagamentos · AuthZ</div><div class="act">o sujeito do token é o titular desta conta?</div><span class="tag" style="background:#FCEBEB;color:#501313;">o que faltou ao Bruno</span></div><div class="lrow"><div class="lnum">4</div><div class="actors">Pagamentos · contexto</div><div class="act">valor exige step-up? <code>acr</code> basta? assinatura da transação confere?</div><span class="tag" style="background:#EEEDFE;color:#26215C;">ABAC</span></div><div class="lrow"><div class="lnum">5</div><div class="actors">Plataforma (mesh)</div><div class="act">certificado válido? policy permite Pagamentos → Antifraude /avaliar?</div><span class="tag" style="background:#E6F1FB;color:#042C53;">mTLS + policy</span></div><div class="lrow"><div class="lnum">6</div><div class="actors">Antifraude</div><div class="act">padrão legítimo? device conhecido? destino novo? velocidade?</div><span class="tag" style="background:#EEEDFE;color:#26215C;">ALLOW/step-up/DENY</span></div><div class="lrow"><div class="lnum">7</div><div class="actors">Ledger + dados</div><div class="act">workload autorizado a debitar? dado sensível via KMS com uso auditado?</div><span class="tag" style="background:#E6F1FB;color:#042C53;">KMS</span></div><div class="lrow"><div class="lnum">8</div><div class="actors">Saída (SPI)</div><div class="act">mensagem assinada com chave do HSM</div><span class="tag" style="background:#E1F5EE;color:#04342C;">não-repúdio</span></div><div class="lrow"><div class="lnum">9</div><div class="actors">Auditoria</div><div class="act">evento imutável, encadeado por hash</div><span class="tag" style="background:#E1F5EE;color:#04342C;">trilha</span></div><div class="lrow"><div class="lnum">10</div><div class="actors">SIEM</div><div class="act">alguma anomalia?</div><span class="tag" style="background:#E1F5EE;color:#04342C;">detecção</span></div></div>
+</div>
+<div class="cap">Para levar para casa</div>
+<div class="fig">
+<div style="display:grid;grid-template-columns:repeat(1,1fr);gap:8px;margin-top:0px;"><div class="box" style="background:#EEEDFE;border:2px solid #CECBF6;"><div style="font-size:18px;color:#26215C;font-weight:500;">1 · Autenticação estabelece identidade; autorização limita poder.</div><div style="font-size:16px;color:#534AB7;margin-top:5px;">Um token válido diz <em>quem</em>, nunca <em>sobre o quê</em>. O sub vem do token; o objeto, do servidor; a comparação, do domínio.</div></div><div class="box" style="background:#E6F1FB;border:2px solid #B5D4F4;"><div style="font-size:18px;color:#042C53;font-weight:500;">2 · Cada workload é um sujeito, com identidade própria e privilégio mínimo.</div><div style="font-size:16px;color:#185FA5;margin-top:5px;">mTLS autentica o canal, policy autoriza a ação — e nenhum dos dois substitui a regra de negócio.</div></div><div class="box" style="background:#E1F5EE;border:2px solid #9FE1CB;"><div style="font-size:18px;color:#04342C;font-weight:500;">3 · Assuma o comprometimento.</div><div style="font-size:16px;color:#0F6E56;margin-top:5px;">Tokens curtos, segredos dinâmicos, dado cifrado por titular, raio de explosão limitado: você reduz o custo e o tempo de vida do incidente.</div></div><div class="box" style="background:#FAEEDA;border:2px solid #FAC775;"><div style="font-size:18px;color:#412402;font-weight:500;">4 · Nem toda fraude viola permissão.</div><div style="font-size:16px;color:#854F0B;margin-top:5px;">O golpe autorizado só cai num controle baseado em risco — com trade-off explícito entre fricção e perda.</div></div><div class="box" style="background:#FCEBEB;border:2px solid #F7C1C1;"><div style="font-size:18px;color:#501313;font-weight:500;">5 · Provar é mais difícil do que proteger.</div><div style="font-size:16px;color:#791F1F;margin-top:5px;">Sem trilha imutável, fitness functions e runbook ensaiado, segurança é crença. Segurança não verificada automaticamente regride.</div></div></div>
+<div class="box" style="margin-top:10px;display:flex;align-items:center;gap:8px;background:#F1EFE8;border:2px solid #D3D1C7;font-size:18px;color:#2C2C2A;"><i class="ti ti-arrow-right" aria-hidden="true"></i><span><b>Gancho para a próxima aula:</b> agora cada requisição atravessa proxy, policy, autorização, antifraude, KMS e trilha. Cada uma é rápida; somadas, são dezenas de saltos e centenas de ms. Quando o cliente disser "o Pix demora", o painel de segurança estará todo verde — segurança verifica se o acesso foi <em>permitido</em>, não <em>quanto tempo cada camada custou</em>. Latência que ninguém enxerga é problema de <b>observabilidade</b>.</span></div>
+</div>
+
+</div>
+
+<script>
+/* =============================================
+   TECH ICONS — auto-injection inside .fig boxes
+   Uses Simple Icons CDN + letter-badge fallback
+   ============================================= */
+(function () {
+  var SI = 'https://cdn.simpleicons.org/';
+
+  /* ── Icon map ────────────────────────────────────────────────
+     img: Simple Icons slug + brand color (hex, no #)
+     letter: fallback badge letter  bg: badge bg color
+  ───────────────────────────────────────────────────────────── */
+  var ICONS = {
+    // ── Segurança (Aula 9) ──
+    'KMS':{ti:'ti-key',bg:'#0F6E56'},'HSM':{ti:'ti-lock',bg:'#0F6E56'},'JWT':{ti:'ti-certificate',bg:'#534AB7'},'mTLS':{ti:'ti-shield-lock',bg:'#185FA5'},'Gateway':{ti:'ti-door-enter',bg:'#854F0B'},'SIEM':{ti:'ti-radar',bg:'#791F1F'},'Antifraude':{ti:'ti-shield-check',bg:'#534AB7'},'Ledger':{ti:'ti-book',bg:'#0F6E56'},
+    // ── Databases ─────────────────────────────────────────────
+    'PostgreSQL':    { img: SI+'postgresql/336791' },
+    'MySQL':         { img: SI+'mysql/4479A1' },
+    'InnoDB':        { img: SI+'mysql/4479A1' },
+    'CockroachDB':   { img: SI+'cockroachlabs/6933FF' },
+    'TiDB':          { img: SI+'tidb/CC0000' },
+    'YugabyteDB':    { letter:'Y', bg:'#3D3D4F' },
+    'Yugabyte':      { letter:'Y', bg:'#3D3D4F' },
+    'Spanner':       { img: SI+'googlecloud/4285F4' },
+    'DynamoDB':      { ti:'ti-database', bg:'#4053D6' },
+    'Vitess':        { letter:'V', bg:'#F10737' },
+    // ── Cache ─────────────────────────────────────────────────
+    'Redis':         { img: SI+'redis/DC382D' },
+    'Cache':         { img: SI+'redis/DC382D' },
+    // ── Messaging / Streaming ─────────────────────────────────
+    'Kafka':         { img: SI+'apachekafka/231F20' },
+    'Broker':        { img: SI+'apachekafka/231F20' },
+    // ── CDC ───────────────────────────────────────────────────
+    'Debezium':      { letter:'D', bg:'#FF4040' },
+    // ── Connection pooling ────────────────────────────────────
+    'PgBouncer':     { img: SI+'postgresql/336791' },
+    'Pooler':        { img: SI+'postgresql/8B5E3C' },
+    // ── Testing ───────────────────────────────────────────────
+    'k6':            { img: SI+'k6/7D64FF' },
+    // ── Feature flags ─────────────────────────────────────────
+    'Unleash':       { ti:'ti-toggle-left', bg:'#1A4A52' },
+    // ── Resilience ────────────────────────────────────────────
+    'Resilience4j':  { letter:'R4', bg:'#27ae60' },
+    // ── Architecture testing ──────────────────────────────────
+    'ArchUnit':      { letter:'A', bg:'#e67e22' },
+    // ── Proxy / Service Mesh ──────────────────────────────────
+    'Envoy':         { img: SI+'envoyproxy/AC6199' },
+    // ── Version control ───────────────────────────────────────
+    'GitHub':        { img: SI+'github/181717' },
+    // ── Containers ────────────────────────────────────────────
+    'Docker':        { img: SI+'docker/2496ED' },
+    'Kubernetes':    { img: SI+'kubernetes/326CE5' },
+    // ── Cloud ─────────────────────────────────────────────────
+    'AWS':           { ti:'ti-cloud', bg:'#FF9900' },
+    'GCP':           { img: SI+'googlecloud/4285F4' },
+    // ── Load balancers / WAF / CDN / DNS ──────────────────────
+    'Cloudflare DNS':{ img: SI+'cloudflare/F38020' },
+    'Cloudflare WAF':{ img: SI+'cloudflare/F38020' },
+    'Cloudflare':    { img: SI+'cloudflare/F38020' },
+    'NGINX':         { img: SI+'nginx/009639' },
+    // ── PIX / BACEN — sem brasão oficial, ícone genérico ──────
+    'Pix':           { img: SI+'pix/32BCAD' },
+    'BACEN':         { ti:'ti-building-bank', bg:'#374151' },
+    'SPI':           { ti:'ti-building-bank', bg:'#374151' },
+    'DICT':          { ti:'ti-address-book', bg:'#374151' },
+    'RSFN':          { ti:'ti-antenna-bars-5', bg:'#374151' },
+    // ── Segurança / rede — conceito genérico ──────────────────
+    'mTLS':          { ti:'ti-shield-lock', bg:'#475569' },
+    'TLS':           { ti:'ti-lock', bg:'#475569' },
+    'DNS':           { ti:'ti-world', bg:'#0f766e' },
+    'WAF':           { ti:'ti-shield', bg:'#b45309' },
+    'CDN':           { ti:'ti-cloud', bg:'#0f766e' },
+    // ── Cliente / borda — conceito genérico ───────────────────
+    'app do cliente':{ ti:'ti-device-mobile', bg:'#52525b' },
+    'cliente':       { ti:'ti-device-mobile', bg:'#52525b' },
+    'Gateway / BFF': { ti:'ti-route', bg:'#52525b' },
+    'Gateway':       { ti:'ti-route', bg:'#52525b' },
+    // ── Observabilidade ────────────────────────────────────────
+    'Prometheus':    { img: SI+'prometheus/E6522C' },
+    'Grafana':       { img: SI+'grafana/F46800' },
+    'Sentry':        { img: SI+'sentry/362D59' },
+    'Datadog':       { img: SI+'datadog/632CA6' },
+    // ── CI/CD / IaC ────────────────────────────────────────────
+    'GitHub Actions':{ img: SI+'githubactions/2088FF' },
+    'Terraform':     { img: SI+'terraform/7B42BC' },
+    // ── IA / Agentes ───────────────────────────────────────────
+    'Claude':        { img: SI+'anthropic/191919' },
+    'Anthropic':     { img: SI+'anthropic/191919' },
+    'MCP':           { ti:'ti-plug-connected', bg:'#7c3aed' },
+    // ── Outras bases ───────────────────────────────────────────
+    'MongoDB':       { img: SI+'mongodb/47A248' },
+    'RabbitMQ':      { img: SI+'rabbitmq/FF6600' },
+    // ── Agente / MCP (aula 8) ──────────────────────────────────
+    'Servidor MCP':  { ti:'ti-plug-connected', bg:'#7c3aed' },
+    'Agente':        { ti:'ti-robot', bg:'#534AB7' },
+  };
+
+  /* Sort by key length desc so longer matches win
+     (e.g. "CockroachDB" beats "Cockroach") */
+  var SORTED = Object.keys(ICONS).sort(function(a,b){ return b.length - a.length; });
+
+  function makeIcon(data) {
+    if (data.ti) {
+      var ic = document.createElement('i');
+      ic.className = 'ti ' + data.ti;
+      ic.setAttribute('aria-hidden', 'true');
+      ic.style.cssText =
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'width:22px;height:22px;min-width:22px;font-size:14px;' +
+        'background:' + data.bg + ';color:#fff;border-radius:4px;' +
+        'margin-right:7px;vertical-align:middle;flex-shrink:0;';
+      return ic;
+    }
+    if (data.img) {
+      var img = document.createElement('img');
+      img.src = data.img;
+      img.width = 22; img.height = 22;
+      img.alt = '';
+      img.style.cssText =
+        'vertical-align:middle;margin-right:7px;border-radius:3px;' +
+        'flex-shrink:0;display:inline-block;';
+      img.onerror = function(){ this.style.display='none'; };
+      return img;
+    }
+    if (data.letter) {
+      var span = document.createElement('span');
+      span.textContent = data.letter;
+      span.style.cssText =
+        'display:inline-flex;align-items:center;justify-content:center;' +
+        'width:22px;height:22px;min-width:22px;' +
+        'background:' + data.bg + ';color:#fff;' +
+        'border-radius:4px;font-size:11px;font-weight:700;' +
+        'margin-right:7px;vertical-align:middle;flex-shrink:0;' +
+        'font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+      return span;
+    }
+    return null;
+  }
+
+  function injectInto(el) {
+    if (!el || el._ti) return;   // already processed
+    var text = el.textContent.trim();
+    for (var i = 0; i < SORTED.length; i++) {
+      var tech = SORTED[i];
+      /* Match at word-boundary start (avoid "MySQL" matching inside words) */
+      if (text === tech ||
+          text.startsWith(tech + ' ') ||
+          text.startsWith(tech + '/') ||
+          text.startsWith(tech + ',') ||
+          text.startsWith(tech + ':') ||
+          text.startsWith(tech + ' —') ||
+          (text.indexOf(tech) === 0)) {
+        var icon = makeIcon(ICONS[tech]);
+        if (icon) {
+          /* Wrap text in a flex row */
+          el.style.display = 'flex';
+          el.style.alignItems = 'center';
+          el.style.flexWrap = 'nowrap';
+          el.insertBefore(icon, el.firstChild);
+          el._ti = true;
+        }
+        return;
+      }
+    }
+  }
+
+  function run() {
+    /* ── Aulas 1–8: .fig .box > first div child with font-weight ── */
+    document.querySelectorAll(
+      '.fig .box > div:first-child, ' +
+      '.fig .box > [style*="font-weight:500"]:first-child, ' +
+      '.fig .box > [style*="font-weight: 500"]:first-child'
+    ).forEach(injectInto);
+
+    /* ── Topologia: .t class titles ──────────────────────────── */
+    document.querySelectorAll('.fig .box .t, .fig .t').forEach(injectInto);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+})();
+</script>
+
+</body>
+</html>

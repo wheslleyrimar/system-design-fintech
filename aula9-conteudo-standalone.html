@@ -1,24 +1,51 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aula 9 — Segurança em Sistemas Financeiros</title>
 <style>
-:root{--bg:#f8f9fb;--fg:#1a1a2e;--mut:#5b5b70;--bd:#e2e4ea;--acc:#4338ca;--card:#fff;--code:#f1f2f6}
-@media(prefers-color-scheme:dark){:root{--bg:#14151c;--fg:#e8e8f0;--mut:#a0a0b4;--bd:#2c2e3a;--acc:#8b86f5;--card:#1c1e28;--code:#22242f}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-main{max-width:980px;margin:0 auto;padding:40px 20px 100px}
-h1{font-size:2.2rem;line-height:1.2;margin:.2em 0}h2{font-size:1.6rem;margin:2.4em 0 .6em;padding-top:1.2em;border-top:1px solid var(--bd)}h3{font-size:1.2rem;margin:1.8em 0 .4em;color:var(--acc)}
-a{color:var(--acc)}blockquote{margin:1.2em 0;padding:.6em 1.1em;border-left:4px solid var(--acc);background:var(--card);border-radius:0 8px 8px 0;color:var(--mut)}
-table{border-collapse:collapse;width:100%;margin:1.2em 0;font-size:.92rem;display:block;overflow-x:auto}th,td{border:1px solid var(--bd);padding:8px 10px;text-align:left;vertical-align:top}th{background:var(--code)}
-code{background:var(--code);padding:.1em .35em;border-radius:4px;font-size:.9em}pre{background:var(--code);padding:14px;border-radius:8px;overflow-x:auto;line-height:1.5}pre code{background:none;padding:0}
-hr{border:0;border-top:1px solid var(--bd);margin:2em 0}
-div[style*="background:#fafafa"]{background:#fafafa!important;color:#1a1a1a}
-@media print{body{background:#fff}main{padding:0}}
-</style></head><body><main>
-<h1>Aula 9 — Segurança em Sistemas Financeiros</h1>
-<p><em>Curso de Arquitetura de Sistemas Financeiros com IA</em></p>
-<blockquote>
-<p><strong>Navegação:</strong> <a href="https://wheslleyrimar.github.io/system-design-fintech/">Índice</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula1-conteudo-completo">Aula 1</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula2-conteudo-completo">Aula 2</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula3-conteudo-completo">Aula 3</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula4-conteudo-completo">Aula 4</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula5-conteudo-completo">Aula 5</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula6-conteudo-completo">Aula 6</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula7-conteudo-completo">Aula 7</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/aula8-conteudo-completo">Aula 8</a> · <strong>Aula 9 (você está aqui)</strong></p>
-</blockquote>
+:root{--surface-0:#F0EEE6;--surface-1:#ffffff;--text-primary:#1f1e1c;--text-secondary:#5F5E5A;--text-muted:#8a897f;--border:#E4E1D8;--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:var(--font-sans);line-height:1.6;}
+.wrap{max-width:920px;margin:0 auto;padding:44px 24px 90px;}
+h1{font-size:27px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em;}
+.sub{color:var(--text-muted);font-size:14px;margin:0 0 18px;}
+h2{font-size:20px;font-weight:600;margin:40px 0 8px;border-top:1px solid var(--border);padding-top:26px;}
+h3{font-size:16px;font-weight:600;margin:26px 0 6px;color:#534AB7;}
+p,li{font-size:15px;color:var(--text-primary);}
+li{margin:3px 0;}
+a{color:#534AB7;}
+strong{font-weight:600;}
+blockquote{margin:14px 0;padding:14px 18px;background:var(--surface-1);border:1px solid var(--border);border-radius:12px;color:var(--text-secondary);}
+blockquote p{margin:4px 0;font-size:15px;color:var(--text-secondary);}
+table{border-collapse:separate;border-spacing:0;width:100%;margin:14px 0;font-size:13.5px;background:var(--surface-1);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:block;overflow-x:auto;}
+th,td{padding:8px 11px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border);}
+th{background:#F7F5EE;font-weight:600;}tr:last-child td{border-bottom:none;}
+code{background:#EEEDFE;color:#26215C;padding:1px 5px;border-radius:5px;font-size:.88em;}
+pre{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;overflow-x:auto;line-height:1.5;font-size:13px;}
+pre code{background:none;color:var(--text-primary);padding:0;}
+hr{border:0;border-top:1px solid var(--border);margin:30px 0;}
+.navlink{font-size:12.5px;text-decoration:none;border-radius:8px;padding:5px 12px;display:inline-block;border:1px solid var(--border);color:var(--text-secondary);background:#fff;}
+.navlink:hover{border-color:#534AB7;color:#534AB7;}
+.navlink.active{background:#534AB7;border-color:#534AB7;color:#fff;}
+.lead{font-size:15px;color:var(--text-secondary);background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin:0 0 14px;}
+@media print{body{background:#fff;}.wrap{padding:0;max-width:none;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Aula 9 — Segurança em Sistemas Financeiros</h1>
+  <nav style="display:flex;gap:8px;margin:2px 0 14px;flex-wrap:wrap;">
+    <a href="aula1-roteiro.html" class="navlink">Aula 1</a>
+    <a href="aula2-roteiro.html" class="navlink">Aula 2</a>
+    <a href="aula3-roteiro.html" class="navlink">Aula 3</a>
+    <a href="aula8-roteiro.html" class="navlink">Aula 8</a>
+    <a href="aula9-roteiro.html" class="navlink">Aula 9 · caderno visual</a>
+    <a href="aula9-conteudo-standalone.html" class="navlink active">Aula 9 · conteúdo completo</a>
+    <a href="topologia-progressiva.html" class="navlink">Topologia</a>
+  </nav>
+  <p class="sub">Curso de Arquitetura de Sistemas Financeiros com IA · texto integral da aula</p>
 <blockquote>
 <p><strong>Esta aula é autocontida.</strong> Todo conceito que ela usa é definido aqui, no ponto em que aparece. Quem chegou sem ter visto as anteriores só precisa saber uma coisa: a <strong>TechPix</strong> é uma fintech fictícia que processa Pix — pagamentos instantâneos brasileiros, liquidados em segundos, <strong>irreversíveis por natureza</strong> — sobre um ledger (o livro-razão que registra cada centavo), organizada em serviços: <em>Pagamentos</em>, <em>Antifraude e Limites</em>, <em>Contas e Ledger</em>, <em>Identidade e Onboarding</em>.</p>
 </blockquote>
@@ -1665,6 +1692,7 @@ Reavaliar o mesh se a latência de p99 do caminho crítico exceder o orçamento
 <p>Segurança acrescenta camadas. Camadas acrescentam latência. E <strong>latência que ninguém enxerga</strong> não é problema de segurança — é problema de observabilidade.</p>
 </blockquote>
 <hr>
-<p><a href="https://wheslleyrimar.github.io/system-design-fintech/aula8-conteudo-completo">← Aula 8</a> · <a href="https://wheslleyrimar.github.io/system-design-fintech/">Índice</a></p>
 
-</main></body></html>
+</div>
+</body>
+</html>
