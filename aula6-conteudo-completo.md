@@ -6,7 +6,7 @@ title: "Aula 6 — Evolução para Microsserviços com Validação"
 # Aula 6 — Evolução para Microsserviços com Validação
 *Curso de Arquitetura de Sistemas Financeiros com IA*
 
-> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · **Aula 6 (você está aqui)** · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · **Aula 6 (você está aqui)** · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md) · [Aula 9](aula9-conteudo-completo.md)
 
 Deixa eu contar sobre o dia 14 de novembro de 2025, uma sexta-feira, 9 horas da manhã. Foi o dia em que a TechPix desligou a rota antiga do Antifraude — o dia da primeira extração de verdade, quando um pedaço do monólito virou um serviço separado, com processo próprio, banco próprio, deploy próprio.
 

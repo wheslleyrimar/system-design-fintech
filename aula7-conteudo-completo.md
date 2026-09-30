@@ -6,7 +6,7 @@ title: "Aula 7 — Observabilidade e Operação Inteligente"
 # Aula 7 — Observabilidade e Operação Inteligente
 *Curso de Arquitetura de Sistemas Financeiros com IA*
 
-> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · **Aula 7 (você está aqui)** · [Aula 8](aula8-conteudo-completo.md)
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · **Aula 7 (você está aqui)** · [Aula 8](aula8-conteudo-completo.md) · [Aula 9](aula9-conteudo-completo.md)
 
 Deixa eu começar essa aula de um jeito que nenhuma das anteriores começou: sem incidente.
 

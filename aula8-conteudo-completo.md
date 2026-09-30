@@ -6,7 +6,7 @@ title: "Aula 8 — Arquitetura Evolutiva com IA, Agentes e Feedback Contínuo"
 # Aula 8 — Arquitetura Evolutiva com IA, Agentes e Feedback Contínuo
 *Curso de Arquitetura de Sistemas Financeiros com IA*
 
-> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · **Aula 8 (você está aqui)**
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · **Aula 8 (você está aqui)** · [Aula 9](aula9-conteudo-completo.md)
 
 Faz um tempo que a gente não se via. Deixa eu recapitular rapidinho o que aconteceu com a TechPix nesse meio-tempo, porque isso importa para o que eu vou mostrar hoje.
 
@@ -633,4 +633,4 @@ E para fechar de verdade, deixa eu desenhar a TechPix inteira — não como ela 
 
 ---
 
-[← Aula 7](aula7-conteudo-completo.md) · [Índice](index.md)
+[← Aula 7](aula7-conteudo-completo.md) · [Índice](index.md) · [Aula 9 →](aula9-conteudo-completo.md)

@@ -6,7 +6,7 @@ title: "Aula 5 — Núcleo da Fintech com IA e Agentes"
 # Aula 5 — Núcleo da Fintech com IA e Agentes
 *Curso de Arquitetura de Sistemas Financeiros com IA*
 
-> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · **Aula 5 (você está aqui)** · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · **Aula 5 (você está aqui)** · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md) · [Aula 9](aula9-conteudo-completo.md)
 
 Semana passada eu terminei a aula com uma promessa: a chamada síncrona de Pagamentos para Antifraude, aquela que a gente colocou no caminho crítico com um orçamento de ~100 milissegundos no p99, ia ganhar um inquilino novo. Hoje eu pago essa promessa. Mas antes, como sempre, deixa eu contar o que aconteceu — porque dessa vez o sistema não ficou lento, não caiu, não congelou extrato nenhum. Dessa vez o sistema funcionou perfeitamente. E foi exatamente assim que ele falhou.
 

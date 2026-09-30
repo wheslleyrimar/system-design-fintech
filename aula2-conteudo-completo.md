@@ -6,7 +6,7 @@ title: "Aula 2 — Fundamentos da Evolução Arquitetural em Fintech"
 # Aula 2 — Fundamentos da Evolução Arquitetural em Fintech
 *Curso de Arquitetura de Sistemas Financeiros com IA*
 
-> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · **Aula 2 (você está aqui)** · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · **Aula 2 (você está aqui)** · [Aula 3](aula3-conteudo-completo.md) · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md) · [Aula 9](aula9-conteudo-completo.md)
 
 Antes de entrar no conteúdo de hoje, eu quero começar retomando o **ADR-001** — o registro de decisão que a gente escreveu juntos no fim da aula passada. Quatro pontos dele importam para hoje:
 

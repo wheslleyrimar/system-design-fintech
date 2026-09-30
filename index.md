@@ -59,3 +59,9 @@ Curso ao vivo, com o caso contínuo da fintech fictícia **TechPix**, desenhado 
 - [Roteiro (apresentação)](aula8-roteiro.html)
 - [Conteúdo completo](aula8-conteudo-completo.md)
 - [Guia de perguntas difíceis](aula8-perguntas-dificeis.md)
+
+## Aula 9 — Segurança em Sistemas Financeiros
+
+- [Roteiro (fonte)](aula9-roteiro.md)
+- [Conteúdo completo](aula9-conteudo-completo.md)
+- [Guia de perguntas difíceis](aula9-perguntas-dificeis.md)

@@ -6,7 +6,7 @@ title: "Aula 4 — Comunicação, Integração e Resiliência"
 # Aula 4 — Comunicação, Integração e Resiliência
 *Curso de Arquitetura de Sistemas Financeiros com IA*
 
-> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · **Aula 4 (você está aqui)** · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · [Aula 3](aula3-conteudo-completo.md) · **Aula 4 (você está aqui)** · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md) · [Aula 9](aula9-conteudo-completo.md)
 
 Boa noite. Meu nome não importa tanto quanto o meu crachá anterior: eu passei os últimos dez anos de plantão. Eu sou o engenheiro que chamam quando o sistema já está no ar, já tem cliente dentro, e alguma coisa acabou de fazer um barulho estranho. O professor que esteve aqui antes de mim desenhou com vocês o ledger, os trade-offs, as fronteiras — e desenhou bem, eu li tudo, inclusive os ADRs. O meu trabalho, nas próximas quatro aulas, é outro: é fazer esse desenho **sobreviver ao contato com a produção**. E eu quero começar do jeito que eu conheço melhor — contando um incidente.
 

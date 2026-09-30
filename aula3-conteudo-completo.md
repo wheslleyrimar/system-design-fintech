@@ -6,7 +6,7 @@ title: "Aula 3 — Modelagem de Domínio e Decisões Arquiteturais"
 # Aula 3 — Modelagem de Domínio e Decisões Arquiteturais (SDD na prática)
 *Curso de Arquitetura de Sistemas Financeiros com IA*
 
-> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · **Aula 3 (você está aqui)** · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md)
+> **Navegação:** [Índice](index.md) · [Aula 1](aula1-conteudo-completo.md) · [Aula 2](aula2-conteudo-completo.md) · **Aula 3 (você está aqui)** · [Aula 4](aula4-conteudo-completo.md) · [Aula 5](aula5-conteudo-completo.md) · [Aula 6](aula6-conteudo-completo.md) · [Aula 7](aula7-conteudo-completo.md) · [Aula 8](aula8-conteudo-completo.md) · [Aula 9](aula9-conteudo-completo.md)
 
 Eu terminei a última aula com uma confissão: desenhei as fronteiras do monólito da TechPix meio no olho. "Tem um módulo de Contas, tem um de Pagamentos, tem um de Antifraude" — e apontei essas divisões como se fossem óbvias. Hoje eu quero mostrar por que isso é perigoso, e dar para vocês uma técnica sistemática para nunca mais precisarem confiar só no palpite.
 
